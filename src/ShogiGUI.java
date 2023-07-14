@@ -391,6 +391,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		
 		public void resetAllKoma() {
 			turnIsSente = true;
+			
 			listKomaOnBoard.clear();
 			listKomaOnHandForSente.clear();
 			listKomaOnHandForGote.clear();
