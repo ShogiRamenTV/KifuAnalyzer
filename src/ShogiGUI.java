@@ -76,6 +76,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	String kifuFilePath = "./kifu/";
 	String strategyFilePath = "./strategy/";
 	String castleFilePath = "./castle/";
+	JLabel castleIconLabel = new JLabel();
+	String castleIconPath = "./img/";
 	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
 	List<StringCount> strategyCountData = new ArrayList<StringCount>();
 	List<CastleData> castleDataBase = new ArrayList<CastleData>();
@@ -146,6 +148,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		initializeButtonSetting();
 		initializeTextBoxSetting();
 		initializePlayerIconLabel();
+		initializeCastleIcon();
 		initializeListBoxSetting();
 		initializeCanvasSetting();
 		initializeSoundSetting();
@@ -170,6 +173,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		getContentPane().add(labelGote);
 		getContentPane().add(playerIconLabel[0]);
 		getContentPane().add(playerIconLabel[1]);
+		getContentPane().add(castleIconLabel);
 		getContentPane().add(textBoxStrategy);
 		getContentPane().add(textBoxCastle);
 		getContentPane().add(textBoxLoad);
@@ -232,11 +236,11 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		radioButtonSente.setBounds(708, 95, 70, 10);
 		radioButtonGote.setBounds(768, 95, 70, 10);
 		textBoxLoad.setBounds(758, 35, 50, 20);
-		labelSente.setBounds(810, 35, 100, 20);
-		textBoxPlayerS.setBounds(840, 35, 100, 20);
+		labelSente.setBounds(840, 15, 100, 20);
+		textBoxPlayerS.setBounds(835, 35, 120, 20);
 		textBoxPlayerS.addActionListener(enterActionListener);
-		labelGote.setBounds(950, 35, 100, 20);
-		textBoxPlayerG.setBounds(975, 35, 100, 20);
+		labelGote.setBounds(965, 15, 100, 20);
+		textBoxPlayerG.setBounds(965, 35, 120, 20);
 		textBoxPlayerG.addActionListener(enterActionListener);
 		checkBoxEditMode.setBounds(680, 20, 100, 10);
 		
@@ -315,6 +319,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		playerIconLabel[1] = new JLabel();
 		playerIconLabel[0].setBounds(840, 25, 100, 200);
 		playerIconLabel[1].setBounds(970, 25, 100, 200);
+		castleIconLabel.setBounds(880, 460, 200, 252);
 	}
 	public void clearTextBox() {
 		textBoxPlayerS.setText("");
@@ -1008,6 +1013,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		createPlayerDataBase();
 		clearTextBox();
 		initializePlayerIcon();
+		initializeCastleIcon();
 	}
 	public void actionForSave() {
 		Path path;
@@ -1402,8 +1408,13 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	public class CastleData {
 		String name;
 		List<int[]> data = new ArrayList<int[]>();
+		ImageIcon castleIcon;
 		CastleData(String castleName) {
 			name = castleName;
+			castleIcon = new ImageIcon(castleIconPath + name + ".jpg");
+			Image image = castleIcon.getImage();
+			Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
+			castleIcon = new ImageIcon(newImage);
 		}
 	}
 	public void loadCastleData() {
@@ -1513,7 +1524,10 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	
 	public void updateListInfoByCastle() {
 		int selectedIndex = listCastle.getSelectedIndex()-2;
-		if(selectedIndex < 0) return;
+		if(selectedIndex < 0) {
+			initializeCastleIcon();
+			return;
+		}
 		int selectedIndexStrategy = listStrategy.getSelectedIndex();
 		String strategyName = "";
 		if(selectedIndexStrategy >= 2) {
@@ -1530,6 +1544,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		StringCount sc = castleCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String castleName = sc.str;
+		updateCastleIcon();
 		
 		modelInfo.clear();
 		listInfo.setModel(modelInfo);
@@ -1626,6 +1641,23 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			}
 		}
 		return null;
+	}
+	public void updateCastleIcon() {
+		int selectedIndex = listCastle.getSelectedIndex()-2;
+		if(selectedIndex < 0) return;
+		StringCount sc = castleCountData.get(selectedIndex);
+		String castleName = sc.str;
+		
+		castleIconLabel.setIcon(null);
+		
+		for(CastleData cd: castleDataBase) {
+			if(cd.name.equals(castleName)) {
+				castleIconLabel.setIcon(cd.castleIcon);
+			}
+		}
+	}
+	public void initializeCastleIcon() {
+		castleIconLabel.setIcon(null);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1800,6 +1832,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	}
 	public class GameResult {
 		String strategy;
+		String castleS;
+		String castleG;
 		Boolean isPlayerWin;
 		Boolean isSente;
 		
