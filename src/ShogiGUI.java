@@ -91,11 +91,19 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	int iconWidth;
 	int iconHeight;
 	CanvasBoard cv = new CanvasBoard();
-	JButton button = new JButton("Initialize");
-	JButton button2 = new JButton("Save");
-	JButton button3 = new JButton("Load");
-	JButton button4 = new JButton("Strategy");
-	JButton button5 = new JButton("Castle");
+	public enum ButtonType {
+		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4);
+		private final int id;
+		
+		private ButtonType(final int id) {
+			this.id = id;
+		}
+		
+		public int getInt() {
+			return this.id;
+		}
+	};
+	JButton button[] = new JButton[5];
 	JLabel labelStrategy = new JLabel("Name");
 	JLabel labelCastle = new JLabel("Name");
 	JLabel labelSente = new JLabel("Sente");
@@ -162,11 +170,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		for(int x=0; x<40; x++) {
 			getContentPane().add(shogiData.k[x]);
 		}
-		getContentPane().add(button);
-		getContentPane().add(button2);
-		getContentPane().add(button3);
-		getContentPane().add(button4);
-		getContentPane().add(button5);
+		for(ButtonType b: ButtonType.values()) getContentPane().add(button[b.id]);
 		getContentPane().add(labelStrategy);
 		getContentPane().add(labelCastle);
 		getContentPane().add(labelSente);
@@ -222,11 +226,14 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		button.setBounds(x, y, width, height);
 	}
 	public void initializeButtonSetting() {
-		commonButtonSetting(button, 600, 15, 80, 20);
-		commonButtonSetting(button2, 600, 35, 80, 20);
-		commonButtonSetting(button3, 680, 35, 80, 20);
-		commonButtonSetting(button4, 600, 55, 80, 20);
-		commonButtonSetting(button5, 600, 75, 80, 20);
+		for(ButtonType b: ButtonType.values()) {
+			button[b.id] = new JButton(b.name());
+		}
+		commonButtonSetting(button[ButtonType.Initialize.id], 600, 15, 80, 20);
+		commonButtonSetting(button[ButtonType.Save.id], 600, 35, 80, 20);
+		commonButtonSetting(button[ButtonType.Load.id], 680, 35, 80, 20);
+		commonButtonSetting(button[ButtonType.Strategy.id], 600, 55, 80, 20);
+		commonButtonSetting(button[ButtonType.Castle.id], 600, 75, 80, 20);
 	}
 	public void initializeTextBoxSetting() {
 		labelStrategy.setBounds(685, 55, 100, 20);
@@ -1214,19 +1221,19 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getActionCommand() == button.getText()) { // initialize
+		if(e.getActionCommand() == button[ButtonType.Initialize.id].getText()) { // initialize
 			actionForInitialize();
 		}
-		if(e.getActionCommand() == button2.getText()) { // save
+		if(e.getActionCommand() == button[ButtonType.Save.id].getText()) { // save
 			actionForSave();
 		}
-		if(e.getActionCommand() == button3.getText()) { // load
+		if(e.getActionCommand() == button[ButtonType.Load.id].getText()) { // load
 			actionForLoad();
 		}
-		if(e.getActionCommand() == button4.getText()) { // strategy
+		if(e.getActionCommand() == button[ButtonType.Strategy.id].getText()) { // strategy
 			actionForStrategy();
 		}
-		if(e.getActionCommand() == button5.getText()) { // strategy
+		if(e.getActionCommand() == button[ButtonType.Castle.id].getText()) { // castle
 			actionForCastle();
 		}
 	}
