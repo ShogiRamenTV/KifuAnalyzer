@@ -1845,8 +1845,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	}
 	public class GameResult {
 		String strategy;
-		String castleS;
-		String castleG;
+		String castle;
 		Boolean isPlayerWin;
 		Boolean isSente;
 		
@@ -1899,6 +1898,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 				grS.isPlayerWin = false;
 				grG.isPlayerWin = true;
 			}
+			grS.castle = kdb.castleNameS;
+			grG.castle = kdb.castleNameG;
 			
 			for(PlayerData pd: playerDataBase) {
 				if(kdb.playerNameS.equals(pd.playerName)) {
@@ -1950,36 +1951,11 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		
 		// count strategy data
 		List<GameResultCount> grcList = new ArrayList<GameResultCount>();
-		for(GameResult gr: pd.grList) {
-			Boolean found = false;
-			for(GameResultCount grc: grcList) {
-				if(grc.str.equals(gr.strategy)) {
-					found = true;
-					grc.cnt++;
-					if(gr.isPlayerWin) {
-						if(gr.isSente) grc.senteWinCnt++;
-						else grc.goteWinCnt++;
-					} else {
-						if(gr.isSente) grc.senteLoseCnt++;
-						else grc.goteLoseCnt++;
-					}
-				}
-			}
-			if(!found) {
-				GameResultCount grc = new GameResultCount(gr.strategy, gr.isPlayerWin, gr.isSente);
-				grcList.add(grc);
-			}
-		}
+		countStrategyDataByPlayerData(grcList, pd);
 		
-		Collections.sort(
-				grcList,
-				new Comparator<GameResultCount>() {
-					@Override
-					public int compare(GameResultCount obj1, GameResultCount obj2) {
-						return obj2.cnt - obj1.cnt;
-					}
-				}
-				);
+		// count castle data
+		List<StringCount> strList = new ArrayList<StringCount>();
+		countCastleDataByPlayerData(strList, pd);
 		
 		modelInfo.clear();
 		listInfo.setModel(modelInfo);
@@ -2020,12 +1996,75 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		for(GameResultCount grc: grcList) {
 			str = grc.str;
 			d = (double)(grc.senteWinCnt+grc.goteWinCnt)/(double)(grc.cnt)*100;
-			str += ":" + String.format("%d", grc.cnt)+" games";
+			str += ":" + String.format("%d", grc.cnt) + " games";
 			str += "(Winning Rate" + String.format("%.0f", d) + "%)";
 			modelInfo.addElement(str);
 		}
 		
+		modelInfo.addElement("---------");
+		for(StringCount sc: strList) {
+			str = sc.str;
+			str += ":" + String.format("%d", sc.cnt) + " games";
+			modelInfo.addElement(str);
+		}
+		
 		listInfo.setModel(modelInfo);
+	}
+	public void countStrategyDataByPlayerData(List<GameResultCount> grcList, PlayerData pd) {
+		for(GameResult gr: pd.grList) {
+			Boolean found = false;
+			for(GameResultCount grc: grcList) {
+				if(grc.str.equals(gr.strategy)) {
+					found = true;
+					grc.cnt++;
+					if(gr.isPlayerWin) {
+						if(gr.isSente) grc.senteWinCnt++;
+						else grc.goteWinCnt++;
+					} else {
+						if(gr.isSente) grc.senteLoseCnt++;
+						else grc.goteLoseCnt++;
+					}
+				}
+			}
+			if(!found) {
+				GameResultCount grc = new GameResultCount(gr.strategy, gr.isPlayerWin, gr.isSente);
+				grcList.add(grc);
+			}
+		}
+		
+		Collections.sort(
+				grcList,
+				new Comparator<GameResultCount>() {
+					@Override
+					public int compare(GameResultCount obj1, GameResultCount obj2) {
+						return obj2.cnt - obj1.cnt;
+					}
+				}
+				);
+	}
+	public void countCastleDataByPlayerData(List<StringCount> strList, PlayerData pd) {
+		for(GameResult gr: pd.grList) {
+			Boolean found = false;
+			for(StringCount sc: strList) {
+				if(sc.str.equals(gr.castle)) {
+					found = true;
+					sc.cnt++;
+				}
+			}
+			if(!found) {
+				StringCount sc = new StringCount(gr.castle, true);
+				strList.add(sc);
+			}
+		}
+		Collections.sort(
+				strList,
+				new Comparator<StringCount>() {
+					@Override
+					public int compare(StringCount obj1, StringCount obj2) {
+						return obj2.cnt - obj1.cnt;
+					}
+				}
+				);
 	}
 	public void updatePlayerIcon() {
 		String playerNameS = textBoxPlayerS.getText();
