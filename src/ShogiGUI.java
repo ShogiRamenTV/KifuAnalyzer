@@ -1111,6 +1111,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	
 	public void actionForDB() {
 		try {
+			System.out.println("Load Kifu Data");
 			int fileIndex = 1;
 			kifuDB.clear();
 			while(true) {
@@ -1159,6 +1160,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		
 		listKifu.setSelectedIndex(0);
 		commonListAction();
+		
+		System.out.println("Finish");
 	}
 	public void actionForStrategy() {
 		Path path;
@@ -1250,6 +1253,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		}
 	}
 	public void loadStrategyData() {
+		System.out.println("Load Strategy Data");
 		strategyDataBase.clear();
 		try {
 			int fileIndex = 1;
@@ -1280,6 +1284,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		} catch(IOException er) {
 			System.out.println(er);
 		}
+		System.out.println("Finish");
 	}
 	
 	public String checkStrategy(ShogiData sd) {
@@ -1414,17 +1419,21 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	// -------------------------------------------------------------------------
 	public class CastleData {
 		String name;
-		List<int[]> data = new ArrayList<int[]>();
-		ImageIcon castleIcon;
+		//List<int[]> data = new ArrayList<int[]>();
+		int data[][] = new int[25][4];
+		//ImageIcon castleIcon;
 		CastleData(String castleName) {
 			name = castleName;
+			/*
 			castleIcon = new ImageIcon(castleIconPath + name + ".jpg");
 			Image image = castleIcon.getImage();
 			Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
 			castleIcon = new ImageIcon(newImage);
+			*/
 		}
 	}
 	public void loadCastleData() {
+		System.out.println("Load Castle Data");
 		castleDataBase.clear();
 		try {
 			int fileIndex = 1;
@@ -1436,19 +1445,15 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 				String content;
 				content = br.readLine(); // name
 				CastleData castleData = new CastleData(content);
+				int i = 0;
 				while((content = br.readLine()) != null) {
 					StringTokenizer st = new StringTokenizer(content,",");
 					while(st.hasMoreTokens()) {
-						int s =  Integer.parseInt(st.nextToken()); // sente
-						int x = Integer.parseInt(st.nextToken()); // x
-						int y = Integer.parseInt(st.nextToken()); // y
-						int type = Integer.parseInt(st.nextToken()); // type
-						int data[] = new int[4];
-						data[0] = s;
-						data[1] = x;
-						data[2] = y;
-						data[3] = type;
-						castleData.data.add(data);
+						castleData.data[i][0] =  Integer.parseInt(st.nextToken()); // sente
+						castleData.data[i][1] = Integer.parseInt(st.nextToken()); // x
+						castleData.data[i][2] = Integer.parseInt(st.nextToken()); // y
+						castleData.data[i][3] = Integer.parseInt(st.nextToken()); // type
+						i++;
 					}
 				}
 				br.close();
@@ -1461,6 +1466,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		} catch(IOException er) {
 			System.out.println(er);
 		}
+		
+		System.out.println("Finish");
 	}
 	
 	public void countCastle() {
@@ -1659,7 +1666,11 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		
 		for(CastleData cd: castleDataBase) {
 			if(cd.name.equals(castleName)) {
-				castleIconLabel.setIcon(cd.castleIcon);
+				ImageIcon castleIcon = new ImageIcon(castleIconPath + castleName + ".jpg");
+				Image image = castleIcon.getImage();
+				Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
+				castleIcon = new ImageIcon(newImage);
+				castleIconLabel.setIcon(castleIcon);
 			}
 		}
 	}
@@ -1826,15 +1837,10 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	// -------------------------------------------------------------------------
 	public class PlayerData {
 		String playerName;
-		ImageIcon playerIcon;
 		List<GameResult> grList = new ArrayList<GameResult>();
 		
 		PlayerData(String name) {
 			playerName = name;
-			playerIcon = new ImageIcon(playerIconPath + name + ".jpg");
-			Image image = playerIcon.getImage();
-			Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
-			playerIcon = new ImageIcon(newImage);
 		}
 	}
 	public class GameResult {
@@ -2030,10 +2036,18 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		
 		for(PlayerData pd: playerDataBase) {
 			if(pd.playerName.equals(playerNameS)) {
-				playerIconLabel[0].setIcon(pd.playerIcon);
+				ImageIcon playerIcon = new ImageIcon(playerIconPath + playerNameS + ".jpg");
+				Image image = playerIcon.getImage();
+				Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
+				playerIcon = new ImageIcon(newImage);
+				playerIconLabel[0].setIcon(playerIcon);
 			}
 			if(pd.playerName.equals(playerNameG)) {
-				playerIconLabel[1].setIcon(pd.playerIcon);
+				ImageIcon playerIcon = new ImageIcon(playerIconPath + playerNameG + ".jpg");
+				Image image = playerIcon.getImage();
+				Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
+				playerIcon = new ImageIcon(newImage);
+				playerIconLabel[1].setIcon(playerIcon);
 			}
 		}
 	}
