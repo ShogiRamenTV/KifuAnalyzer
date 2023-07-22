@@ -1297,8 +1297,6 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 				}
 			}
 			if(isSame) {
-				int index = strategyDataBase.indexOf(strData)+1;
-				//System.out.println("strategy" + String.format("%03d.txt", index));
 				return strData.name;
 			}
 		}
@@ -1480,14 +1478,12 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			for(StringCount sc: castleCountData) {
 				if(sc.str.equals(kdb.castleNameS)) {
 					sc.cnt++;
-					if(kdb.isSenteWin) sc.senteWinCnt++;
 					found = true;
 				}
 			}
 			if(!found) {
 				StringCount sc = new StringCount(kdb.castleNameS, kdb.isSenteWin);
 				castleCountData.add(sc);
-				//System.out.println(sc.str);
 			}
 		}
 		for(KifuDataBase kdb: kifuDB) {
@@ -1495,14 +1491,12 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			for(StringCount sc: castleCountData) {
 				if(sc.str.equals(kdb.castleNameG)) {
 					sc.cnt++;
-					if(kdb.isSenteWin) sc.senteWinCnt++;
 					found = true;
 				}
 			}
 			if(!found) {
 				StringCount sc = new StringCount(kdb.castleNameG, kdb.isSenteWin);
 				castleCountData.add(sc);
-				//System.out.println(sc.str);
 			}
 		}
 		
@@ -1517,20 +1511,15 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 				);
 		
 		int totalCnt = 0;
-		int totalSenteWinCnt = 0;
 		for(StringCount sc: castleCountData) {	
 			totalCnt += sc.cnt;
-			totalSenteWinCnt += sc.senteWinCnt;
 		}
-		Double d = (double)totalSenteWinCnt/(double)totalCnt*100;
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Castles>";
 		modelCastle.addElement(str);
 		modelCastle.addElement("----------");
 		for(StringCount sc: castleCountData) {
 			str = sc.str;
-			d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
-			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
 			modelCastle.addElement(str);
 		}
 		listCastle.setModel(modelCastle);
@@ -1776,15 +1765,6 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		Kifu kf = kdb.db.get(index);
 		String str = createMoveKomaName(kf.k.type, kf.k.sente, kf.x, kf.y, kf.p, kf.pp, kf.d);
 		Boolean found = false;
-		// create message for debug
-		String msg = str + ":kifu"+String.format("%03d", kifuDB.indexOf(kdb)+1)+".txt is matched.";
-		if(isSenteWin(kdb)) {
-			msg += "(" + kdb.strategyName + ":Sente Win)";
-		} else {
-			msg += "(" + kdb.strategyName + ":Gote win)";
-		}
-		//System.out.println(msg);
-		
 		// count string data if same string
 		for(StringCount sc: listSC) {
 			if(sc.str.equals(str)) {
@@ -2127,19 +2107,15 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	}
 	@Override
 	public void keyTyped(KeyEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
 		//System.out.println("Key Typed");
 	}
 	@Override
 	public void keyPressed(KeyEvent e) {
 		//System.out.println("Key Pressed");
-		// TODO 自動生成されたメソッド・スタブ
-		
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {
 		//System.out.println("Key Released");
-		// TODO 自動生成されたメソッド・スタブ
 		if((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_DOWN)) {
 			if(e.getSource() == listKifu) {
 				commonListAction();
@@ -2262,7 +2238,6 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	}
 	@Override
 	public void mousePressed(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
 		//System.out.println("mouse pressed");
 		if(shogiData.selectedKoma == null) {
 			selectKoma(e);
@@ -2370,17 +2345,12 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
-		
 	}
 	@Override
 	public void mouseExited(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
-		
 	}
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		// TODO 自動生成されたメソッド・スタブ
 		//System.out.println("Mouse moved");
 		if(shogiData.selectedKoma != null) {
 			Point mp = e.getPoint();			
