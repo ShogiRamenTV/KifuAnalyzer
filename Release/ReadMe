@@ -8,7 +8,7 @@
 - Next use following commands on the Command Prompt.
 2. CD ShogiGUI_v1.2_for_Windows (You can drag and drop the folder into Command Prompt)
   After you succeeded to move in the folder. Then execute next command.
-3. start ./Java17ForWindows/bin/java.exe -jar ShogiGUI.jar
+3. start ./Java17ForWindows/bin/java.exe -jar KifuAnalyzer.jar
 
 <Functionalities>
 1. Save and Load a Kifu
