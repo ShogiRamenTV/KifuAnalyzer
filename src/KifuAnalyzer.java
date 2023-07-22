@@ -48,7 +48,7 @@ import javax.swing.JTextField;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListener, 
+public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener {
 	Color boardColor = new Color(255, 238, 203);
 	
@@ -117,16 +117,16 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	Clip soundKoma;
 
 	public static void main(String[] args) {
-		ShogiGUI st = new ShogiGUI();
-		st.setTitle("ShogiRamenApp");
-		st.setVisible(true);
-		st.shogiData.viewKomaOnBoard();
+		KifuAnalyzer ka = new KifuAnalyzer();
+		ka.setTitle("ShogiRamenApp");
+		ka.setVisible(true);
+		ka.shogiData.viewKomaOnBoard();
 	}
 
 	// -------------------------------------------------------------------------
 	// ----------------------- << GUI Setting >> -------------------------------
 	// -------------------------------------------------------------------------
-	ShogiGUI() {		
+	KifuAnalyzer() {		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		shogiData.initializeIcon();
 		setSize(shogiData.iconWidth*22, shogiData.iconHeight*12);
