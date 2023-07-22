@@ -50,23 +50,15 @@ import javax.swing.event.ListSelectionListener;
 
 public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener {
-	ImageIcon icon[][] = new ImageIcon[10][4];
 	Color boardColor = new Color(255, 238, 203);
 	
 	public enum KomaType {
 		Pawn(0), Rance(1), Knight(2), Silver(3), Gold(4), Bishop(5), Rook(6), King(7), Empty(8);
 		private final int id;
-		
 		private KomaType(final int id) {
 			this.id = id;
 		}
-		
-		public int getInt() {
-			return this.id;
-		}
 	};
-	String[] komaName = {"歩", "香", "桂", "銀", "金", "角", "飛", "王", "と", "成香", "成桂", "成銀", "金", "馬", "龍", "王"};
-	String[] senteGote = {"▲", "△"};
 	
 	ShogiData shogiData = new ShogiData();
 	ShogiData shogiDataForKDB = new ShogiData();
@@ -88,22 +80,15 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	String playerIconPath = "./playerIcon/";
 	
 	Point mousePointDifference = new Point();
-	int iconWidth;
-	int iconHeight;
 	CanvasBoard cv = new CanvasBoard();
 	public enum ButtonType {
 		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4);
 		private final int id;
-		
 		private ButtonType(final int id) {
 			this.id = id;
 		}
-		
-		public int getInt() {
-			return this.id;
-		}
 	};
-	JButton button[] = new JButton[5];
+	JButton button[] = new JButton[ButtonType.values().length];
 	JLabel labelStrategy = new JLabel("Name");
 	JLabel labelCastle = new JLabel("Name");
 	JLabel labelSente = new JLabel("Sente");
@@ -116,26 +101,24 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	JCheckBox checkBoxEditMode = new JCheckBox("Edit Mode", false);
 	JRadioButton radioButtonSente = new JRadioButton("Sente", true);
 	JRadioButton radioButtonGote = new JRadioButton("Gote");
-	JScrollPane sp = new JScrollPane();
-	DefaultListModel<String> modelKifu = new DefaultListModel<String>();
-	JList<String> listKifu = new JList<String>();
-	JScrollPane sp2 = new JScrollPane();
-	DefaultListModel<String> modelInfo = new DefaultListModel<String>();
-	JList<String> listInfo = new JList<String>();
-	JScrollPane sp3 = new JScrollPane();
-	DefaultListModel<String> modelStrategy = new DefaultListModel<String>();
-	JList<String> listStrategy = new JList<String>();
-	JScrollPane sp4 = new JScrollPane();
-	DefaultListModel<String> modelPlayer = new DefaultListModel<String>();
-	JList<String> listPlayer = new JList<String>();
-	JScrollPane sp5 = new JScrollPane();
-	DefaultListModel<String> modelCastle = new DefaultListModel<String>();
-	JList<String> listCastle = new JList<String>();
+	
+	public enum ListBoxType {
+		Kifu(0), Info(1), Strategy(2), Player(3), Castle(4);
+		private final int id;		
+		private ListBoxType(final int id) {
+			this.id = id;
+		}
+	};
+	JScrollPane scrollPane[] = new JScrollPane[ListBoxType.values().length];
+	@SuppressWarnings("unchecked")
+	DefaultListModel<String> listModel[] = new DefaultListModel[ListBoxType.values().length];
+	@SuppressWarnings("unchecked")
+	JList<String> listBox[] = new JList[ListBoxType.values().length];
 	Clip soundKoma;
 
 	public static void main(String[] args) {
 		ShogiGUI st = new ShogiGUI();
-		st.setTitle("Shogi GUI");
+		st.setTitle("ShogiRamenApp");
 		st.setVisible(true);
 		st.shogiData.viewKomaOnBoard();
 	}
@@ -145,8 +128,10 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	// -------------------------------------------------------------------------
 	ShogiGUI() {		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		initializeIcon();
-		setSize(iconWidth*22, iconHeight*12);
+		shogiData.initializeIcon();
+		setSize(shogiData.iconWidth*22, shogiData.iconHeight*12);
+		ImageIcon icon = new ImageIcon("./img/Shogi Ramen TV.jpg");
+		setIconImage(icon.getImage());
 		
 		getContentPane().setLayout(null);
 		
@@ -186,11 +171,14 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		getContentPane().add(checkBoxEditMode);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
+		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(scrollPane[lb.id]);
+		/*
 		getContentPane().add(sp);
 		getContentPane().add(sp2);
 		getContentPane().add(sp3);
 		getContentPane().add(sp4);
 		getContentPane().add(sp5);
+		*/
 		for(int x=0; x<8; x++) {
 			getContentPane().add(shogiData.labelNumOfKomaS[x]);
 			getContentPane().add(shogiData.labelNumOfKomaG[x]);
@@ -256,71 +244,25 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		buttonGroup.add(radioButtonGote);
 	}
 	public void initializeListBoxSetting() {
-		modelKifu.addElement("--------");
-		listKifu.setModel(modelKifu);
-		listKifu.addListSelectionListener(this);
-		listKifu.addKeyListener(this);
-		sp.getViewport().setView(listKifu);
-		sp.setBounds(580, 250, 200, 100);
+		for(ListBoxType lb: ListBoxType.values()) {
+			listModel[lb.id] = new DefaultListModel<String>();
+			listBox[lb.id] = new JList<String>();
+			scrollPane[lb.id] = new JScrollPane();
+			listBox[lb.id].setModel(listModel[lb.id]);
+			listBox[lb.id].addListSelectionListener(this);
+			listBox[lb.id].addKeyListener(this);
+			scrollPane[lb.id].getViewport().setView(listBox[lb.id]);
+		}
 		
-		listInfo.setModel(modelInfo);
-		listInfo.addListSelectionListener(this);
-		listInfo.addKeyListener(this);
-		sp2.getViewport().setView(listInfo);
-		sp2.setBounds(580, 350, 200, 100);
-		
-		listStrategy.setModel(modelStrategy);
-		listStrategy.addListSelectionListener(this);
-		listStrategy.addKeyListener(this);
-		sp3.getViewport().setView(listStrategy);
-		sp3.setBounds(780, 250, 200, 100);
-		
-		listCastle.setModel(modelCastle);
-		listCastle.addListSelectionListener(this);
-		listCastle.addKeyListener(this);
-		sp5.getViewport().setView(listCastle);
-		sp5.setBounds(780, 350, 200, 100);
-		
-		listPlayer.setModel(modelPlayer);
-		listPlayer.addListSelectionListener(this);
-		listPlayer.addKeyListener(this);
-		sp4.getViewport().setView(listPlayer);
-		sp4.setBounds(980, 250, 100, 200);
+		listModel[ListBoxType.Kifu.id].addElement("--------");
+		scrollPane[ListBoxType.Kifu.id].setBounds(580, 250, 200, 100);
+		scrollPane[ListBoxType.Info.id].setBounds(580, 350, 200, 100);
+		scrollPane[ListBoxType.Strategy.id].setBounds(780, 250, 200, 100);
+		scrollPane[ListBoxType.Castle.id].setBounds(780, 350, 200, 100);
+		scrollPane[ListBoxType.Player.id].setBounds(980, 250, 100, 200);
 	}
 	
-	public void initializeIcon() {
-		icon[KomaType.Pawn.getInt()][0] = new ImageIcon("./img/Pawn.png");
-		icon[KomaType.Pawn.getInt()][1] = new ImageIcon("./img/Promoted Pawn.png");
-		icon[KomaType.Pawn.getInt()][2] = new ImageIcon("./img/Pawn Gote.png");
-		icon[KomaType.Pawn.getInt()][3] = new ImageIcon("./img/Promoted Pawn Gote.png");
-		icon[KomaType.Rance.getInt()][0] = new ImageIcon("./img/Rance.png");
-		icon[KomaType.Rance.getInt()][1] = new ImageIcon("./img/Promoted Rance.png");
-		icon[KomaType.Rance.getInt()][2] = new ImageIcon("./img/Rance Gote.png");
-		icon[KomaType.Rance.getInt()][3] = new ImageIcon("./img/Promoted Rance Gote.png");
-		icon[KomaType.Knight.getInt()][0] = new ImageIcon("./img/Knight.png");
-		icon[KomaType.Knight.getInt()][1] = new ImageIcon("./img/Promoted Knight.png");
-		icon[KomaType.Knight.getInt()][2] = new ImageIcon("./img/Knight Gote.png");
-		icon[KomaType.Knight.getInt()][3] = new ImageIcon("./img/Promoted Knight Gote.png");
-		icon[KomaType.Silver.getInt()][0] = new ImageIcon("./img/Silver.png");
-		icon[KomaType.Silver.getInt()][1] = new ImageIcon("./img/Promoted Silver.png");
-		icon[KomaType.Silver.getInt()][2] = new ImageIcon("./img/Silver Gote.png");
-		icon[KomaType.Silver.getInt()][3] = new ImageIcon("./img/Promoted Silver Gote.png");
-		icon[KomaType.Gold.getInt()][0] = new ImageIcon("./img/Gold.png");
-		icon[KomaType.Gold.getInt()][2] = new ImageIcon("./img/Gold Gote.png");
-		icon[KomaType.Rook.getInt()][0] = new ImageIcon("./img/Rook.png");
-		icon[KomaType.Rook.getInt()][1] = new ImageIcon("./img/Promoted Rook.png");
-		icon[KomaType.Rook.getInt()][2] = new ImageIcon("./img/Rook Gote.png");
-		icon[KomaType.Rook.getInt()][3] = new ImageIcon("./img/Promoted Rook Gote.png");
-		icon[KomaType.Bishop.getInt()][0] = new ImageIcon("./img/Bishop.png");
-		icon[KomaType.Bishop.getInt()][1]= new ImageIcon("./img/Promoted Bishop.png");
-		icon[KomaType.Bishop.getInt()][2] = new ImageIcon("./img/Bishop Gote.png");
-		icon[KomaType.Bishop.getInt()][3]= new ImageIcon("./img/Promoted Bishop Gote.png");
-		icon[KomaType.King.getInt()][0] = new ImageIcon("./img/King.png");
-		icon[KomaType.King.getInt()][2] = new ImageIcon("./img/King Gote.png");
-		
-		iconWidth = icon[KomaType.Pawn.getInt()][0].getIconWidth();
-		iconHeight = icon[KomaType.Pawn.getInt()][0].getIconHeight();
-	}
+	
 	public void initializePlayerIconLabel() {
 		playerIconLabel[0] = new JLabel();
 		playerIconLabel[1] = new JLabel();
@@ -340,6 +282,11 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	// ----------------------- << Shogi Board >> -------------------------------
 	// -------------------------------------------------------------------------
 	public class ShogiData {
+		String[] komaName = {"歩", "香", "桂", "銀", "金", "角", "飛", "王", "と", "成香", "成桂", "成銀", "金", "馬", "龍", "王"};
+		String[] senteGote = {"▲", "△"};
+		ImageIcon icon[][] = new ImageIcon[10][4];
+		int iconWidth;
+		int iconHeight;
 		Koma k[];
 		Koma selectedKoma = null;
 		Boolean turnIsSente;
@@ -355,6 +302,40 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			listKomaOnBoard = new ArrayList<Koma>();
 			listKomaOnHandForSente = new ArrayList<Koma>();
 			listKomaOnHandForGote = new ArrayList<Koma>();
+		}
+		
+		public void initializeIcon() {
+			icon[KomaType.Pawn.id][0] = new ImageIcon("./img/Pawn.png");
+			icon[KomaType.Pawn.id][1] = new ImageIcon("./img/Promoted Pawn.png");
+			icon[KomaType.Pawn.id][2] = new ImageIcon("./img/Pawn Gote.png");
+			icon[KomaType.Pawn.id][3] = new ImageIcon("./img/Promoted Pawn Gote.png");
+			icon[KomaType.Rance.id][0] = new ImageIcon("./img/Rance.png");
+			icon[KomaType.Rance.id][1] = new ImageIcon("./img/Promoted Rance.png");
+			icon[KomaType.Rance.id][2] = new ImageIcon("./img/Rance Gote.png");
+			icon[KomaType.Rance.id][3] = new ImageIcon("./img/Promoted Rance Gote.png");
+			icon[KomaType.Knight.id][0] = new ImageIcon("./img/Knight.png");
+			icon[KomaType.Knight.id][1] = new ImageIcon("./img/Promoted Knight.png");
+			icon[KomaType.Knight.id][2] = new ImageIcon("./img/Knight Gote.png");
+			icon[KomaType.Knight.id][3] = new ImageIcon("./img/Promoted Knight Gote.png");
+			icon[KomaType.Silver.id][0] = new ImageIcon("./img/Silver.png");
+			icon[KomaType.Silver.id][1] = new ImageIcon("./img/Promoted Silver.png");
+			icon[KomaType.Silver.id][2] = new ImageIcon("./img/Silver Gote.png");
+			icon[KomaType.Silver.id][3] = new ImageIcon("./img/Promoted Silver Gote.png");
+			icon[KomaType.Gold.id][0] = new ImageIcon("./img/Gold.png");
+			icon[KomaType.Gold.id][2] = new ImageIcon("./img/Gold Gote.png");
+			icon[KomaType.Rook.id][0] = new ImageIcon("./img/Rook.png");
+			icon[KomaType.Rook.id][1] = new ImageIcon("./img/Promoted Rook.png");
+			icon[KomaType.Rook.id][2] = new ImageIcon("./img/Rook Gote.png");
+			icon[KomaType.Rook.id][3] = new ImageIcon("./img/Promoted Rook Gote.png");
+			icon[KomaType.Bishop.id][0] = new ImageIcon("./img/Bishop.png");
+			icon[KomaType.Bishop.id][1]= new ImageIcon("./img/Promoted Bishop.png");
+			icon[KomaType.Bishop.id][2] = new ImageIcon("./img/Bishop Gote.png");
+			icon[KomaType.Bishop.id][3]= new ImageIcon("./img/Promoted Bishop Gote.png");
+			icon[KomaType.King.id][0] = new ImageIcon("./img/King.png");
+			icon[KomaType.King.id][2] = new ImageIcon("./img/King Gote.png");
+			
+			iconWidth = icon[KomaType.Pawn.id][0].getIconWidth();
+			iconHeight = icon[KomaType.Pawn.id][0].getIconHeight();
 		}
 		
 		public void viewKomaOnBoard() {
@@ -380,18 +361,18 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			
 			for(Koma k: listKomaOnHandForSente) {
 				k.setOpaque(false);
-				k.setLocation((9+(k.type.getInt()%4))*(iconWidth+10)+55, (6+(k.type.getInt()/4))*(iconHeight+10)+25);
-				numOfKomaS[k.type.getInt()]++;
-				labelNumOfKomaS[k.type.getInt()].setText(Integer.valueOf(numOfKomaS[k.type.getInt()]).toString());
-				labelNumOfKomaS[k.type.getInt()].setVisible(true);
+				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (6+(k.type.id/4))*(iconHeight+10)+25);
+				numOfKomaS[k.type.id]++;
+				labelNumOfKomaS[k.type.id].setText(Integer.valueOf(numOfKomaS[k.type.id]).toString());
+				labelNumOfKomaS[k.type.id].setVisible(true);
 			}
 			
 			for(Koma k: listKomaOnHandForGote) {
 				k.setOpaque(false);
-				k.setLocation((9+(k.type.getInt()%4))*(iconWidth+10)+55, (2-(k.type.getInt()/4))*(iconHeight+10)+40);
-				numOfKomaG[k.type.getInt()]++;
-				labelNumOfKomaG[k.type.getInt()].setText(Integer.valueOf(numOfKomaG[k.type.getInt()]).toString());
-				labelNumOfKomaG[k.type.getInt()].setVisible(true);
+				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (2-(k.type.id/4))*(iconHeight+10)+40);
+				numOfKomaG[k.type.id]++;
+				labelNumOfKomaG[k.type.id].setText(Integer.valueOf(numOfKomaG[k.type.id]).toString());
+				labelNumOfKomaG[k.type.id].setVisible(true);
 			}
 		}
 		
@@ -507,8 +488,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		int drop;
 		KomaType type;
 		Koma(KomaType t, int x, int y, int s, int i) {
-			this.setIcon(icon[t.getInt()][0+s*2]);
-			this.setBounds((iconWidth+10)*(9-x)+25, (iconHeight+10)*(y-1)+25, iconWidth, iconHeight);
+			this.setIcon(shogiData.icon[t.id][0+s*2]);
+			this.setBounds((shogiData.iconWidth+10)*(9-x)+25, (shogiData.iconHeight+10)*(y-1)+25, shogiData.iconWidth, shogiData.iconHeight);
 			this.setBackground(boardColor);
 			this.setOpaque(true);
 			type = t;
@@ -532,10 +513,10 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		public void promote() {
 			if(type == KomaType.Gold || type == KomaType.King) return;
 			if(promoted == 0) {
-				this.setIcon(icon[type.getInt()][sente*2+1]);
+				this.setIcon(shogiData.icon[type.id][sente*2+1]);
 				promoted = 1;
 			} else {
-				this.setIcon(icon[type.getInt()][sente*2]);
+				this.setIcon(shogiData.icon[type.id][sente*2]);
 				promoted = 0;
 			}
 		}
@@ -546,7 +527,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			} else {
 				sente = 0;
 			}
-			this.setIcon(icon[type.getInt()][sente*2 + promoted]);
+			this.setIcon(shogiData.icon[type.id][sente*2 + promoted]);
 		}
 		
 		public Boolean isMovable(int x, int y) {
@@ -780,7 +761,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			if(promoted == -1) {
 				if(!this.confirmPromotion(x, y, preX, preY, sd)) {
 					// case of cancel
-					this.setLocation((9-preX)*(iconWidth+10)+25, (preY-1)*(iconHeight+10)+25);
+					this.setLocation((9-preX)*(shogiData.iconWidth+10)+25, (preY-1)*(shogiData.iconHeight+10)+25);
 					return false;
 				}
 			}
@@ -789,7 +770,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			this.px = x;
 			this.py = y;
 			this.drop = 0;
-			this.setLocation((9-x)*(iconWidth+10)+25, (y-1)*(iconHeight+10)+25);
+			this.setLocation((9-x)*(shogiData.iconWidth+10)+25, (y-1)*(shogiData.iconHeight+10)+25);
 			
 			if(x>0 && x<10 && y>0 && y<10) {
 				if( sd.listKomaOnHandForSente.indexOf(this) != -1 ) moveFromStoB(sd);
@@ -920,12 +901,12 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		public void paint(Graphics g) {
 			//System.out.println("repaint()");
 			g.setColor(boardColor);
-			g.fillRect(20, 20, (iconWidth+10)*9, (iconHeight+10)*9);
+			g.fillRect(20, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
 			
 			g.setColor(Color.black);
 			for(int x=0; x<9; x++)
 				for(int y=0; y<9; y++) {
-					g.drawRect(x*(iconWidth+10)+20, y*(iconHeight+10)+20, iconWidth+10, iconHeight+10);
+					g.drawRect(x*(shogiData.iconWidth+10)+20, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
 				}
 			
 			if(mousePressed) {
@@ -936,8 +917,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			
 			for(Point p: drawList) {
 				Point pB = drawListBase.get(drawList.indexOf(p));
-				Point pBase = new Point((9-pB.x)*(iconWidth+10)+25+iconWidth/2, (pB.y-1)*(iconHeight+10)+25+iconHeight/2);
-				Point pTarget = new Point((9-p.x)*(iconWidth+10)+25+iconWidth/2, (p.y-1)*(iconHeight+10)+25+iconHeight/2);
+				Point pBase = new Point((9-pB.x)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pB.y-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+				Point pTarget = new Point((9-p.x)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (p.y-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 				Arrow ar = new Arrow(pBase, pTarget);
 				g.setColor(Color.blue);
 				ar.draw((Graphics2D)g);
@@ -951,7 +932,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		public void drawPoint(int x, int y, Color cl) {
 			Graphics g = getGraphics();
 			g.setColor(cl);
-			g.fillRect((9-x)*(iconWidth+10)+22, (y-1)*(iconHeight+10)+22, iconWidth+6, iconHeight+6);
+			g.fillRect((9-x)*(shogiData.iconWidth+10)+22, (y-1)*(shogiData.iconHeight+10)+22, shogiData.iconWidth+6, shogiData.iconHeight+6);
 		}
 		
 		public void setLastPoint(int px, int py, Boolean enable) {
@@ -1098,8 +1079,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			br.close();
 			
 			shogiData.resetAllKoma();	
-			listKifu.setSelectedIndex(0);
-			listKifu.ensureIndexIsVisible(0);
+			listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+			listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 			
 			shogiData.viewKomaOnBoard();
 			shogiData.viewKomaOnHand();
@@ -1158,7 +1139,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			System.out.println(er);
 		}
 		
-		listKifu.setSelectedIndex(0);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		commonListAction();
 		
 		System.out.println("Finish");
@@ -1305,8 +1286,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	}
 	
 	public void countStrategy() {
-		modelStrategy.clear();
-		listStrategy.setModel(modelStrategy);
+		listModel[ListBoxType.Strategy.id].clear();
+		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
 		strategyCountData.clear();
 		
 		for(KifuDataBase kdb: kifuDB) {
@@ -1342,28 +1323,28 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		}
 		Double d = (double)totalSenteWinCnt/(double)totalCnt*100;
 		String str = "<Total:" + String.format("%2d", totalCnt)+" games" + "(Sente Winning Rate" + String.format("%.0f", d) + "%)>";
-		modelStrategy.addElement(str);
-		modelStrategy.addElement("----------");
+		listModel[ListBoxType.Strategy.id].addElement(str);
+		listModel[ListBoxType.Strategy.id].addElement("----------");
 		for(StringCount sc: strategyCountData) {
 			str = sc.str;
 			d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
 			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
-			modelStrategy.addElement(str);
+			listModel[ListBoxType.Strategy.id].addElement(str);
 		}
-		listStrategy.setModel(modelStrategy);
+		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
 	}
 	
 	public void updateListBox2ByStrategy() {
-		int selectedIndex = listStrategy.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Strategy.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
-		int selectedIndex4 = listPlayer.getSelectedIndex();
+		int selectedIndex4 = listBox[ListBoxType.Player.id].getSelectedIndex();
 		String playerName = "";
 		if(selectedIndex4 >= 2) {
-			playerName = modelPlayer.getElementAt(selectedIndex4);
+			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndex4);
 			//System.out.println(playerName);
 		}
-		int selectedIndexCastle = listCastle.getSelectedIndex();
+		int selectedIndexCastle = listBox[ListBoxType.Castle.id].getSelectedIndex();
 		String castleName = "";
 		if(selectedIndexCastle >= 2) {
 			StringCount sc = castleCountData.get(selectedIndexCastle-2);
@@ -1374,12 +1355,12 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		//System.out.println(sc.str);
 		String strategy = sc.str;
 		
-		modelInfo.clear();
-		listInfo.setModel(modelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 
-		if(playerName.equals("")) modelInfo.addElement("<"+ strategy + "'s Kifu>");
-		else modelInfo.addElement("<"+ strategy + "(" + playerName + ")"+"'s Kifu>");
-		modelInfo.addElement("-------------");
+		if(playerName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ strategy + "'s Kifu>");
+		else listModel[ListBoxType.Info.id].addElement("<"+ strategy + "(" + playerName + ")"+"'s Kifu>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuDataBase kdb: kifuDB) {
 			if(kdb.strategyName.equals(strategy)) {
 				String str = String.format("kf%03d:", kifuDB.indexOf(kdb)+1);
@@ -1387,22 +1368,22 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 				if(kdb.isSenteWin) str+="(Sente Win)";
 				else str+="(Gote Win)";
 				if(playerName.equals("") && castleName.equals("")) {
-					modelInfo.addElement(str);
+					listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("") && !castleName.equals("")) {
 					if(str.contains(playerName) && (kdb.castleNameS.equals(castleName) || kdb.castleNameG.equals(castleName))) {
-						modelInfo.addElement(str);
+						listModel[ListBoxType.Info.id].addElement(str);
 					}
 				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) modelInfo.addElement(str);
+					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!castleName.equals("")) {
-					if(kdb.castleNameS.equals(castleName) || kdb.castleNameG.equals(castleName)) modelInfo.addElement(str);
+					if(kdb.castleNameS.equals(castleName) || kdb.castleNameG.equals(castleName)) listModel[ListBoxType.Info.id].addElement(str);
 				}
 			}
 		}
-		listInfo.setModel(modelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	public void getLoadNumberOnListBox2() {
-		String str = modelInfo.getElementAt(listInfo.getSelectedIndex());
+		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
 		String subStr = str.substring(2,5);
 		for(int index=0; index<1000; index++) {
 			String numStr = String.format("%03d", index);
@@ -1469,8 +1450,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	}
 	
 	public void countCastle() {
-		modelCastle.clear();
-		listCastle.setModel(modelCastle);
+		listModel[ListBoxType.Castle.id].clear();
+		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
 		castleCountData.clear();
 		
 		for(KifuDataBase kdb: kifuDB) {
@@ -1515,32 +1496,32 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			totalCnt += sc.cnt;
 		}
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Castles>";
-		modelCastle.addElement(str);
-		modelCastle.addElement("----------");
+		listModel[ListBoxType.Castle.id].addElement(str);
+		listModel[ListBoxType.Castle.id].addElement("----------");
 		for(StringCount sc: castleCountData) {
 			str = sc.str;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
-			modelCastle.addElement(str);
+			listModel[ListBoxType.Castle.id].addElement(str);
 		}
-		listCastle.setModel(modelCastle);
+		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
 	}
 	
-	public void updateListInfoByCastle() {
-		int selectedIndex = listCastle.getSelectedIndex()-2;
+	public void updateListBoxInfoByCastle() {
+		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) {
 			initializeCastleIcon();
 			return;
 		}
-		int selectedIndexStrategy = listStrategy.getSelectedIndex();
+		int selectedIndexStrategy = listBox[ListBoxType.Strategy.id].getSelectedIndex();
 		String strategyName = "";
 		if(selectedIndexStrategy >= 2) {
 			StringCount sc = strategyCountData.get(selectedIndexStrategy-2);
 			strategyName = sc.str;
 		}
-		int selectedIndexPlayer = listPlayer.getSelectedIndex();
+		int selectedIndexPlayer = listBox[ListBoxType.Player.id].getSelectedIndex();
 		String playerName = "";
 		if(selectedIndexPlayer >= 2) {
-			playerName = modelPlayer.getElementAt(selectedIndexPlayer);
+			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndexPlayer);
 			//System.out.println(playerName);
 		}
 		
@@ -1549,12 +1530,12 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		String castleName = sc.str;
 		updateCastleIcon();
 		
-		modelInfo.clear();
-		listInfo.setModel(modelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 
-		if(strategyName.equals("")) modelInfo.addElement("<"+ castleName + "'s Kifu>");
-		else modelInfo.addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
-		modelInfo.addElement("-------------");
+		if(strategyName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ castleName + "'s Kifu>");
+		else listModel[ListBoxType.Info.id].addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuDataBase kdb: kifuDB) {
 			if(kdb.castleNameS.equals(castleName) || kdb.castleNameG.equals(castleName)) {
 				String str = String.format("kf%03d:", kifuDB.indexOf(kdb)+1);
@@ -1563,17 +1544,17 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 				else str+="(Gote Win)";
 				
 				if(strategyName.equals("") && playerName.equals("")) {
-					modelInfo.addElement(str);
+					listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!strategyName.equals("") && !playerName.equals("")) {
-					if(kdb.strategyName.equals(strategyName) && str.contains(playerName)) modelInfo.addElement(str);
+					if(kdb.strategyName.equals(strategyName) && str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!strategyName.equals("")) {
-					if(kdb.strategyName.equals(strategyName)) modelInfo.addElement(str);
+					if(kdb.strategyName.equals(strategyName)) listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) modelInfo.addElement(str);
+					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
 				}
 			}
 		}
-		listInfo.setModel(modelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	
 	public String checkCastle(ShogiData sd, Boolean isSente) {
@@ -1646,7 +1627,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		return null;
 	}
 	public void updateCastleIcon() {
-		int selectedIndex = listCastle.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
 		StringCount sc = castleCountData.get(selectedIndex);
 		String castleName = sc.str;
@@ -1721,11 +1702,11 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		}
 	}
 	public String createMoveKomaName(KomaType type, int sente, int x, int y, int promoted, int preP, int drop) {
-		String s = senteGote[sente] + String.valueOf(x)+String.valueOf(y);
+		String s = shogiData.senteGote[sente] + String.valueOf(x)+String.valueOf(y);
 		if(preP == 0 && promoted == 1) {
-			s += komaName[type.getInt()] + "成";
+			s += shogiData.komaName[type.id] + "成";
 		} else {
-			s += komaName[type.getInt()+8*promoted];
+			s += shogiData.komaName[type.id+8*promoted];
 		}
 		if(drop == 1) s += "打";
 		
@@ -1857,8 +1838,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		}
 	}
 	public void createPlayerDataBase() {
-		modelPlayer.clear();
-		listPlayer.setModel(modelPlayer);
+		listModel[ListBoxType.Player.id].clear();
+		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
 		playerDataBase.clear();
 		
 		for(KifuDataBase kdb: kifuDB) {
@@ -1913,16 +1894,16 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 				}
 				);
 		
-		modelPlayer.addElement("<Name List>");
-		modelPlayer.addElement("---------");
+		listModel[ListBoxType.Player.id].addElement("<Name List>");
+		listModel[ListBoxType.Player.id].addElement("---------");
 		
 		for(PlayerData pd: playerDataBase) {
-			modelPlayer.addElement(pd.playerName);
+			listModel[ListBoxType.Player.id].addElement(pd.playerName);
 		}
-		listPlayer.setModel(modelPlayer);
+		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
 	}
 	public void updateListBox2ByPlayerName() {
-		int selectedIndex = listPlayer.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Player.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
 		
 		PlayerData pd = playerDataBase.get(selectedIndex);
@@ -1937,10 +1918,10 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		List<StringCount> strList = new ArrayList<StringCount>();
 		countCastleDataByPlayerData(strList, pd);
 		
-		modelInfo.clear();
-		listInfo.setModel(modelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 		
-		modelInfo.addElement("<" + pd.playerName + "'s Winning Rate>");
+		listModel[ListBoxType.Info.id].addElement("<" + pd.playerName + "'s Winning Rate>");
 		
 		int totalCnt = 0;
 		int totalWinCnt = 0;
@@ -1959,36 +1940,36 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		String str = "Total " + String.format("%d games %d Win:%d Lose", totalCnt, totalWinCnt, totalCnt-totalWinCnt);
 		Double d = (double)totalWinCnt/(double)(totalCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		modelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		
 		str = String.format("Sente %d games %d Win:%d Lose", totalSenteWinCnt+totalSenteLoseCnt, totalSenteWinCnt, totalSenteLoseCnt);
 		d = (double)totalSenteWinCnt/(double)(totalSenteWinCnt+totalSenteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		modelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		str = String.format("Gote %d games %d Win:%d Lose", totalGoteWinCnt+totalGoteLoseCnt, totalGoteWinCnt, totalGoteLoseCnt);
 		d = (double)totalGoteWinCnt/(double)(totalGoteWinCnt+totalGoteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		modelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		
-		modelInfo.addElement("---------");
+		listModel[ListBoxType.Info.id].addElement("---------");
 		str = "Total Strategies: " + grcList.size() + " patterns";
-		modelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		for(GameResultCount grc: grcList) {
 			str = grc.str;
 			d = (double)(grc.senteWinCnt+grc.goteWinCnt)/(double)(grc.cnt)*100;
 			str += ":" + String.format("%d", grc.cnt) + " games";
 			str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-			modelInfo.addElement(str);
+			listModel[ListBoxType.Info.id].addElement(str);
 		}
 		
-		modelInfo.addElement("---------");
+		listModel[ListBoxType.Info.id].addElement("---------");
 		for(StringCount sc: strList) {
 			str = sc.str;
 			str += ":" + String.format("%d", sc.cnt) + " games";
-			modelInfo.addElement(str);
+			listModel[ListBoxType.Info.id].addElement(str);
 		}
 		
-		listInfo.setModel(modelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	public void countStrategyDataByPlayerData(List<GameResultCount> grcList, PlayerData pd) {
 		for(GameResult gr: pd.grList) {
@@ -2088,20 +2069,20 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	@Override
 	public void valueChanged(ListSelectionEvent e) {
 		if(e.getValueIsAdjusting()) {
-			if(e.getSource() == listKifu) {
+			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
 				commonListAction();
 			}
-			if(e.getSource() == listInfo) {
+			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				getLoadNumberOnListBox2();
 			}
-			if(e.getSource() == listStrategy) {
+			if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
 				updateListBox2ByStrategy();
 			}
-			if(e.getSource() == listPlayer) {
+			if(e.getSource() == listBox[ListBoxType.Player.id]) {
 				updateListBox2ByPlayerName();
 			}
-			if(e.getSource() == listCastle) {
-				updateListInfoByCastle();
+			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
+				updateListBoxInfoByCastle();
 			}
 		}
 	}
@@ -2117,37 +2098,37 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	public void keyReleased(KeyEvent e) {
 		//System.out.println("Key Released");
 		if((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_DOWN)) {
-			if(e.getSource() == listKifu) {
+			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
 				commonListAction();
 				soundKoma();
 			}
-			if(e.getSource() == listInfo) {
+			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				getLoadNumberOnListBox2();
 			}
-			if(e.getSource() == listStrategy) {
+			if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
 				updateListBox2ByStrategy();
 			}
-			if(e.getSource() == listPlayer) {
+			if(e.getSource() == listBox[ListBoxType.Player.id]) {
 				updateListBox2ByPlayerName();
 			}
-			if(e.getSource() == listCastle) {
-				updateListInfoByCastle();
+			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
+				updateListBoxInfoByCastle();
 			}
 		}
 	}
 	public void clearListBox() {
-		modelKifu.clear();
-		modelKifu.addElement("--------");
-		listKifu.setModel(modelKifu);
-		listKifu.setSelectedIndex(0);
+		listModel[ListBoxType.Kifu.id].clear();
+		listModel[ListBoxType.Kifu.id].addElement("--------");
+		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 	}
 	public void updateListBox(KomaType type, int x, int y, int sente, int promoted, int preP, int drop) {
 		// remove items under selected item 
-		int selectedIndex = listKifu.getSelectedIndex();
-		if(selectedIndex != -1 && selectedIndex <= modelKifu.size()-1) {
-			int index = modelKifu.size()-1;
+		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+		if(selectedIndex != -1 && selectedIndex <= listModel[ListBoxType.Kifu.id].size()-1) {
+			int index = listModel[ListBoxType.Kifu.id].size()-1;
 			while(index > selectedIndex) {
-				modelKifu.remove(index);
+				listModel[ListBoxType.Kifu.id].remove(index);
 				kifuData.remove(index-1);
 				index--;
 			}
@@ -2155,14 +2136,14 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		
 		// add new item
 		String s = createMoveKomaName(type, sente, x, y, promoted, preP, drop);
-		s = modelKifu.size() + ":"+s;
-		modelKifu.addElement(s);
-		listKifu.setModel(modelKifu);
-		listKifu.ensureIndexIsVisible(modelKifu.size()-1);
-		listKifu.setSelectedIndex(modelKifu.size()-1);
+		s = listModel[ListBoxType.Kifu.id].size() + ":"+s;
+		listModel[ListBoxType.Kifu.id].addElement(s);
+		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
+		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(listModel[ListBoxType.Kifu.id].size()-1);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(listModel[ListBoxType.Kifu.id].size()-1);
 	}
 	public void commonListAction() {
-		int selectedIndex = listKifu.getSelectedIndex();
+		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
 		//System.out.println("list selected:" + selectedIndex);
 		shogiData.resetAllKoma();
 		shogiData.viewKomaOnBoard();
@@ -2188,8 +2169,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		shogiData.viewKomaOnHand();
 	}
 	public void updateListBox2(List<StringCount> listSC) {
-		modelInfo.clear();
-		listInfo.setModel(modelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 		cv.clearDrawPoint();
 		
 		Collections.sort(
@@ -2207,9 +2188,9 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			str += ":" + String.format("%2d", sc.cnt)+" games";
 			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
 			cv.addDrawPoint(sc.target,  sc.base);
-			modelInfo.addElement(str);
+			listModel[ListBoxType.Info.id].addElement(str);
 		}
-		listInfo.setModel(modelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -2250,21 +2231,21 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 		Point mp = e.getPoint();
 		for(Koma k: shogiData.listKomaOnBoard) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+iconWidth && mp.y > lp.y && mp.y < lp.y+iconHeight*2) {
+			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
 				commonMousePressed(mp, lp, k, true);
 				return;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHandForSente) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+iconWidth && mp.y > lp.y && mp.y < lp.y+iconHeight*2) {
+			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
 				commonMousePressed(mp, lp, k, false);
 				return;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHandForGote) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+iconWidth && mp.y > lp.y && mp.y < lp.y+iconHeight*2) {
+			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
 				commonMousePressed(mp, lp, k, false);
 				return;
 			}
@@ -2294,8 +2275,8 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 	public void releaseKoma() {
 		Koma selectedKoma = shogiData.selectedKoma;
 		if(selectedKoma == null) return;
-		int x = (selectedKoma.getLocation().x - 20 + iconWidth/2) / (iconWidth+10);
-		int y = (selectedKoma.getLocation().y - 20 + iconHeight/2) / (iconHeight+10) + 1;
+		int x = (selectedKoma.getLocation().x - 20 + shogiData.iconWidth/2) / (shogiData.iconWidth+10);
+		int y = (selectedKoma.getLocation().y - 20 + shogiData.iconHeight/2) / (shogiData.iconHeight+10) + 1;
 		int preX = selectedKoma.px;
 		int preY = selectedKoma.py;
 		int preP = selectedKoma.promoted;
@@ -2327,7 +2308,7 @@ public class ShogiGUI extends JFrame implements MouseListener, MouseMotionListen
 			}
 			Kifu kf = new Kifu(selectedKoma, 9-x, y, promoted, preP, drop);
 			kifuData.add(kf);
-			checkKDB(modelKifu.size()-1);
+			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
 			shogiData.turnIsSente = !shogiData.turnIsSente;
 		}
 		
