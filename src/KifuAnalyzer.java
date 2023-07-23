@@ -172,13 +172,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
 		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(scrollPane[lb.id]);
-		/*
-		getContentPane().add(sp);
-		getContentPane().add(sp2);
-		getContentPane().add(sp3);
-		getContentPane().add(sp4);
-		getContentPane().add(sp5);
-		*/
 		for(int x=0; x<8; x++) {
 			getContentPane().add(shogiData.labelNumOfKomaS[x]);
 			getContentPane().add(shogiData.labelNumOfKomaG[x]);
@@ -1205,19 +1198,19 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getActionCommand() == button[ButtonType.Initialize.id].getText()) { // initialize
+		if(e.getActionCommand() == button[ButtonType.Initialize.id].getText()) {
 			actionForInitialize();
 		}
-		if(e.getActionCommand() == button[ButtonType.Save.id].getText()) { // save
+		if(e.getActionCommand() == button[ButtonType.Save.id].getText()) {
 			actionForSave();
 		}
-		if(e.getActionCommand() == button[ButtonType.Load.id].getText()) { // load
+		if(e.getActionCommand() == button[ButtonType.Load.id].getText()) {
 			actionForLoad();
 		}
-		if(e.getActionCommand() == button[ButtonType.Strategy.id].getText()) { // strategy
+		if(e.getActionCommand() == button[ButtonType.Strategy.id].getText()) {
 			actionForStrategy();
 		}
-		if(e.getActionCommand() == button[ButtonType.Castle.id].getText()) { // castle
+		if(e.getActionCommand() == button[ButtonType.Castle.id].getText()) {
 			actionForCastle();
 		}
 	}
@@ -1385,12 +1378,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void getLoadNumberOnListBox2() {
 		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
 		String subStr = str.substring(2,5);
-		for(int index=0; index<1000; index++) {
-			String numStr = String.format("%03d", index);
-			if(subStr.equals(numStr)) {
-				textBoxLoad.setText(numStr);
-			}
-		}
+		if(subStr.matches("[+-]?\\d*(\\.\\d+)?")) textBoxLoad.setText(subStr);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1398,17 +1386,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	public class CastleData {
 		String name;
-		//List<int[]> data = new ArrayList<int[]>();
 		int data[][] = new int[25][4];
-		//ImageIcon castleIcon;
 		CastleData(String castleName) {
 			name = castleName;
-			/*
-			castleIcon = new ImageIcon(castleIconPath + name + ".jpg");
-			Image image = castleIcon.getImage();
-			Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
-			castleIcon = new ImageIcon(newImage);
-			*/
 		}
 	}
 	public void loadCastleData() {
@@ -2199,23 +2179,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// 6, @Overrideアノテーションを付ける。
 	public void mouseDragged(MouseEvent e) {
 		//System.out.println("mouse dragged");
-		/*
-		if(shogiData.selectedKoma != null) {
-			Point mp = e.getPoint();			
-			shogiData.selectedKoma.setLocation(mp.x - sh.x, mp.y - sh.y);
-		}
-		*/
 	}
 	@Override
 	public void mouseClicked(MouseEvent e) {
-		//if(shogiData.selectedKoma == null) return;
-		//if(shogiData.listKomaOnBoard.indexOf(shogiData.selectedKoma) == -1) return;
-		if(e.getClickCount() == 2) {
-			//System.out.println("double clicked");
-			//selectedKoma.reverse();
-		} else if(e.getClickCount() == 1){
-			//System.out.println("mouse clicked");
-		}
 	}
 	@Override
 	public void mousePressed(MouseEvent e) {
