@@ -1542,13 +1542,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			for(CastleData cd: castleDataBase) {
 				if((k.type == KomaType.King) && isSente && k.sente == 0) {
 					if(isSameCastle(sd, cd, k.sente)) {
-						System.out.println("castle" + String.format("%03d", castleDataBase.indexOf(cd)+1) + ".txt matched");
+						//System.out.println("castle" + String.format("%03d", castleDataBase.indexOf(cd)+1) + ".txt matched");
 						return cd.name;
 					}
 				}
 				if((k.type == KomaType.King) && !isSente && k.sente == 1) {
 					if(isSameCastle(sd, cd, k.sente)) {
-						System.out.println("castle" + String.format("%03d", castleDataBase.indexOf(cd)+1) + ".txt matched");
+						//System.out.println("castle" + String.format("%03d", castleDataBase.indexOf(cd)+1) + ".txt matched");
 						return cd.name;
 					}
 				}
