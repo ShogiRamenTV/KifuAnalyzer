@@ -1367,7 +1367,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			totalSenteWinCnt += sc.senteWinCnt;
 		}
 		Double d = (double)totalSenteWinCnt/(double)totalCnt*100;
-		String str = "<Total:" + String.format("%2d", totalCnt)+" games" + "(Sente Winning Rate" + String.format("%.0f", d) + "%)>";
+		String str = "<Total:" + String.format("%2d", totalCnt)+" Games" + "(Sente Winning Rate" + String.format("%.0f", d) + "%)>";
 		listModel[ListBoxType.Strategy.id].addElement(str);
 		listModel[ListBoxType.Strategy.id].addElement("----------");
 		for(StringCount sc: strategyCountData) {
@@ -2038,7 +2038,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 				);
 		
-		listModel[ListBoxType.Player.id].addElement("<Name List>");
+		String str = "<Total:" + playerDataBase.size() + " Players>";
+		listModel[ListBoxType.Player.id].addElement(str);
 		listModel[ListBoxType.Player.id].addElement("---------");
 		
 		for(PlayerData pd: playerDataBase) {
