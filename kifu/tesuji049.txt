@@ -1,0 +1,3 @@
+Pawn-anchored gold
+011
+110
