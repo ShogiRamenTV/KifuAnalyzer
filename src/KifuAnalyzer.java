@@ -92,18 +92,22 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JButton button[] = new JButton[ButtonType.values().length];
-	JLabel labelStrategy = new JLabel("Name");
-	JLabel labelCastle = new JLabel("Name");
-	JLabel labelTesuji = new JLabel("Name");
-	JLabel labelSente = new JLabel("Sente");
-	JLabel labelGote = new JLabel("Gote");
-	JTextField textBoxStrategy = new JTextField();
-	JTextField textBoxCastle = new JTextField();
-	JTextField textBoxTesuji = new JTextField();
-	JTextField textBoxLoad = new JTextField();
-	JTextField textBoxLoad2 = new JTextField();
-	JTextField textBoxPlayerS = new JTextField();
-	JTextField textBoxPlayerG = new JTextField();
+	public enum LabelType {
+		Strategy(0), Castle(1), Tesuji(2), Sente(3), Gote(4);
+		private final int id;
+		private LabelType(final int id) {
+			this.id = id;
+		}
+	};
+	JLabel label[] = new JLabel[LabelType.values().length];
+	public enum TextBoxType {
+		Load1(0), Load2(1), Player1(2), Player2(3), Tesuji(4), Strategy(5), Castle(6);
+		private final int id;
+		private TextBoxType(final int id) {
+			this.id = id;
+		}
+	};
+	JTextField textBox[] = new JTextField[TextBoxType.values().length];
 	JCheckBox checkBoxEditMode = new JCheckBox("Edit Mode", false);
 	JRadioButton radioButtonSente = new JRadioButton("Sente", true);
 	JRadioButton radioButtonGote = new JRadioButton("Gote");
@@ -146,6 +150,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		shogiDataForKDB.initializeKomaSetting();
 		initializeButtonSetting();
 		initializeTextBoxSetting();
+		initializeCheckBox();
 		initializePlayerIconLabel();
 		initializeCastleIcon();
 		initializeListBoxSetting();
@@ -162,21 +167,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			getContentPane().add(shogiData.k[x]);
 		}
 		for(ButtonType b: ButtonType.values()) getContentPane().add(button[b.id]);
-		getContentPane().add(labelStrategy);
-		getContentPane().add(labelCastle);
-		getContentPane().add(labelTesuji);
-		getContentPane().add(labelSente);
-		getContentPane().add(labelGote);
+		for(LabelType l: LabelType.values()) getContentPane().add(label[l.id]);
 		getContentPane().add(playerIconLabel[0]);
 		getContentPane().add(playerIconLabel[1]);
 		getContentPane().add(castleIconLabel);
-		getContentPane().add(textBoxStrategy);
-		getContentPane().add(textBoxCastle);
-		getContentPane().add(textBoxTesuji);
-		getContentPane().add(textBoxLoad);
-		getContentPane().add(textBoxLoad2);
-		getContentPane().add(textBoxPlayerS);
-		getContentPane().add(textBoxPlayerG);
+		for(TextBoxType t: TextBoxType.values()) getContentPane().add(textBox[t.id]);
 		getContentPane().add(checkBoxEditMode);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
@@ -211,40 +206,49 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void initializeCanvasSetting() {
 		cv.setBounds(0, 0, this.getSize().width, this.getSize().height);
 	}
-	public void commonButtonSetting(JButton button, int x, int y, int width, int height) {
-		button.addActionListener(this);
-		button.setBounds(x, y, width, height);
-	}
 	public void initializeButtonSetting() {
 		for(ButtonType b: ButtonType.values()) {
 			button[b.id] = new JButton(b.name());
+			button[b.id].addActionListener(this);
 		}
-		commonButtonSetting(button[ButtonType.Initialize.id], 600, 15, 80, 20);
-		commonButtonSetting(button[ButtonType.Save.id], 840, 15, 80, 20);
-		commonButtonSetting(button[ButtonType.Load.id], 920, 15, 80, 20);
-		commonButtonSetting(button[ButtonType.Strategy.id], 600, 55, 80, 20);
-		commonButtonSetting(button[ButtonType.Castle.id], 600, 75, 80, 20);
-		commonButtonSetting(button[ButtonType.Tesuji.id], 600, 35, 80, 20);
+		button[ButtonType.Initialize.id].setBounds(600, 15, 80, 20);
+		button[ButtonType.Save.id].setBounds(840, 15, 80, 20);
+		button[ButtonType.Load.id].setBounds(920, 15, 80, 20);
+		button[ButtonType.Strategy.id].setBounds(600, 55, 80, 20);
+		button[ButtonType.Castle.id].setBounds(600, 75, 80, 20);
+		button[ButtonType.Tesuji.id].setBounds(600, 35, 80, 20);
 	}
 	public void initializeTextBoxSetting() {
-		labelStrategy.setBounds(685, 55, 100, 20);
-		textBoxStrategy.setBounds(718, 55, 100, 20);
-		labelCastle.setBounds(685, 75, 100, 20);
-		textBoxCastle.setBounds(718, 75, 100, 20);
-		labelTesuji.setBounds(685, 35, 100, 20);
-		textBoxTesuji.setBounds(718, 35, 100, 20);
+		for(TextBoxType t: TextBoxType.values()) {
+			textBox[t.id] = new JTextField();
+		}
+		for(LabelType l: LabelType.values()) {
+			label[l.id] = new JLabel();
+		}
+		label[LabelType.Strategy.id].setText("Name");
+		label[LabelType.Strategy.id].setBounds(685, 55, 100, 20);
+		textBox[TextBoxType.Strategy.id].setBounds(718, 55, 100, 20);
+		label[LabelType.Castle.id].setText("Name");
+		label[LabelType.Castle.id].setBounds(685, 75, 100, 20);
+		textBox[TextBoxType.Castle.id].setBounds(718, 75, 100, 20);
+		label[LabelType.Tesuji.id].setText("Name");
+		label[LabelType.Tesuji.id].setBounds(685, 35, 100, 20);
+		textBox[TextBoxType.Tesuji.id].setBounds(718, 35, 100, 20);
+		textBox[TextBoxType.Load1.id].setBounds(998, 15, 50, 20);
+		textBox[TextBoxType.Load2.id].setBounds(1048, 15, 50, 20);
+		label[LabelType.Sente.id].setText("Sente");
+		label[LabelType.Sente.id].setBounds(840, 35, 100, 20);
+		textBox[TextBoxType.Player1.id].setBounds(835, 55, 120, 20);
+		textBox[TextBoxType.Player1.id].addActionListener(enterActionListener);
+		label[LabelType.Gote.id].setText("Gote");
+		label[LabelType.Gote.id].setBounds(965, 35, 100, 20);
+		textBox[TextBoxType.Player2.id].setBounds(965, 55, 120, 20);
+		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
+	}
+	public void initializeCheckBox() {
+		checkBoxEditMode.setBounds(680, 20, 100, 10);
 		radioButtonSente.setBounds(708, 95, 70, 10);
 		radioButtonGote.setBounds(768, 95, 70, 10);
-		textBoxLoad.setBounds(998, 15, 50, 20);
-		textBoxLoad2.setBounds(1048, 15, 50, 20);
-		labelSente.setBounds(840, 35, 100, 20);
-		textBoxPlayerS.setBounds(835, 55, 120, 20);
-		textBoxPlayerS.addActionListener(enterActionListener);
-		labelGote.setBounds(965, 35, 100, 20);
-		textBoxPlayerG.setBounds(965, 55, 120, 20);
-		textBoxPlayerG.addActionListener(enterActionListener);
-		checkBoxEditMode.setBounds(680, 20, 100, 10);
-		
 		ButtonGroup buttonGroup = new ButtonGroup();
 		buttonGroup.add(radioButtonSente);
 		buttonGroup.add(radioButtonGote);
@@ -278,11 +282,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		castleIconLabel.setBounds(880, 460, 200, 252);
 	}
 	public void clearTextBox() {
-		textBoxPlayerS.setText("");
-		textBoxPlayerG.setText("");
-		textBoxStrategy.setText("");
-		textBoxCastle.setText("");
-		//textBoxLoad.setText("");
+		textBox[TextBoxType.Player1.id].setText("");
+		textBox[TextBoxType.Player2.id].setText("");
+		textBox[TextBoxType.Strategy.id].setText("");
+		textBox[TextBoxType.Castle.id].setText("");
+		//textBox[TextBoxType.Load1.id].setText("");
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1027,8 +1031,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		try {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
-			fw.write(textBoxPlayerS.getText() + "\n");
-			fw.write(textBoxPlayerG.getText() + "\n");
+			fw.write(textBox[TextBoxType.Player1.id].getText() + "\n");
+			fw.write(textBox[TextBoxType.Player2.id].getText() + "\n");
 			for(Kifu kf: kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
 			fw.close();
 			
@@ -1039,7 +1043,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	
 	public void actionForLoad() {
-		loadByNumber(textBoxLoad.getText(), textBoxLoad2.getText());
+		loadByNumber(textBox[TextBoxType.Load1.id].getText(), textBox[TextBoxType.Load2.id].getText());
 	}
 	public void loadByNumber(String numStr, String numStr2) {
 		String fileName;
@@ -1068,8 +1072,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			FileReader fr = new FileReader(file);
 			BufferedReader br = new BufferedReader(fr);
 			String content;
-			textBoxPlayerS.setText(br.readLine());
-			textBoxPlayerG.setText(br.readLine());
+			textBox[TextBoxType.Player1.id].setText(br.readLine());
+			textBox[TextBoxType.Player2.id].setText(br.readLine());
 			while((content = br.readLine()) != null) {
 				StringTokenizer st = new StringTokenizer(content,",");
 				while(st.hasMoreTokens()) {
@@ -1176,7 +1180,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 		
-			fw.write(textBoxStrategy.getText() + "\n");
+			fw.write(textBox[TextBoxType.Strategy.id].getText() + "\n");
 			for(int i=0; i<40; i++) {
 				fw.write(shogiData.k[i].px + "," + shogiData.k[i].py + "\n");
 			}
@@ -1203,7 +1207,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 		
-			fw.write(textBoxCastle.getText() + "\n");
+			fw.write(textBox[TextBoxType.Castle.id].getText() + "\n");
 			for(Koma k: shogiData.k) {
 				if((k.type == KomaType.King) && radioButtonSente.isSelected() && k.sente == 0) {
 					saveListKomaAroundKing(shogiData, k, fw);
@@ -1235,8 +1239,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 		
-			fw.write(textBoxTesuji.getText() + "\n");
-			fw.write(textBoxLoad.getText() + "\n");
+			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
+			fw.write(textBox[TextBoxType.Load1.id].getText() + "\n");
 			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
 			
@@ -1431,10 +1435,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
 		String subStr = str.substring(2,5);
 		String subStr2 = str.substring(6,9);
-		textBoxLoad.setText("");
-		textBoxLoad2.setText("");
-		if(subStr.matches("[+-]?\\d*(\\.\\d+)?")) textBoxLoad.setText(subStr);
-		if(subStr2.matches("[+-]?\\d*(\\.\\d+)?")) textBoxLoad2.setText(subStr2);
+		textBox[TextBoxType.Load1.id].setText("");
+		textBox[TextBoxType.Load2.id].setText("");
+		if(subStr.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.Load1.id].setText(subStr);
+		if(subStr2.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.Load2.id].setText(subStr2);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1775,7 +1779,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		StringCount sc = tesujiCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String tesujiName = sc.str;
-		textBoxTesuji.setText(tesujiName);
+		textBox[TextBoxType.Tesuji.id].setText(tesujiName);
 		
 		listModel[ListBoxType.Info.id].clear();
 		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
@@ -2052,7 +2056,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(selectedIndex < 0) return;
 		
 		PlayerData pd = playerDataBase.get(selectedIndex);
-		textBoxPlayerS.setText(pd.playerName);
+		textBox[TextBoxType.Player1.id].setText(pd.playerName);
 		updatePlayerIcon();
 		
 		// count strategy data
@@ -2173,8 +2177,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				);
 	}
 	public void updatePlayerIcon() {
-		String playerNameS = textBoxPlayerS.getText();
-		String playerNameG = textBoxPlayerG.getText();
+		String playerNameS = textBox[TextBoxType.Player1.id].getText();
+		String playerNameG = textBox[TextBoxType.Player2.id].getText();
 		
 		playerIconLabel[0].setIcon(null);
 		playerIconLabel[1].setIcon(null);
@@ -2304,12 +2308,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				kf.k.moveKoma(shogiData, kf.x, kf.y, kf.p);
 				shogiData.turnIsSente = !shogiData.turnIsSente;
 				cv.setLastPoint(kf.x, kf.y, true);
-				if(textBoxStrategy.getText().equals("")) textBoxStrategy.setText(checkStrategy(shogiData));
-				if(textBoxCastle.getText().equals("")) {
-					textBoxCastle.setText(checkCastle(shogiData, true));
+				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(checkStrategy(shogiData));
+				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+					textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, true));
 				}
-				if(textBoxCastle.getText().equals("")) {
-					textBoxCastle.setText(checkCastle(shogiData, false));
+				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+					textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, false));
 				}
 			}
 		}
@@ -2450,14 +2454,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		// check strategy
-		if(textBoxStrategy.getText().equals("")) {
-			textBoxStrategy.setText(checkStrategy(shogiData));
+		if(textBox[TextBoxType.Strategy.id].getText().equals("")) {
+			textBox[TextBoxType.Strategy.id].setText(checkStrategy(shogiData));
 		}
-		if(textBoxCastle.getText().equals("")) {
-			textBoxCastle.setText(checkCastle(shogiData, true));
+		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+			textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, true));
 		}
-		if(textBoxCastle.getText().equals("")) {
-			textBoxCastle.setText(checkCastle(shogiData, false));
+		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+			textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, false));
 		}
 		
 		shogiData.selectedKoma = null;
