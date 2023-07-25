@@ -65,11 +65,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	List<Kifu> kifuData = new ArrayList<Kifu>();
 	List<KifuDataBase> kifuDB = new ArrayList<KifuDataBase>();
+	String imgFilePath = "./img/";
 	String kifuFilePath = "./kifu/";
 	String strategyFilePath = "./strategy/";
-	String castleFilePath = "./castle/";
 	JLabel castleIconLabel = new JLabel();
-	String castleIconPath = "./img/";
 	String tesujiFilePath = "./tesuji/";
 	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
 	List<StringCount> strategyCountData = new ArrayList<StringCount>();
@@ -80,7 +79,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	List<PlayerData> playerDataBase = new ArrayList<PlayerData>();
 	JLabel playerIconLabel[] = new JLabel[2];
-	String playerIconPath = "./playerIcon/";
 	
 	Point mousePointDifference = new Point();
 	CanvasBoard cv = new CanvasBoard();
@@ -1197,7 +1195,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int index = 1;
 		
 		while(true) {
-			fileName = castleFilePath + String.format("castle%03d.txt", index);
+			fileName = strategyFilePath + String.format("castle%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1457,7 +1455,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		try {
 			int fileIndex = 1;
 			while(true) {
-				String fileName = castleFilePath + "castle" + String.format("%03d", fileIndex) + ".txt";
+				String fileName = strategyFilePath + "castle" + String.format("%03d", fileIndex) + ".txt";
 				File file = new File(fileName);
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
@@ -1676,7 +1674,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		for(CastleData cd: castleDataBase) {
 			if(cd.name.equals(castleName)) {
-				ImageIcon castleIcon = new ImageIcon(castleIconPath + castleName + ".jpg");
+				ImageIcon castleIcon = new ImageIcon(imgFilePath + castleName + ".jpg");
 				Image image = castleIcon.getImage();
 				Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
 				castleIcon = new ImageIcon(newImage);
@@ -2185,14 +2183,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		for(PlayerData pd: playerDataBase) {
 			if(pd.playerName.equals(playerNameS)) {
-				ImageIcon playerIcon = new ImageIcon(playerIconPath + playerNameS + ".jpg");
+				ImageIcon playerIcon = new ImageIcon(imgFilePath + playerNameS + ".jpg");
 				Image image = playerIcon.getImage();
 				Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
 				playerIcon = new ImageIcon(newImage);
 				playerIconLabel[0].setIcon(playerIcon);
 			}
 			if(pd.playerName.equals(playerNameG)) {
-				ImageIcon playerIcon = new ImageIcon(playerIconPath + playerNameG + ".jpg");
+				ImageIcon playerIcon = new ImageIcon(imgFilePath + playerNameG + ".jpg");
 				Image image = playerIcon.getImage();
 				Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
 				playerIcon = new ImageIcon(newImage);
