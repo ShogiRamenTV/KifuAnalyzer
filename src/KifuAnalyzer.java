@@ -70,10 +70,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String castleFilePath = "./castle/";
 	JLabel castleIconLabel = new JLabel();
 	String castleIconPath = "./img/";
+	String tesujiFilePath = "./tesuji/";
 	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
 	List<StringCount> strategyCountData = new ArrayList<StringCount>();
 	List<CastleData> castleDataBase = new ArrayList<CastleData>();
 	List<StringCount> castleCountData = new ArrayList<StringCount>();
+	List<TesujiData> tesujiDataBase = new ArrayList<TesujiData>();
+	List<StringCount> tesujiCountData = new ArrayList<StringCount>();
 	
 	List<PlayerData> playerDataBase = new ArrayList<PlayerData>();
 	JLabel playerIconLabel[] = new JLabel[2];
@@ -82,7 +85,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Point mousePointDifference = new Point();
 	CanvasBoard cv = new CanvasBoard();
 	public enum ButtonType {
-		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4);
+		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4), Tesuji(5);
 		private final int id;
 		private ButtonType(final int id) {
 			this.id = id;
@@ -91,11 +94,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JButton button[] = new JButton[ButtonType.values().length];
 	JLabel labelStrategy = new JLabel("Name");
 	JLabel labelCastle = new JLabel("Name");
+	JLabel labelTesuji = new JLabel("Name");
 	JLabel labelSente = new JLabel("Sente");
 	JLabel labelGote = new JLabel("Gote");
 	JTextField textBoxStrategy = new JTextField();
 	JTextField textBoxCastle = new JTextField();
+	JTextField textBoxTesuji = new JTextField();
 	JTextField textBoxLoad = new JTextField();
+	JTextField textBoxLoad2 = new JTextField();
 	JTextField textBoxPlayerS = new JTextField();
 	JTextField textBoxPlayerG = new JTextField();
 	JCheckBox checkBoxEditMode = new JCheckBox("Edit Mode", false);
@@ -103,7 +109,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JRadioButton radioButtonGote = new JRadioButton("Gote");
 	
 	public enum ListBoxType {
-		Kifu(0), Info(1), Strategy(2), Player(3), Castle(4);
+		Kifu(0), Info(1), Strategy(2), Player(3), Castle(4), Tesuji(5);
 		private final int id;		
 		private ListBoxType(final int id) {
 			this.id = id;
@@ -158,6 +164,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(ButtonType b: ButtonType.values()) getContentPane().add(button[b.id]);
 		getContentPane().add(labelStrategy);
 		getContentPane().add(labelCastle);
+		getContentPane().add(labelTesuji);
 		getContentPane().add(labelSente);
 		getContentPane().add(labelGote);
 		getContentPane().add(playerIconLabel[0]);
@@ -165,7 +172,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		getContentPane().add(castleIconLabel);
 		getContentPane().add(textBoxStrategy);
 		getContentPane().add(textBoxCastle);
+		getContentPane().add(textBoxTesuji);
 		getContentPane().add(textBoxLoad);
+		getContentPane().add(textBoxLoad2);
 		getContentPane().add(textBoxPlayerS);
 		getContentPane().add(textBoxPlayerG);
 		getContentPane().add(checkBoxEditMode);
@@ -211,24 +220,28 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			button[b.id] = new JButton(b.name());
 		}
 		commonButtonSetting(button[ButtonType.Initialize.id], 600, 15, 80, 20);
-		commonButtonSetting(button[ButtonType.Save.id], 600, 35, 80, 20);
-		commonButtonSetting(button[ButtonType.Load.id], 680, 35, 80, 20);
+		commonButtonSetting(button[ButtonType.Save.id], 840, 15, 80, 20);
+		commonButtonSetting(button[ButtonType.Load.id], 920, 15, 80, 20);
 		commonButtonSetting(button[ButtonType.Strategy.id], 600, 55, 80, 20);
 		commonButtonSetting(button[ButtonType.Castle.id], 600, 75, 80, 20);
+		commonButtonSetting(button[ButtonType.Tesuji.id], 600, 35, 80, 20);
 	}
 	public void initializeTextBoxSetting() {
 		labelStrategy.setBounds(685, 55, 100, 20);
 		textBoxStrategy.setBounds(718, 55, 100, 20);
 		labelCastle.setBounds(685, 75, 100, 20);
 		textBoxCastle.setBounds(718, 75, 100, 20);
+		labelTesuji.setBounds(685, 35, 100, 20);
+		textBoxTesuji.setBounds(718, 35, 100, 20);
 		radioButtonSente.setBounds(708, 95, 70, 10);
 		radioButtonGote.setBounds(768, 95, 70, 10);
-		textBoxLoad.setBounds(758, 35, 50, 20);
-		labelSente.setBounds(840, 15, 100, 20);
-		textBoxPlayerS.setBounds(835, 35, 120, 20);
+		textBoxLoad.setBounds(998, 15, 50, 20);
+		textBoxLoad2.setBounds(1048, 15, 50, 20);
+		labelSente.setBounds(840, 35, 100, 20);
+		textBoxPlayerS.setBounds(835, 55, 120, 20);
 		textBoxPlayerS.addActionListener(enterActionListener);
-		labelGote.setBounds(965, 15, 100, 20);
-		textBoxPlayerG.setBounds(965, 35, 120, 20);
+		labelGote.setBounds(965, 35, 100, 20);
+		textBoxPlayerG.setBounds(965, 55, 120, 20);
 		textBoxPlayerG.addActionListener(enterActionListener);
 		checkBoxEditMode.setBounds(680, 20, 100, 10);
 		
@@ -248,19 +261,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		listModel[ListBoxType.Kifu.id].addElement("--------");
-		scrollPane[ListBoxType.Kifu.id].setBounds(580, 250, 200, 100);
-		scrollPane[ListBoxType.Info.id].setBounds(580, 350, 200, 100);
-		scrollPane[ListBoxType.Strategy.id].setBounds(780, 250, 200, 100);
-		scrollPane[ListBoxType.Castle.id].setBounds(780, 350, 200, 100);
-		scrollPane[ListBoxType.Player.id].setBounds(980, 250, 100, 200);
+		scrollPane[ListBoxType.Kifu.id].setBounds(580, 250, 165, 100);
+		scrollPane[ListBoxType.Info.id].setBounds(580, 350, 165, 100);
+		scrollPane[ListBoxType.Strategy.id].setBounds(745, 250, 165, 100);
+		scrollPane[ListBoxType.Castle.id].setBounds(745, 350, 165, 100);
+		scrollPane[ListBoxType.Player.id].setBounds(910, 250, 165, 100);
+		scrollPane[ListBoxType.Tesuji.id].setBounds(910, 350, 165, 100);
 	}
 	
 	
 	public void initializePlayerIconLabel() {
 		playerIconLabel[0] = new JLabel();
 		playerIconLabel[1] = new JLabel();
-		playerIconLabel[0].setBounds(840, 25, 100, 200);
-		playerIconLabel[1].setBounds(970, 25, 100, 200);
+		playerIconLabel[0].setBounds(840, 45, 100, 200);
+		playerIconLabel[1].setBounds(970, 45, 100, 200);
 		castleIconLabel.setBounds(880, 460, 200, 252);
 	}
 	public void clearTextBox() {
@@ -988,9 +1002,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.setLastPoint(-1, -1, false);
 		loadStrategyData();
 		loadCastleData();
+		loadTesujiData();
 		actionForDB();
 		countStrategy();
 		countCastle();
+		countTesujiData();
 		createPlayerDataBase();
 		clearTextBox();
 		initializePlayerIcon();
@@ -1023,9 +1039,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	
 	public void actionForLoad() {
-		loadByNumber(textBoxLoad.getText());
+		loadByNumber(textBoxLoad.getText(), textBoxLoad2.getText());
 	}
-	public void loadByNumber(String numStr) {
+	public void loadByNumber(String numStr, String numStr2) {
 		String fileName;
 		if(numStr.equals("")) {
 			Path path = Paths.get("").toAbsolutePath();
@@ -1071,9 +1087,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			br.close();
 			
-			shogiData.resetAllKoma();	
-			listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-			listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+			shogiData.resetAllKoma();
+			if(numStr2.equals("")) {
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+			} else {
+				int selectedIndex = Integer.parseInt(numStr2);
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(selectedIndex);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(selectedIndex);
+				commonListAction();
+			}
 			
 			shogiData.viewKomaOnBoard();
 			shogiData.viewKomaOnHand();
@@ -1196,6 +1219,32 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			System.out.println(er);
 		}
 	}
+	public void actionForTesuji() {
+		Path path;
+		String fileName;
+		int index = 1;
+		
+		while(true) {
+			fileName = tesujiFilePath + String.format("tesuji%03d.txt", index);
+			path = Paths.get(fileName);
+			if(!Files.exists(path)) break;
+			index++;
+		}
+		
+		try {
+			File file = new File(fileName);
+			FileWriter fw = new FileWriter(file);
+		
+			fw.write(textBoxTesuji.getText() + "\n");
+			fw.write(textBoxLoad.getText() + "\n");
+			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
+			fw.close();
+			
+			System.out.println(fileName + " is saved.");
+		} catch(IOException er) {
+			System.out.println(er);
+		}
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand() == button[ButtonType.Initialize.id].getText()) {
@@ -1212,6 +1261,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(e.getActionCommand() == button[ButtonType.Castle.id].getText()) {
 			actionForCastle();
+		}
+		if(e.getActionCommand() == button[ButtonType.Tesuji.id].getText()) {
+			actionForTesuji();
 		}
 	}
 	
@@ -1378,7 +1430,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void getLoadNumberOnListBox2() {
 		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
 		String subStr = str.substring(2,5);
+		String subStr2 = str.substring(6,9);
+		textBoxLoad.setText("");
+		textBoxLoad2.setText("");
 		if(subStr.matches("[+-]?\\d*(\\.\\d+)?")) textBoxLoad.setText(subStr);
+		if(subStr2.matches("[+-]?\\d*(\\.\\d+)?")) textBoxLoad2.setText(subStr2);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1627,7 +1683,115 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void initializeCastleIcon() {
 		castleIconLabel.setIcon(null);
 	}
-	
+	// -------------------------------------------------------------------------
+	// ----------------------- << Tesuji Data >> -----------------------------
+	// -------------------------------------------------------------------------
+	public class TesujiData {
+		String name;
+		int fileIndex;
+		int stepIndex;
+		TesujiData(String tesujiName, int file, int step) {
+			name = tesujiName;
+			fileIndex = file;
+			stepIndex = step;
+		}
+	}
+	public void loadTesujiData() {
+		System.out.println("Load Tesuji Data");
+		tesujiDataBase.clear();
+		try {
+			int fileIndex = 1;
+			while(true) {
+				String fileName = tesujiFilePath + "tesuji" + String.format("%03d", fileIndex) + ".txt";
+				File file = new File(fileName);
+				FileReader fr = new FileReader(file);
+				BufferedReader br = new BufferedReader(fr);
+				String name = br.readLine();
+				int fileNumber = Integer.parseInt(br.readLine());
+				int stepNumber = Integer.parseInt(br.readLine());
+				TesujiData tesujiData = new TesujiData(name, fileNumber, stepNumber); 
+				br.close();
+				tesujiDataBase.add(tesujiData);
+				fileIndex++;
+				//System.out.println(castleData.name);
+			}
+		} catch(FileNotFoundException en) {
+			System.out.println(en);
+		} catch(IOException er) {
+			System.out.println(er);
+		}
+		
+		System.out.println("Finish");
+	}
+	public void countTesujiData() {
+		listModel[ListBoxType.Tesuji.id].clear();
+		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
+		tesujiCountData.clear();
+		
+		for(TesujiData td: tesujiDataBase) {
+			Boolean found = false;
+			for(StringCount sc: tesujiCountData) {
+				if(sc.str.equals(td.name)) {
+					sc.cnt++;
+					found = true;
+				}
+			}
+			if(!found) {
+				StringCount sc = new StringCount(td.name, true);
+				tesujiCountData.add(sc);
+			}
+		}
+		
+		Collections.sort(
+				tesujiCountData,
+				new Comparator<StringCount>() {
+					@Override
+					public int compare(StringCount obj1, StringCount obj2) {
+						return obj2.cnt - obj1.cnt;
+					}
+				}
+				);
+		
+		int totalCnt = 0;
+		for(StringCount sc: tesujiCountData) {	
+			totalCnt += sc.cnt;
+		}
+		String str = "<Total:" + String.format("%2d", totalCnt)+" Tesujis>";
+		listModel[ListBoxType.Tesuji.id].addElement(str);
+		listModel[ListBoxType.Tesuji.id].addElement("----------");
+		for(StringCount sc: tesujiCountData) {
+			str = sc.str;
+			str += ":" + String.format("%2d", sc.cnt)+" counts";
+			listModel[ListBoxType.Tesuji.id].addElement(str);
+		}
+		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
+	}
+	public void updateListBoxInfoByTesuji() {
+		int selectedIndex = listBox[ListBoxType.Tesuji.id].getSelectedIndex()-2;
+		if(selectedIndex < 0) {
+			return;
+		}
+		
+		StringCount sc = tesujiCountData.get(selectedIndex);
+		//System.out.println(sc.str);
+		String tesujiName = sc.str;
+		textBoxTesuji.setText(tesujiName);
+		
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+
+		listModel[ListBoxType.Info.id].addElement("<"+ tesujiName + "'s Kifu>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
+		for(TesujiData td: tesujiDataBase) {
+			if(td.name.equals(tesujiName)) {
+				String str = "kf" + String.format("%03d:%03d", td.fileIndex, td.stepIndex);
+				KifuDataBase kdb = kifuDB.get(td.fileIndex-1);
+				str += ":" + kdb.playerNameS + " vs " + kdb.playerNameG;
+				listModel[ListBoxType.Info.id].addElement(str);
+			}
+		}
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Kifu Data >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -2064,6 +2228,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
 				updateListBoxInfoByCastle();
 			}
+			if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
+				updateListBoxInfoByTesuji();
+			}
 		}
 	}
 	@Override
@@ -2093,6 +2260,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
 				updateListBoxInfoByCastle();
+			}
+			if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
+				updateListBoxInfoByTesuji();
 			}
 		}
 	}
