@@ -69,7 +69,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String kifuFilePath = "./kifu/";
 	String strategyFilePath = "./strategy/";
 	JLabel castleIconLabel = new JLabel();
-	String tesujiFilePath = "./tesuji/";
 	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
 	List<StringCount> strategyCountData = new ArrayList<StringCount>();
 	List<CastleData> castleDataBase = new ArrayList<CastleData>();
@@ -1227,7 +1226,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int index = 1;
 		
 		while(true) {
-			fileName = tesujiFilePath + String.format("tesuji%03d.txt", index);
+			fileName = kifuFilePath + String.format("tesuji%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1704,7 +1703,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		try {
 			int fileIndex = 1;
 			while(true) {
-				String fileName = tesujiFilePath + "tesuji" + String.format("%03d", fileIndex) + ".txt";
+				String fileName = kifuFilePath + "tesuji" + String.format("%03d", fileIndex) + ".txt";
 				File file = new File(fileName);
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
