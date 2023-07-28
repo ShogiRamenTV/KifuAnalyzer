@@ -52,35 +52,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	ActionListener, ListSelectionListener, KeyListener {
 	Color boardColor = new Color(255, 238, 203);
 	
-	public enum KomaType {
-		Pawn(0), Rance(1), Knight(2), Silver(3), Gold(4), Bishop(5), Rook(6), King(7), Empty(8);
-		private final int id;
-		private KomaType(final int id) {
-			this.id = id;
-		}
-	};
-	
-	ShogiData shogiData = new ShogiData();
-	ShogiData shogiDataForKDB = new ShogiData();
-	
-	List<Kifu> kifuData = new ArrayList<Kifu>();
-	List<KifuDataBase> kifuDB = new ArrayList<KifuDataBase>();
 	String imgFilePath = "./img/";
 	String kifuFilePath = "./kifu/";
 	String strategyFilePath = "./strategy/";
 	JLabel castleIconLabel = new JLabel();
-	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
-	List<StringCount> strategyCountData = new ArrayList<StringCount>();
-	List<CastleData> castleDataBase = new ArrayList<CastleData>();
-	List<StringCount> castleCountData = new ArrayList<StringCount>();
-	List<TesujiData> tesujiDataBase = new ArrayList<TesujiData>();
-	List<StringCount> tesujiCountData = new ArrayList<StringCount>();
-	
-	List<PlayerData> playerDataBase = new ArrayList<PlayerData>();
 	JLabel playerIconLabel[] = new JLabel[2];
 	
-	Point mousePointDifference = new Point();
-	CanvasBoard cv = new CanvasBoard();
 	public enum ButtonType {
 		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4), Tesuji(5);
 		private final int id;
@@ -139,9 +116,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		setSize(shogiData.iconWidth*22, shogiData.iconHeight*12);
 		ImageIcon icon = new ImageIcon("./img/Shogi Ramen TV.jpg");
 		setIconImage(icon.getImage());
-		
 		getContentPane().setLayout(null);
-		
+		initializeGUISetting();
+		contentPaneSetting();
+		listenerSetting();		
+		actionForInitialize();
+	}
+	public void initializeGUISetting() {
 		shogiData.initializeKomaSetting();
 		shogiData.initializeLabelSetting();
 		shogiDataForKDB.initializeKomaSetting();
@@ -153,11 +134,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeListBoxSetting();
 		initializeCanvasSetting();
 		initializeSoundSetting();
-		
-		contentPaneSetting();
-		listenerSetting();
-		
-		actionForInitialize();
 	}
 	public void contentPaneSetting() {
 		for(int x=0; x<40; x++) {
@@ -165,14 +141,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		for(ButtonType b: ButtonType.values()) getContentPane().add(button[b.id]);
 		for(LabelType l: LabelType.values()) getContentPane().add(label[l.id]);
+		for(TextBoxType t: TextBoxType.values()) getContentPane().add(textBox[t.id]);
+		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(scrollPane[lb.id]);
 		getContentPane().add(playerIconLabel[0]);
 		getContentPane().add(playerIconLabel[1]);
 		getContentPane().add(castleIconLabel);
-		for(TextBoxType t: TextBoxType.values()) getContentPane().add(textBox[t.id]);
 		getContentPane().add(checkBoxEditMode);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
-		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(scrollPane[lb.id]);
 		for(int x=0; x<8; x++) {
 			getContentPane().add(shogiData.labelNumOfKomaS[x]);
 			getContentPane().add(shogiData.labelNumOfKomaG[x]);
@@ -289,6 +265,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Board >> -------------------------------
 	// -------------------------------------------------------------------------
+	ShogiData shogiData = new ShogiData();
+	ShogiData shogiDataForKDB = new ShogiData();
 	public class ShogiData {
 		String[] komaName = {"歩", "香", "桂", "銀", "金", "角", "飛", "王", "と", "成香", "成桂", "成銀", "金", "馬", "龍", "王"};
 		String[] senteGote = {"▲", "△"};
@@ -487,6 +465,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Koma Action >> -------------------------------
 	// -------------------------------------------------------------------------
+	public enum KomaType {
+		Pawn(0), Rance(1), Knight(2), Silver(3), Gold(4), Bishop(5), Rook(6), King(7), Empty(8);
+		private final int id;
+		private KomaType(final int id) {
+			this.id = id;
+		}
+	};
 	public class Koma extends JLabel {
 		int px;
 		int py;
@@ -892,6 +877,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Canvas >> ------------------------------------
 	// -------------------------------------------------------------------------
+	CanvasBoard cv = new CanvasBoard();
 	public class CanvasBoard extends Canvas {
 		int x;
 		int y;
@@ -1271,6 +1257,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Strategy Data >> -----------------------------
 	// -------------------------------------------------------------------------
+	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
+	List<StringCount> strategyCountData = new ArrayList<StringCount>();
 	public class StrategyData {
 		Point p[];
 		String name;
@@ -1441,6 +1429,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Castle Data >> -----------------------------
 	// -------------------------------------------------------------------------
+	List<CastleData> castleDataBase = new ArrayList<CastleData>();
+	List<StringCount> castleCountData = new ArrayList<StringCount>();
 	public class CastleData {
 		String name;
 		int data[][] = new int[25][4];
@@ -1687,6 +1677,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Tesuji Data >> -----------------------------
 	// -------------------------------------------------------------------------
+	List<TesujiData> tesujiDataBase = new ArrayList<TesujiData>();
+	List<StringCount> tesujiCountData = new ArrayList<StringCount>();
 	public class TesujiData {
 		String name;
 		int fileIndex;
@@ -1796,6 +1788,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Kifu Data >> -----------------------------
 	// -------------------------------------------------------------------------
+	List<Kifu> kifuData = new ArrayList<Kifu>();
+	List<KifuDataBase> kifuDB = new ArrayList<KifuDataBase>();
 	public class StringCount {
 		String str;
 		int cnt;
@@ -1941,6 +1935,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Player Data >> -----------------------------
 	// -------------------------------------------------------------------------
+	List<PlayerData> playerDataBase = new ArrayList<PlayerData>();
 	public class PlayerData {
 		String playerName;
 		List<GameResult> grList = new ArrayList<GameResult>();
@@ -2348,6 +2343,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
+	Point mousePointDifference = new Point();
 	// 6, @Overrideアノテーションを付ける。
 	public void mouseDragged(MouseEvent e) {
 		//System.out.println("mouse dragged");
@@ -2475,7 +2471,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		//System.out.println("Mouse moved");
 		if(shogiData.selectedKoma != null) {
 			Point mp = e.getPoint();			
-			shogiData.selectedKoma.setLocation(mp.x -mousePointDifference.x, mp.y - mousePointDifference.y);
+			shogiData.selectedKoma.setLocation(mp.x - mousePointDifference.x, mp.y - mousePointDifference.y);
 		}
 	}
 }
