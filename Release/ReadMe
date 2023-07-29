@@ -25,12 +25,11 @@
  You can easily search specific kifu by strategy name and player name. You can see strategy name list and player name list in the listbox. At first you need to click the strategy name and player name in the listbox. Then you can find the kifu list in the left listbox. After that you need to click the specific kifu in the list. Then you can load the kifu by pushing "Load" button.
 
 4. Add Player Image
- When you want to add new player image into this application, you need to prepare the image file and put the same name of kifu, like "Taku.jpg". After that you need to put the file into playerIcon folder. Then you can see the new player Image when you loaded a kifu of the player.
+ When you want to add new player image into this application, you need to prepare the image file and put the same name of kifu, like "Taku.jpg". After that you need to put the file into img folder. Then you can see the new player Image when you loaded a kifu of the player.
 
 <Included Folders>
-- img: Including images of each pieces. You don't need to touch.
+- img: Including images of player, koma, castle. If you want to add new player, you can add image files with same name of player.
 - kifu: Including Kifu Data. If you don't need pre installed Kifu, then you can remove all.
-- playerIcon: Including player images. You can change the images and also add new images.
 - sound: Including a sound of Koma after moved. You don't need to touch.
 - strategy: Including strategy date. If you don't need pre installed strategies, then you can remove all;
 - Java17ForMac or Java17ForWindows: Including java execution files. You don't need to touch.

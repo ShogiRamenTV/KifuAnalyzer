@@ -55,6 +55,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String imgFilePath = "./img/";
 	String kifuFilePath = "./kifu/";
 	String strategyFilePath = "./strategy/";
+	String soundFilePath = "./sound/";
 	JLabel castleIconLabel = new JLabel();
 	JLabel playerIconLabel[] = new JLabel[2];
 	
@@ -114,7 +115,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		shogiData.initializeIcon();
 		setSize(shogiData.iconWidth*22, shogiData.iconHeight*12);
-		ImageIcon icon = new ImageIcon("./img/Shogi Ramen TV.jpg");
+		ImageIcon icon = new ImageIcon(imgFilePath + "Shogi Ramen TV.jpg");
 		setIconImage(icon.getImage());
 		getContentPane().setLayout(null);
 		initializeGUISetting();
@@ -163,7 +164,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void initializeSoundSetting() {
 		try {
-			String fileName = "./sound/Koma Oto.wav";
+			String fileName = soundFilePath + "Koma Oto.wav";
 			AudioInputStream ais = AudioSystem.getAudioInputStream(new File(fileName));
 			soundKoma = AudioSystem.getClip();
 			soundKoma.open(ais);
