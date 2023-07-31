@@ -260,7 +260,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Player2.id].setText("");
 		textBox[TextBoxType.Strategy.id].setText("");
 		textBox[TextBoxType.Castle.id].setText("");
-		//textBox[TextBoxType.Load1.id].setText("");
+		textBox[TextBoxType.Tesuji.id].setText("");
+		textBox[TextBoxType.Load1.id].setText("");
+		textBox[TextBoxType.Load2.id].setText("");
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1224,7 +1226,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			FileWriter fw = new FileWriter(file);
 		
 			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
-			fw.write(textBox[TextBoxType.Load1.id].getText() + "\n");
+			if(textBox[TextBoxType.Load1.id].getText().equals("")) {
+				fw.write(String.format("%03d", kifuDB.size()+1) + "\n");
+			}
+			else {
+				fw.write(textBox[TextBoxType.Load1.id].getText() + "\n");
+			}
 			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
 			
