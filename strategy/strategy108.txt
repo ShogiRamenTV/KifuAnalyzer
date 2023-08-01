@@ -1,4 +1,4 @@
-Gote Central Rook
+Central Rook
 1,7
 2,5
 3,6

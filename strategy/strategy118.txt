@@ -1,4 +1,4 @@
-Gote Sakata Style Opposing Rook
+Sakata Style Opposing Rook
 1,7
 2,5
 3,7

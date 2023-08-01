@@ -1,4 +1,4 @@
-Sente Gangi
+Gangi
 1,7
 2,3
 3,7

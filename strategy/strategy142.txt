@@ -1,4 +1,4 @@
-Gote Rejection Bishop Exchange
+Rejection Bishop Exchange
 1,7
 2,5
 3,6

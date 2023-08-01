@@ -1,4 +1,4 @@
-Sente Third File Rook
+Third File Rook
 1,5
 2,7
 3,7

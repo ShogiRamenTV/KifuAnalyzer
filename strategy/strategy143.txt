@@ -1,4 +1,4 @@
-Gote Direct Opposing Rook
+Direct Opposing Rook
 1,7
 2,6
 3,7
