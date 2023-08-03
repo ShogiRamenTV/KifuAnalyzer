@@ -1564,6 +1564,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		//System.out.println(sc.str);
 		String castleName = sc.str;
 		updateCastleIcon();
+		textBox[TextBoxType.Castle.id].setText(castleName);
 		
 		listModel[ListBoxType.Info.id].clear();
 		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
@@ -2183,22 +2184,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		playerIconLabel[0].setIcon(null);
 		playerIconLabel[1].setIcon(null);
 		
-		for(PlayerData pd: playerDataBase) {
-			if(pd.playerName.equals(playerNameS)) {
-				ImageIcon playerIcon = new ImageIcon(imgFilePath + playerNameS + ".jpg");
-				Image image = playerIcon.getImage();
-				Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
-				playerIcon = new ImageIcon(newImage);
-				playerIconLabel[0].setIcon(playerIcon);
-			}
-			if(pd.playerName.equals(playerNameG)) {
-				ImageIcon playerIcon = new ImageIcon(imgFilePath + playerNameG + ".jpg");
-				Image image = playerIcon.getImage();
-				Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
-				playerIcon = new ImageIcon(newImage);
-				playerIconLabel[1].setIcon(playerIcon);
-			}
-		}
+		ImageIcon playerIcon = new ImageIcon(imgFilePath + playerNameS + ".jpg");
+		Image image = playerIcon.getImage();
+		Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
+		playerIcon = new ImageIcon(newImage);
+		playerIconLabel[0].setIcon(playerIcon);
+		playerIcon = new ImageIcon(imgFilePath + playerNameG + ".jpg");
+		image = playerIcon.getImage();
+		newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
+		playerIcon = new ImageIcon(newImage);
+		playerIconLabel[1].setIcon(playerIcon);
 	}
 	public void initializePlayerIcon() {
 		playerIconLabel[0].setIcon(null);
