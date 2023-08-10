@@ -157,9 +157,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		getContentPane().add(checkBoxEditMode);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
-		for(int x=0; x<8; x++) {
-			getContentPane().add(shogiData.labelNumOfKomaS[x]);
-			getContentPane().add(shogiData.labelNumOfKomaG[x]);
+		for(SenteGote sg: SenteGote.values()) {
+			for(int x=0; x<8; x++) getContentPane().add(shogiData.labelNumOfKoma[sg.id][x]);
 		}
 		getContentPane().add(cv);
 	}
@@ -288,8 +287,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Koma> listKomaOnBoard;
 		List<Koma> listKomaOnHandForSente;
 		List<Koma> listKomaOnHandForGote;
-		JLabel[] labelNumOfKomaS = new JLabel[8];
-		JLabel[] labelNumOfKomaG = new JLabel[8];
+		JLabel[][] labelNumOfKoma = new JLabel[2][8];
 		
 		ShogiData() {
 			k = new Koma[40];
@@ -342,32 +340,30 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		public void viewKomaOnHand() {
-			int numOfKomaS[] = new int[8];
-			int numOfKomaG[] = new int[8];
+			int numOfKoma[][] = new int[2][8];
 			
-			for(int x=0; x<8; x++) {
-				labelNumOfKomaS[x].setVisible(false);
-				labelNumOfKomaG[x].setVisible(false);
-				labelNumOfKomaS[x].setSize(20, 10);
-				labelNumOfKomaG[x].setSize(20, 10);
-				numOfKomaS[x] = 0;
-				numOfKomaG[x] = 0;
+			for(SenteGote sg: SenteGote.values()) {
+				for(int x=0; x<8; x++) {
+					labelNumOfKoma[sg.id][x].setVisible(false);
+					labelNumOfKoma[sg.id][x].setSize(20, 10);
+					numOfKoma[sg.id][x] = 0;
+				}
 			}
 			
 			for(Koma k: listKomaOnHandForSente) {
 				k.setOpaque(false);
 				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (6+(k.type.id/4))*(iconHeight+10)+25);
-				numOfKomaS[k.type.id]++;
-				labelNumOfKomaS[k.type.id].setText(Integer.valueOf(numOfKomaS[k.type.id]).toString());
-				labelNumOfKomaS[k.type.id].setVisible(true);
+				numOfKoma[SenteGote.Sente.id][k.type.id]++;
+				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Sente.id][k.type.id]).toString());
+				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setVisible(true);
 			}
 			
 			for(Koma k: listKomaOnHandForGote) {
 				k.setOpaque(false);
 				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (2-(k.type.id/4))*(iconHeight+10)+40);
-				numOfKomaG[k.type.id]++;
-				labelNumOfKomaG[k.type.id].setText(Integer.valueOf(numOfKomaG[k.type.id]).toString());
-				labelNumOfKomaG[k.type.id].setVisible(true);
+				numOfKoma[SenteGote.Gote.id][k.type.id]++;
+				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Gote.id][k.type.id]).toString());
+				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setVisible(true);
 			}
 		}
 		
@@ -460,13 +456,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		public void initializeLabelSetting() {
 			for(int x=0; x<8; x++) {
-				labelNumOfKomaS[x] = new JLabel("0");
-				labelNumOfKomaS[x].setBounds((10+(x%4))*(iconWidth+10)+38, (6+(x/4))*(iconHeight+10)+30, 80, 20);
-				labelNumOfKomaS[x].setVisible(false);
+				labelNumOfKoma[SenteGote.Sente.id][x] = new JLabel("0");
+				labelNumOfKoma[SenteGote.Sente.id][x].setBounds((10+(x%4))*(iconWidth+10)+38, (6+(x/4))*(iconHeight+10)+30, 80, 20);
+				labelNumOfKoma[SenteGote.Sente.id][x].setVisible(false);
 				
-				labelNumOfKomaG[x] = new JLabel("0");
-				labelNumOfKomaG[x].setBounds((10+(x%4))*(iconWidth+10)+38, (3-(x/4))*(iconHeight+10)+15, 80, 20);
-				labelNumOfKomaG[x].setVisible(false);
+				labelNumOfKoma[SenteGote.Gote.id][x] = new JLabel("0");
+				labelNumOfKoma[SenteGote.Gote.id][x].setBounds((10+(x%4))*(iconWidth+10)+38, (3-(x/4))*(iconHeight+10)+15, 80, 20);
+				labelNumOfKoma[SenteGote.Gote.id][x].setVisible(false);
 			}
 		}
 	}
@@ -1115,8 +1111,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
 				String content;
-				kdb.playerNameS = br.readLine();
-				kdb.playerNameG = br.readLine();
+				for(SenteGote sg: SenteGote.values()) {
+					kdb.playerName[sg.id] = br.readLine();
+				}
 				while((content = br.readLine()) != null) {
 					StringTokenizer st = new StringTokenizer(content,",");
 					while(st.hasMoreTokens()) {
@@ -1132,11 +1129,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 						if(kdb.strategyName.equals("")) {
 							kdb.strategyName = checkStrategy(shogiDataForKDB);
 						}
-						if(kdb.castleNameS.equals("")) {
-							kdb.castleNameS = checkCastle(shogiDataForKDB, true);
+						if(kdb.castleName[SenteGote.Sente.id].equals("")) {
+							kdb.castleName[SenteGote.Sente.id] = checkCastle(shogiDataForKDB, true);
 						}
-						if(kdb.castleNameG.equals("")) {
-							kdb.castleNameG = checkCastle(shogiDataForKDB, false);
+						if(kdb.castleName[SenteGote.Gote.id].equals("")) {
+							kdb.castleName[SenteGote.Gote.id] = checkCastle(shogiDataForKDB, false);
 						}
 					}
 				}
@@ -1412,19 +1409,19 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(KifuDataBase kdb: kifuDB) {
 			if(kdb.strategyName.equals(strategy)) {
 				String str = String.format("kf%03d:", kifuDB.indexOf(kdb)+1);
-				str += kdb.playerNameS + "(" + kdb.castleNameS + ")" + " vs " + kdb.playerNameG + "(" + kdb.castleNameG + ")";
+				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
 				if(kdb.isSenteWin) str+="(Sente Win)";
 				else str+="(Gote Win)";
 				if(playerName.equals("") && castleName.equals("")) {
 					listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("") && !castleName.equals("")) {
-					if(str.contains(playerName) && (kdb.castleNameS.equals(castleName) || kdb.castleNameG.equals(castleName))) {
+					if(str.contains(playerName) && (kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName))) {
 						listModel[ListBoxType.Info.id].addElement(str);
 					}
 				} else if(!playerName.equals("")) {
 					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!castleName.equals("")) {
-					if(kdb.castleNameS.equals(castleName) || kdb.castleNameG.equals(castleName)) listModel[ListBoxType.Info.id].addElement(str);
+					if(kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName)) listModel[ListBoxType.Info.id].addElement(str);
 				}
 			}
 		}
@@ -1498,26 +1495,26 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(KifuDataBase kdb: kifuDB) {
 			Boolean found = false;
 			for(StringCount sc: castleCountData) {
-				if(sc.str.equals(kdb.castleNameS)) {
+				if(sc.str.equals(kdb.castleName[SenteGote.Sente.id])) {
 					sc.cnt++;
 					found = true;
 				}
 			}
 			if(!found) {
-				StringCount sc = new StringCount(kdb.castleNameS, kdb.isSenteWin);
+				StringCount sc = new StringCount(kdb.castleName[SenteGote.Sente.id], kdb.isSenteWin);
 				castleCountData.add(sc);
 			}
 		}
 		for(KifuDataBase kdb: kifuDB) {
 			Boolean found = false;
 			for(StringCount sc: castleCountData) {
-				if(sc.str.equals(kdb.castleNameG)) {
+				if(sc.str.equals(kdb.castleName[SenteGote.Gote.id])) {
 					sc.cnt++;
 					found = true;
 				}
 			}
 			if(!found) {
-				StringCount sc = new StringCount(kdb.castleNameG, kdb.isSenteWin);
+				StringCount sc = new StringCount(kdb.castleName[SenteGote.Gote.id], kdb.isSenteWin);
 				castleCountData.add(sc);
 			}
 		}
@@ -1579,9 +1576,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		else listModel[ListBoxType.Info.id].addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
 		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuDataBase kdb: kifuDB) {
-			if(kdb.castleNameS.equals(castleName) || kdb.castleNameG.equals(castleName)) {
+			if(kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName)) {
 				String str = String.format("kf%03d:", kifuDB.indexOf(kdb)+1);
-				str += kdb.playerNameS + "(" + kdb.castleNameS + ")" + " vs " + kdb.playerNameG + "(" + kdb.castleNameG + ")";
+				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
 				if(kdb.isSenteWin) str+="(Sente Win)";
 				else str+="(Gote Win)";
 				
@@ -1794,7 +1791,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(td.name.equals(tesujiName)) {
 				String str = "kf" + String.format("%03d:%03d", td.fileIndex, td.stepIndex);
 				KifuDataBase kdb = kifuDB.get(td.fileIndex-1);
-				str += ":" + kdb.playerNameS + " vs " + kdb.playerNameG;
+				str += ":" + kdb.playerName[SenteGote.Sente.id] + " vs " + kdb.playerName[SenteGote.Gote.id];
 				listModel[ListBoxType.Info.id].addElement(str);
 			}
 		}
@@ -1825,17 +1822,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public class KifuDataBase {
 		List<Kifu> db = new ArrayList<Kifu>();
-		String playerNameS;
-		String playerNameG;
+		String playerName[] = new String[2];
 		String strategyName;
-		String castleNameS;
-		String castleNameG;
+		String castleName[] = new String[2];
 		Boolean isSenteWin;
 		
 		KifuDataBase() {
 			strategyName = "";
-			castleNameS = "";
-			castleNameG = "";
+			for(SenteGote sg: SenteGote.values()) castleName[sg.id] = "";
 		}
 	}	
 	public class Kifu {
@@ -2014,26 +2008,26 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				grS.isPlayerWin = false;
 				grG.isPlayerWin = true;
 			}
-			grS.castle = kdb.castleNameS;
-			grG.castle = kdb.castleNameG;
+			grS.castle = kdb.castleName[SenteGote.Sente.id];
+			grG.castle = kdb.castleName[SenteGote.Gote.id];
 			
 			for(PlayerData pd: playerDataBase) {
-				if(kdb.playerNameS.equals(pd.playerName)) {
+				if(kdb.playerName[SenteGote.Sente.id].equals(pd.playerName)) {
 					foundS = true;
 					pd.grList.add(grS);
-				} else if(kdb.playerNameG.equals(pd.playerName)) {
+				} else if(kdb.playerName[SenteGote.Gote.id].equals(pd.playerName)) {
 					foundG = true;
 					pd.grList.add(grG);
 				}
 			}
 			
 			if(!foundS) {
-				PlayerData pd = new PlayerData(kdb.playerNameS);
+				PlayerData pd = new PlayerData(kdb.playerName[SenteGote.Sente.id]);
 				pd.grList.add(grS);
 				playerDataBase.add(pd);
 			}
 			if(!foundG) {
-				PlayerData pd = new PlayerData(kdb.playerNameG);
+				PlayerData pd = new PlayerData(kdb.playerName[SenteGote.Gote.id]);
 				pd.grList.add(grG);
 				playerDataBase.add(pd);
 			}
