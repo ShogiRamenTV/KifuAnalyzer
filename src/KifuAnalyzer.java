@@ -57,6 +57,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String strategyFilePath = "./strategy/";
 	String soundFilePath = "./sound/";
 	JLabel castleIconLabel = new JLabel();
+	
+	public enum SenteGote {
+		Sente(0), Gote(1);
+		private final int id;
+		private SenteGote(final int id) {
+			this.id = id;
+		}
+	};
 	JLabel playerIconLabel[] = new JLabel[2];
 	
 	public enum ButtonType {
@@ -144,8 +152,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(LabelType l: LabelType.values()) getContentPane().add(label[l.id]);
 		for(TextBoxType t: TextBoxType.values()) getContentPane().add(textBox[t.id]);
 		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(scrollPane[lb.id]);
-		getContentPane().add(playerIconLabel[0]);
-		getContentPane().add(playerIconLabel[1]);
+		for(SenteGote sg: SenteGote.values()) getContentPane().add(playerIconLabel[sg.id]);
 		getContentPane().add(castleIconLabel);
 		getContentPane().add(checkBoxEditMode);
 		getContentPane().add(radioButtonSente);
@@ -249,10 +256,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	
 	public void initializePlayerIconLabel() {
-		playerIconLabel[0] = new JLabel();
-		playerIconLabel[1] = new JLabel();
-		playerIconLabel[0].setBounds(840, 45, 100, 200);
-		playerIconLabel[1].setBounds(970, 45, 100, 200);
+		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
+		playerIconLabel[SenteGote.Sente.id].setBounds(840, 45, 100, 200);
+		playerIconLabel[SenteGote.Gote.id].setBounds(970, 45, 100, 200);
 		castleIconLabel.setBounds(880, 460, 200, 252);
 	}
 	public void clearTextBox() {
@@ -2178,26 +2184,21 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				);
 	}
 	public void updatePlayerIcon() {
-		String playerNameS = textBox[TextBoxType.Player1.id].getText();
-		String playerNameG = textBox[TextBoxType.Player2.id].getText();
+		String playerName[] = new String[2];
+		playerName[SenteGote.Sente.id] = new String(textBox[TextBoxType.Player1.id].getText());
+		playerName[SenteGote.Gote.id] = new String(textBox[TextBoxType.Player2.id].getText());
 		
-		playerIconLabel[0].setIcon(null);
-		playerIconLabel[1].setIcon(null);
-		
-		ImageIcon playerIcon = new ImageIcon(imgFilePath + playerNameS + ".jpg");
-		Image image = playerIcon.getImage();
-		Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
-		playerIcon = new ImageIcon(newImage);
-		playerIconLabel[0].setIcon(playerIcon);
-		playerIcon = new ImageIcon(imgFilePath + playerNameG + ".jpg");
-		image = playerIcon.getImage();
-		newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
-		playerIcon = new ImageIcon(newImage);
-		playerIconLabel[1].setIcon(playerIcon);
+		for(SenteGote sg: SenteGote.values()) {
+			playerIconLabel[sg.id].setIcon(null);
+			ImageIcon playerIcon = new ImageIcon(imgFilePath + playerName[sg.id] + ".jpg");
+			Image image = playerIcon.getImage();
+			Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
+			playerIcon = new ImageIcon(newImage);
+			playerIconLabel[sg.id].setIcon(playerIcon);
+		}
 	}
 	public void initializePlayerIcon() {
-		playerIconLabel[0].setIcon(null);
-		playerIconLabel[1].setIcon(null);
+		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id].setIcon(null);
 	}
 	
 	private ActionListener enterActionListener = new ActionListener() {
