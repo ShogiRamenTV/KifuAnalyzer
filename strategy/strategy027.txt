@@ -1,4 +1,4 @@
-Third File Rook
+3rd File Rook
 1,7
 2,6
 3,7
