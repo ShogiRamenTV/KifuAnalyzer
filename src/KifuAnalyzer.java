@@ -123,13 +123,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		shogiData.initializeIcon();
 		setSize(shogiData.iconWidth*22, shogiData.iconHeight*12);
-		ImageIcon icon = new ImageIcon(imgFilePath + "Shogi Ramen TV.jpg");
-		setIconImage(icon.getImage());
-		getContentPane().setLayout(null);
+		initializeAppIcon();
 		initializeGUISetting();
 		contentPaneSetting();
 		listenerSetting();		
 		actionForInitialize();
+	}
+	public void initializeAppIcon() {
+		ImageIcon icon = new ImageIcon(imgFilePath + "Shogi Ramen TV.jpg");
+		setIconImage(icon.getImage());
 	}
 	public void initializeGUISetting() {
 		shogiData.initializeKomaSetting();
@@ -145,6 +147,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeSoundSetting();
 	}
 	public void contentPaneSetting() {
+		getContentPane().setLayout(null);
+		
 		for(int x=0; x<40; x++) {
 			getContentPane().add(shogiData.k[x]);
 		}
@@ -285,6 +289,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Koma selectedKoma = null;
 		Boolean turnIsSente;
 		List<Koma> listKomaOnBoard;
+		List<List<Koma>> listKomaOnHand;
 		List<Koma> listKomaOnHandForSente;
 		List<Koma> listKomaOnHandForGote;
 		JLabel[][] labelNumOfKoma = new JLabel[2][8];
@@ -295,6 +300,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			listKomaOnBoard = new ArrayList<Koma>();
 			listKomaOnHandForSente = new ArrayList<Koma>();
 			listKomaOnHandForGote = new ArrayList<Koma>();
+			listKomaOnHand = new ArrayList<>();
+			listKomaOnHand.add(listKomaOnHandForSente);
+			listKomaOnHand.add(listKomaOnHandForGote);
 		}
 		
 		public void initializeIcon() {
@@ -350,7 +358,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 			
-			for(Koma k: listKomaOnHandForSente) {
+			//for(Koma k: listKomaOnHandForSente) {
+			for(Koma k: listKomaOnHand.get(SenteGote.Sente.id)) {
 				k.setOpaque(false);
 				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (6+(k.type.id/4))*(iconHeight+10)+25);
 				numOfKoma[SenteGote.Sente.id][k.type.id]++;
@@ -358,7 +367,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setVisible(true);
 			}
 			
-			for(Koma k: listKomaOnHandForGote) {
+			for(Koma k: listKomaOnHand.get(SenteGote.Gote.id)) {
 				k.setOpaque(false);
 				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (2-(k.type.id/4))*(iconHeight+10)+40);
 				numOfKoma[SenteGote.Gote.id][k.type.id]++;
@@ -408,8 +417,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void resetAllKoma() {
 			turnIsSente = true;
 			listKomaOnBoard.clear();
-			listKomaOnHandForSente.clear();
-			listKomaOnHandForGote.clear();
+			for(SenteGote sg: SenteGote.values()) listKomaOnHand.get(sg.id).clear();
 			for(int x=0; x<9; x++) {
 				k[x].reset(KomaType.Pawn, x+1, 7, 0);
 			}
@@ -730,7 +738,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(this.type == KomaType.Gold || this.type == KomaType.King ) return true;
 			
 			if(x <= 0 || x >= 10 || y <= 0 || y >= 10) return true;
-			if(sd.listKomaOnHandForSente.indexOf(this) != -1 || sd.listKomaOnHandForGote.indexOf(this) != -1) return true;
+			if(sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1 || sd.listKomaOnHand.get(SenteGote.Gote.id).indexOf(this) != -1) return true;
 			
 			if( (this.sente == 0 && y <= 3) || (this.sente == 1 && y >= 7) ||
 					(this.sente == 0 && preY <= 3) || (this.sente == 1 && preY >= 7) ) {
@@ -771,17 +779,17 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			this.setLocation((9-x)*(shogiData.iconWidth+10)+25, (y-1)*(shogiData.iconHeight+10)+25);
 			
 			if(x>0 && x<10 && y>0 && y<10) {
-				if( sd.listKomaOnHandForSente.indexOf(this) != -1 ) moveFromStoB(sd);
-				else if( sd.listKomaOnHandForGote.indexOf(this) != -1) moveFromGtoB(sd);
+				if( sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1 ) moveFromStoB(sd);
+				else if( sd.listKomaOnHand.get(SenteGote.Gote.id).indexOf(this) != -1) moveFromGtoB(sd);
 				else moveFromBtoB(sd);
 			} else if(y>5) {
 				if(sd.listKomaOnBoard.indexOf(this) != -1) moveFromBtoS(sd);
-				else if(sd.listKomaOnHandForSente.indexOf(this) != -1) moveFromStoS(sd);
+				else if(sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1) moveFromStoS(sd);
 				else moveFromGtoS(sd);
 				return false;
 			} else {
 				if(sd.listKomaOnBoard.indexOf(this) != -1) moveFromBtoG(sd);
-				else if(sd.listKomaOnHandForGote.indexOf(this) != -1) moveFromGtoG(sd);
+				else if(sd.listKomaOnHand.get(SenteGote.Gote.id).indexOf(this) != -1) moveFromGtoG(sd);
 				else moveFromStoG(sd);
 				return false;
 			}
@@ -809,7 +817,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					else {
 						k.py = 8;
 					}
-					sd.listKomaOnHandForSente.add(k);
+					sd.listKomaOnHand.get(SenteGote.Sente.id).add(k);
 				} else {
 					if(k.sente == 0) k.reverse();
 					if(k.type == KomaType.Pawn) k.px = 0;
@@ -825,20 +833,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					else {
 						k.py = 2;
 					}
-					sd.listKomaOnHandForGote.add(k);
+					sd.listKomaOnHand.get(SenteGote.Gote.id).add(k);
 				}
 			}
 		}
 		// OnHandForSente -> OnBoard
 		public void moveFromStoB(ShogiData sd) {
 			this.drop = 1;
-			sd.listKomaOnHandForSente.remove(this);
+			sd.listKomaOnHand.get(SenteGote.Sente.id).remove(this);
 			sd.listKomaOnBoard.add(this);
 		}
 		// OnHandForGote -> OnBoard
 		public void moveFromGtoB(ShogiData sd) {
 			this.drop = 1;
-			sd.listKomaOnHandForGote.remove(this);
+			sd.listKomaOnHand.get(SenteGote.Gote.id).remove(this);
 			sd.listKomaOnBoard.add(this);
 		}
 		// OnBoard -> OnHandForSente
@@ -847,7 +855,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			
 			if(this.sente == 1) this.reverse();
 			if(this.promoted == 1) this.promote();
-			sd.listKomaOnHandForSente.add(this);
+			sd.listKomaOnHand.get(SenteGote.Sente.id).add(this);
 		}
 		// OnBoard -> OnHandForGote
 		public void moveFromBtoG(ShogiData sd) {
@@ -855,19 +863,19 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			
 			if(this.sente == 0) this.reverse();
 			if(this.promoted == 1) this.promote();	
-			sd.listKomaOnHandForGote.add(this);
+			sd.listKomaOnHand.get(SenteGote.Gote.id).add(this);
 		}
 		// OnHandForSente -> OnHandForGote
 		public void moveFromStoG(ShogiData sd) {
-			sd.listKomaOnHandForSente.remove(this);
+			sd.listKomaOnHand.get(SenteGote.Sente.id).remove(this);
 			this.reverse();
-			sd.listKomaOnHandForGote.add(this);
+			sd.listKomaOnHand.get(SenteGote.Gote.id).add(this);
 		}
 		// OnHandForGote -> OnHandForSente
 		public void moveFromGtoS(ShogiData sd) {
-			sd.listKomaOnHandForGote.remove(this);
+			sd.listKomaOnHand.get(SenteGote.Gote.id).remove(this);
 			this.reverse();
-			sd.listKomaOnHandForSente.add(this);
+			sd.listKomaOnHand.get(SenteGote.Sente.id).add(this);
 		}
 		// OnHandForSente -> OnHandForSente
 		public void moveFromStoS(ShogiData sd) {
@@ -2368,14 +2376,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				return;
 			}
 		}
-		for(Koma k: shogiData.listKomaOnHandForSente) {
+		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Sente.id)) {
 			Point lp = k.getLocation();
 			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
 				commonMousePressed(mp, lp, k, false);
 				return;
 			}
 		}
-		for(Koma k: shogiData.listKomaOnHandForGote) {
+		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Gote.id)) {
 			Point lp = k.getLocation();
 			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
 				commonMousePressed(mp, lp, k, false);
