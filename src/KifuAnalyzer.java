@@ -84,7 +84,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	};
 	JLabel label[] = new JLabel[LabelType.values().length];
 	public enum TextBoxType {
-		Load1(0), Load2(1), Player1(2), Player2(3), Tesuji(4), Strategy(5), Castle(6);
+		Load1(0), Load2(1), Player1(2), Player2(3), Strategy(4), Tesuji(5), Castle(6);
 		private final int id;
 		private TextBoxType(final int id) {
 			this.id = id;
@@ -195,12 +195,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			button[b.id] = new JButton(b.name());
 			button[b.id].addActionListener(this);
 		}
-		button[ButtonType.Initialize.id].setBounds(600, 15, 80, 20);
-		button[ButtonType.Save.id].setBounds(840, 15, 80, 20);
-		button[ButtonType.Load.id].setBounds(920, 15, 80, 20);
-		button[ButtonType.Strategy.id].setBounds(600, 55, 80, 20);
-		button[ButtonType.Castle.id].setBounds(600, 75, 80, 20);
-		button[ButtonType.Tesuji.id].setBounds(600, 35, 80, 20);
+		button[ButtonType.Initialize.id].setBounds(580, 15, 80, 20);
+		button[ButtonType.Save.id].setBounds(820, 15, 80, 20);
+		button[ButtonType.Load.id].setBounds(900, 15, 80, 20);
+		button[ButtonType.Strategy.id].setBounds(580, 35, 80, 20);
+		button[ButtonType.Tesuji.id].setBounds(580, 55, 80, 20);
+		button[ButtonType.Castle.id].setBounds(580, 75, 80, 20);
 	}
 	public void initializeTextBoxSetting() {
 		for(TextBoxType t: TextBoxType.values()) {
@@ -209,17 +209,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(LabelType l: LabelType.values()) {
 			label[l.id] = new JLabel();
 		}
-		label[LabelType.Strategy.id].setText("Name");
-		label[LabelType.Strategy.id].setBounds(685, 55, 100, 20);
-		textBox[TextBoxType.Strategy.id].setBounds(718, 55, 100, 20);
-		label[LabelType.Castle.id].setText("Name");
-		label[LabelType.Castle.id].setBounds(685, 75, 100, 20);
-		textBox[TextBoxType.Castle.id].setBounds(718, 75, 100, 20);
-		label[LabelType.Tesuji.id].setText("Name");
-		label[LabelType.Tesuji.id].setBounds(685, 35, 100, 20);
-		textBox[TextBoxType.Tesuji.id].setBounds(718, 35, 100, 20);
-		textBox[TextBoxType.Load1.id].setBounds(998, 15, 50, 20);
-		textBox[TextBoxType.Load2.id].setBounds(1048, 15, 50, 20);
+		textBox[TextBoxType.Strategy.id].setBounds(660, 35, 160, 20);
+		textBox[TextBoxType.Tesuji.id].setBounds(660, 55, 160, 20);
+		textBox[TextBoxType.Castle.id].setBounds(660, 75, 160, 20);
+		textBox[TextBoxType.Load1.id].setBounds(980, 15, 50, 20);
+		textBox[TextBoxType.Load2.id].setBounds(1030, 15, 50, 20);
 		label[LabelType.Sente.id].setText("Sente");
 		label[LabelType.Sente.id].setBounds(840, 35, 100, 20);
 		textBox[TextBoxType.Player1.id].setBounds(835, 55, 120, 20);
@@ -230,9 +224,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
 	}
 	public void initializeCheckBox() {
-		checkBoxEditMode.setBounds(680, 20, 100, 10);
-		radioButtonSente.setBounds(708, 95, 70, 10);
-		radioButtonGote.setBounds(768, 95, 70, 10);
+		checkBoxEditMode.setBounds(660, 20, 100, 10);
+		radioButtonSente.setBounds(660, 95, 70, 10);
+		radioButtonGote.setBounds(720, 95, 70, 10);
 		ButtonGroup buttonGroup = new ButtonGroup();
 		buttonGroup.add(radioButtonSente);
 		buttonGroup.add(radioButtonGote);
@@ -1407,6 +1401,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		StringCount sc = strategyCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String strategy = sc.str;
+		textBox[TextBoxType.Strategy.id].setText(strategy);
 		
 		listModel[ListBoxType.Info.id].clear();
 		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
@@ -1680,16 +1675,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String castleName = sc.str;
 		
 		castleIconLabel.setIcon(null);
-		
-		for(CastleData cd: castleDataBase) {
-			if(cd.name.equals(castleName)) {
-				ImageIcon castleIcon = new ImageIcon(imgFilePath + castleName + ".jpg");
-				Image image = castleIcon.getImage();
-				Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
-				castleIcon = new ImageIcon(newImage);
-				castleIconLabel.setIcon(castleIcon);
-			}
-		}
+		ImageIcon castleIcon = new ImageIcon(imgFilePath + castleName + ".jpg");
+		Image image = castleIcon.getImage();
+		Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
+		castleIcon = new ImageIcon(newImage);
+		castleIconLabel.setIcon(castleIcon);
 	}
 	public void initializeCastleIcon() {
 		castleIconLabel.setIcon(null);
