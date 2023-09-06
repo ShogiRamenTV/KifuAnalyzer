@@ -53,7 +53,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Color boardColor = new Color(255, 238, 203);
 	
 	String imgFilePath = "./img/";
-	String kifuFilePath = "./kifu/";
+	String kifuFilePath = "./kifu";
 	String strategyFilePath = "./strategy/";
 	String soundFilePath = "./sound/";
 	JLabel castleIconLabel = new JLabel();
@@ -84,7 +84,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	};
 	JLabel label[] = new JLabel[LabelType.values().length];
 	public enum TextBoxType {
-		Load1(0), Load2(1), Player1(2), Player2(3), Strategy(4), Tesuji(5), Castle(6);
+		LoadFile(0), LoadStep(1), LoadYear(2), Player1(3), Player2(4), Strategy(5), Tesuji(6), Castle(7);
 		private final int id;
 		private TextBoxType(final int id) {
 			this.id = id;
@@ -212,8 +212,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Strategy.id].setBounds(660, 35, 160, 20);
 		textBox[TextBoxType.Tesuji.id].setBounds(660, 55, 160, 20);
 		textBox[TextBoxType.Castle.id].setBounds(660, 75, 160, 20);
-		textBox[TextBoxType.Load1.id].setBounds(980, 15, 50, 20);
-		textBox[TextBoxType.Load2.id].setBounds(1030, 15, 50, 20);
+		textBox[TextBoxType.LoadFile.id].setBounds(980, 15, 40, 20);
+		textBox[TextBoxType.LoadStep.id].setBounds(1020, 15, 40, 20);
+		textBox[TextBoxType.LoadYear.id].setBounds(1060, 15, 40, 20);
 		label[LabelType.Sente.id].setText("Sente");
 		label[LabelType.Sente.id].setBounds(840, 35, 100, 20);
 		textBox[TextBoxType.Player1.id].setBounds(835, 55, 120, 20);
@@ -264,8 +265,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Strategy.id].setText("");
 		textBox[TextBoxType.Castle.id].setText("");
 		textBox[TextBoxType.Tesuji.id].setText("");
-		textBox[TextBoxType.Load1.id].setText("");
-		textBox[TextBoxType.Load2.id].setText("");
+		textBox[TextBoxType.LoadFile.id].setText("");
+		textBox[TextBoxType.LoadStep.id].setText("");
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1012,7 +1013,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int index = 1;
 		
 		while(true) {
-			fileName = kifuFilePath + String.format("kifu%03d.txt", index);
+			fileName = kifuFilePath + "/" + String.format("kifu%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1033,19 +1034,21 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	
 	public void actionForLoad() {
-		loadByNumber(textBox[TextBoxType.Load1.id].getText(), textBox[TextBoxType.Load2.id].getText());
+		loadByNumber(textBox[TextBoxType.LoadFile.id].getText(), 
+				textBox[TextBoxType.LoadStep.id].getText(),
+				textBox[TextBoxType.LoadYear.id].getText());
 	}
-	public void loadByNumber(String numStr, String numStr2) {
+	public void loadByNumber(String numStrFile, String numStrStep, String numStrYear) {
 		String fileName;
-		if(numStr.equals("")) {
+		if(numStrFile.equals("")) {
 			Path path = Paths.get("").toAbsolutePath();
 			FileDialog fd = new FileDialog(this, "Load", FileDialog.LOAD);
 			fd.setDirectory(path.toString() + "/kifu/");
 			fd.setVisible(true);
 			if(fd.getFile() == null) return;
-			fileName = kifuFilePath + fd.getFile();
+			fileName = kifuFilePath + "/" + fd.getFile();
 		} else {
-			fileName = kifuFilePath + "kifu" + numStr + ".txt";
+			fileName = kifuFilePath + numStrYear + "/" + "kifu" + numStrFile + ".txt";
 		}
 		
 		// initialize before load
@@ -1082,11 +1085,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			br.close();
 			
 			shogiData.resetAllKoma();
-			if(numStr2.equals("")) {
+			if(numStrStep.equals("")) {
 				listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 			} else {
-				int selectedIndex = Integer.parseInt(numStr2);
+				int selectedIndex = Integer.parseInt(numStrStep);
 				listBox[ListBoxType.Kifu.id].setSelectedIndex(selectedIndex);
 				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(selectedIndex);
 				commonListAction();
@@ -1101,13 +1104,17 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	
 	public void actionForDB() {
+		kifuDB.clear();
+		loadKifuDBByYear("");
+		loadKifuDBByYear("2022");
+	}
+	public void loadKifuDBByYear(String strY) {
 		try {
 			System.out.println("Load Kifu Data");
 			int fileIndex = 1;
-			kifuDB.clear();
 			while(true) {
 				shogiDataForKDB.resetAllKoma();
-				String fileName = kifuFilePath + "kifu" + String.format("%03d", fileIndex) + ".txt";
+				String fileName = kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
 				File file = new File(fileName);
 				KifuDataBase kdb = new KifuDataBase();
 				FileReader fr = new FileReader(file);
@@ -1116,6 +1123,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				for(SenteGote sg: SenteGote.values()) {
 					kdb.playerName[sg.id] = br.readLine();
 				}
+				kdb.year = strY;
+				kdb.index = fileIndex;
 				while((content = br.readLine()) != null) {
 					StringTokenizer st = new StringTokenizer(content,",");
 					while(st.hasMoreTokens()) {
@@ -1220,7 +1229,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int index = 1;
 		
 		while(true) {
-			fileName = kifuFilePath + String.format("tesuji%03d.txt", index);
+			fileName = kifuFilePath + "/" + String.format("tesuji%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1231,11 +1240,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			FileWriter fw = new FileWriter(file);
 		
 			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
-			if(textBox[TextBoxType.Load1.id].getText().equals("")) {
+			if(textBox[TextBoxType.LoadFile.id].getText().equals("")) {
 				fw.write(String.format("%03d", kifuDB.size()+1) + "\n");
 			}
 			else {
-				fw.write(textBox[TextBoxType.Load1.id].getText() + "\n");
+				fw.write(textBox[TextBoxType.LoadFile.id].getText() + "\n");
 			}
 			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
@@ -1411,7 +1420,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuDataBase kdb: kifuDB) {
 			if(kdb.strategyName.equals(strategy)) {
-				String str = String.format("kf%03d:", kifuDB.indexOf(kdb)+1);
+				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
 				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
 				if(kdb.isSenteWin) str+="(Sente Win)";
 				else str+="(Gote Win)";
@@ -1432,12 +1441,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void getLoadNumberOnListBox2() {
 		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
-		String subStr = str.substring(2,5);
-		String subStr2 = str.substring(6,9);
-		textBox[TextBoxType.Load1.id].setText("");
-		textBox[TextBoxType.Load2.id].setText("");
-		if(subStr.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.Load1.id].setText(subStr);
-		if(subStr2.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.Load2.id].setText(subStr2);
+		String subStrFile = str.substring(2,5);
+		String subStrStep = str.substring(6,9);
+		String subStrYear = str.substring(10,14);
+		textBox[TextBoxType.LoadFile.id].setText("");
+		textBox[TextBoxType.LoadStep.id].setText("");
+		textBox[TextBoxType.LoadYear.id].setText("");
+		if(subStrFile.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.LoadFile.id].setText(subStrFile);
+		if(subStrStep.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.LoadStep.id].setText(subStrStep);
+		if(subStrYear.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.LoadYear.id].setText(subStrYear);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1580,7 +1592,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuDataBase kdb: kifuDB) {
 			if(kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName)) {
-				String str = String.format("kf%03d:", kifuDB.indexOf(kdb)+1);
+				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
 				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
 				if(kdb.isSenteWin) str+="(Sente Win)";
 				else str+="(Gote Win)";
@@ -1693,6 +1705,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String name;
 		int fileIndex;
 		int stepIndex;
+		String year;
 		TesujiData(String tesujiName, int file, int step) {
 			name = tesujiName;
 			fileIndex = file;
@@ -1700,12 +1713,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public void loadTesujiData() {
-		System.out.println("Load Tesuji Data");
 		tesujiDataBase.clear();
+		loadTesujiDataByYear("");
+		loadTesujiDataByYear("2022");
+	}
+	public void loadTesujiDataByYear(String strY) {
+		System.out.println("Load Tesuji Data");
 		try {
 			int fileIndex = 1;
 			while(true) {
-				String fileName = kifuFilePath + "tesuji" + String.format("%03d", fileIndex) + ".txt";
+				String fileName = kifuFilePath + strY + "/" + "tesuji" + String.format("%03d", fileIndex) + ".txt";
 				File file = new File(fileName);
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
@@ -1713,6 +1730,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				int fileNumber = Integer.parseInt(br.readLine());
 				int stepNumber = Integer.parseInt(br.readLine());
 				TesujiData tesujiData = new TesujiData(name, fileNumber, stepNumber); 
+				tesujiData.year = strY;
 				br.close();
 				tesujiDataBase.add(tesujiData);
 				fileIndex++;
@@ -1787,8 +1805,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(TesujiData td: tesujiDataBase) {
 			if(td.name.equals(tesujiName)) {
-				String str = "kf" + String.format("%03d:%03d", td.fileIndex, td.stepIndex);
-				KifuDataBase kdb = kifuDB.get(td.fileIndex-1);
+				String str = "kf" + String.format("%03d:%03d:%s", td.fileIndex, td.stepIndex, td.year);
+				KifuDataBase kdb = getKDB(td.fileIndex, td.year);
+				if(kdb == null) continue;
 				str += ":" + kdb.playerName[SenteGote.Sente.id] + " vs " + kdb.playerName[SenteGote.Gote.id];
 				listModel[ListBoxType.Info.id].addElement(str);
 			}
@@ -1823,6 +1842,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String playerName[] = new String[2];
 		String strategyName;
 		String castleName[] = new String[2];
+		String year;
+		int index;
 		Boolean isSenteWin;
 		
 		KifuDataBase() {
@@ -1857,6 +1878,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(drop == 1) s += "打";
 		
 		return s;
+	}
+	public KifuDataBase getKDB(int fileIndex, String year) {
+		for(KifuDataBase kdb: kifuDB) {
+			if(kdb.index == fileIndex && kdb.year.equals(year)) return kdb;
+		}
+		
+		return null;
 	}
 	public void checkKDB(int index) {
 		int i;
