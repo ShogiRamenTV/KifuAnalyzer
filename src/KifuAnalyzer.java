@@ -1106,7 +1106,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void actionForDB() {
 		kifuDB.clear();
 		loadKifuDBByYear("");
-		loadKifuDBByYear("2022");
+		//loadKifuDBByYear("2022");
 	}
 	public void loadKifuDBByYear(String strY) {
 		try {
