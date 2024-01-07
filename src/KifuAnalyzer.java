@@ -1334,6 +1334,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 			if(isSame) {
+				//System.out.println("strategy" + String.format("%03d", strategyDataBase.indexOf(strData)+1) + ".txt matched");
 				return strData.name;
 			}
 		}
