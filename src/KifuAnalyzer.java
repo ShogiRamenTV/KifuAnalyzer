@@ -1115,6 +1115,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			while(true) {
 				shogiDataForKDB.resetAllKoma();
 				String fileName = kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
+				//System.out.println(fileName);
 				File file = new File(fileName);
 				KifuDataBase kdb = new KifuDataBase();
 				FileReader fr = new FileReader(file);
