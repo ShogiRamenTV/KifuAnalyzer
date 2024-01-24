@@ -91,7 +91,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JTextField textBox[] = new JTextField[TextBoxType.values().length];
-	JCheckBox checkBoxEditMode = new JCheckBox("Edit Mode", false);
+	JCheckBox checkBoxEditMode = new JCheckBox("Edit", false);
+	JCheckBox checkBoxReverse = new JCheckBox("Reverse", false);
 	JRadioButton radioButtonSente = new JRadioButton("Sente", true);
 	JRadioButton radioButtonGote = new JRadioButton("Gote");
 	
@@ -159,6 +160,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(SenteGote sg: SenteGote.values()) getContentPane().add(playerIconLabel[sg.id]);
 		getContentPane().add(castleIconLabel);
 		getContentPane().add(checkBoxEditMode);
+		getContentPane().add(checkBoxReverse);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
 		for(SenteGote sg: SenteGote.values()) {
@@ -225,7 +227,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
 	}
 	public void initializeCheckBox() {
-		checkBoxEditMode.setBounds(660, 20, 100, 10);
+		checkBoxEditMode.setBounds(660, 20, 60, 10);
+		checkBoxReverse.setBounds(720, 20, 80, 10);
+		checkBoxReverse.addActionListener(checkActionListener);
 		radioButtonSente.setBounds(660, 95, 70, 10);
 		radioButtonGote.setBounds(720, 95, 70, 10);
 		ButtonGroup buttonGroup = new ButtonGroup();
@@ -2227,6 +2231,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
         @Override
         public void actionPerformed(ActionEvent e) {
             updatePlayerIcon();
+        }
+    };
+    
+    private ActionListener checkActionListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        	
         }
     };
 
