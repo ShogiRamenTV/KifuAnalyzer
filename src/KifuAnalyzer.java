@@ -113,6 +113,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public static void main(String[] args) {
 		KifuAnalyzer ka = new KifuAnalyzer();
 		ka.setTitle("KifuAnalyzer");
+		ka.setLocationRelativeTo(null);
 		ka.setVisible(true);
 		ka.shogiData.viewKomaOnBoard();
 	}
@@ -341,8 +342,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void viewKomaOnBoard() {
 			k[0].setLocation(600, 0); // なぜかCanvas枠外で一度描画が必要
 			for(Koma k: listKomaOnBoard) {
+				int X, Y;
+				if(checkBoxReverse.isSelected()) {
+					X = 10 - k.px;
+					Y = 10 - k.py;
+				} else {
+					X = k.px;
+					Y = k.py;
+				}
 				k.setOpaque(true);
-				k.setLocation((9-k.px)*(iconWidth+10)+25, (k.py-1)*(iconHeight+10)+25);
+				k.setLocation((9-X)*(iconWidth+10)+25, (Y-1)*(iconHeight+10)+25);
 			}
 		}
 		
@@ -448,6 +457,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			
 			for(int x=0; x<40; x++) {
 				listKomaOnBoard.add(k[x]);
+			}
+			
+			if(checkBoxReverse.isSelected()) {
+				for(int x=0; x<40; x++) {
+					k[x].reverse();
+				}
 			}
 		}
 		
@@ -923,15 +938,36 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			
 			for(Point p: drawList) {
 				Point pB = drawListBase.get(drawList.indexOf(p));
-				Point pBase = new Point((9-pB.x)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pB.y-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
-				Point pTarget = new Point((9-p.x)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (p.y-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+				int pBX, pBY, pX, pY;
+				if(checkBoxReverse.isSelected()) {
+					pBX = 10 - pB.x;
+					pBY = 10 - pB.y;
+					pX = 10 - p.x;
+					pY = 10 - p.y;
+				} else {
+					pBX = pB.x;
+					pBY = pB.y;
+					pX = p.x;
+					pY = p.y;
+				}
+				
+				Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+				Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 				Arrow ar = new Arrow(pBase, pTarget);
 				g.setColor(Color.blue);
 				ar.draw((Graphics2D)g);
 			}
 			
 			if(enableLastPoint) {
-				drawPoint(x, y, Color.orange);
+				int X, Y;
+				if(checkBoxReverse.isSelected()) {
+					X = 10 - x;
+					Y = 10 - y;
+				} else {
+					X = x;
+					Y = y;
+				}
+				drawPoint(X, Y, Color.orange);
 			}
 		}
 		
@@ -993,6 +1029,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Button Action >> -----------------------------
 	// -------------------------------------------------------------------------
 	public void actionForInitialize() {
+		checkBoxReverse.setSelected(false);
 		shogiData.resetAllKoma();	
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
@@ -2237,7 +2274,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
     private ActionListener checkActionListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-        	
+        	for(Koma k: shogiData.k) {
+        		k.reverse();
+        	}
+        	shogiData.viewKomaOnBoard();
         }
     };
 
@@ -2452,8 +2492,17 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int preY = selectedKoma.py;
 		int preP = selectedKoma.promoted;
 		
-		System.out.println("moveKoma("+(9-x)+","+y+")");
-		Boolean result = selectedKoma.moveKoma(shogiData, 9-x, y, -1);
+		int X, Y;
+		if(checkBoxReverse.isSelected()) {
+			X = 10 - (9-x);
+			Y = 10 - y;
+		} else {
+			X = (9-x);
+			Y = y;
+		}
+		
+		System.out.println("moveKoma("+X+","+Y+")");
+		Boolean result = selectedKoma.moveKoma(shogiData, X, Y, -1);
 		soundKoma();
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
@@ -2472,12 +2521,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int promoted = selectedKoma.promoted;
 		
 		// update kifu listbox and kifuData
-		if(9-x != preX || y != preY) {
-			if(9-x>0 && 9-x<10 && y>0 && y<10) {
-				cv.setLastPoint(9-x, y, true);
-				updateListBox(type, 9-x, y, sente, promoted, preP, drop);
+		if(X != preX || Y != preY) {
+			if(X>0 && X<10 && Y>0 && Y<10) {
+				cv.setLastPoint(X, Y, true);
+				updateListBox(type, X, Y, sente, promoted, preP, drop);
 			}
-			Kifu kf = new Kifu(selectedKoma, 9-x, y, promoted, preP, drop);
+			Kifu kf = new Kifu(selectedKoma, X, Y, promoted, preP, drop);
 			kifuData.add(kf);
 			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
 			shogiData.turnIsSente = !shogiData.turnIsSente;
