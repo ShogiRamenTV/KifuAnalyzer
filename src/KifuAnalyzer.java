@@ -1030,6 +1030,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	public void actionForInitialize() {
 		checkBoxReverse.setSelected(false);
+		radioButtonSente.setSelected(true);
 		shogiData.resetAllKoma();	
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
