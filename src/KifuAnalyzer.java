@@ -237,6 +237,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		buttonGroup.add(radioButtonSente);
 		buttonGroup.add(radioButtonGote);
 	}
+	public void clearCheckBox() {
+		checkBoxEditMode.setSelected(false);
+		checkBoxReverse.setSelected(false);
+		radioButtonSente.setSelected(true);
+	}
 	public void initializeListBoxSetting() {
 		for(ListBoxType lb: ListBoxType.values()) {
 			listModel[lb.id] = new DefaultListModel<String>();
@@ -1029,8 +1034,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Button Action >> -----------------------------
 	// -------------------------------------------------------------------------
 	public void actionForInitialize() {
-		checkBoxReverse.setSelected(false);
-		radioButtonSente.setSelected(true);
+		clearTextBox();
+		clearCheckBox();
+		initializePlayerIcon();
+		initializeCastleIcon();
 		shogiData.resetAllKoma();	
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
@@ -1045,9 +1052,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		countCastle();
 		countTesujiData();
 		createPlayerDataBase();
-		clearTextBox();
-		initializePlayerIcon();
-		initializeCastleIcon();
 	}
 	public void actionForSave() {
 		Path path;
