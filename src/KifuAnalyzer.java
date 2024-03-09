@@ -201,12 +201,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			button[b.id] = new JButton(b.name());
 			button[b.id].addActionListener(this);
 		}
-		button[ButtonType.Initialize.id].setBounds(580, 15, 80, 20);
-		button[ButtonType.Save.id].setBounds(820, 15, 60, 20);
-		button[ButtonType.Load.id].setBounds(880, 15, 60, 20);
-		button[ButtonType.Strategy.id].setBounds(580, 35, 80, 20);
-		button[ButtonType.Tesuji.id].setBounds(580, 55, 80, 20);
-		button[ButtonType.Castle.id].setBounds(580, 75, 80, 20);
+		button[ButtonType.Initialize.id].setBounds(580, 10, 80, 20);
+		button[ButtonType.Save.id].setBounds(820, 10, 60, 20);
+		button[ButtonType.Load.id].setBounds(880, 10, 60, 20);
+		button[ButtonType.Strategy.id].setBounds(580, 30, 80, 20);
+		button[ButtonType.Tesuji.id].setBounds(580, 50, 80, 20);
+		button[ButtonType.Castle.id].setBounds(580, 70, 80, 20);
 	}
 	public void initializeTextBoxSetting() {
 		for(TextBoxType t: TextBoxType.values()) {
@@ -215,27 +215,27 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(LabelType l: LabelType.values()) {
 			label[l.id] = new JLabel();
 		}
-		textBox[TextBoxType.Strategy.id].setBounds(660, 35, 160, 20);
-		textBox[TextBoxType.Tesuji.id].setBounds(660, 55, 160, 20);
-		textBox[TextBoxType.Castle.id].setBounds(660, 75, 160, 20);
-		textBox[TextBoxType.LoadFile.id].setBounds(940, 15, 50, 20);
-		textBox[TextBoxType.LoadStep.id].setBounds(990, 15, 50, 20);
-		textBox[TextBoxType.LoadYear.id].setBounds(1040, 15, 50, 20);
-		label[LabelType.Sente.id].setText("Sente");
-		label[LabelType.Sente.id].setBounds(840, 55, 100, 20);
-		textBox[TextBoxType.Player1.id].setBounds(835, 75, 120, 20);
+		textBox[TextBoxType.Strategy.id].setBounds(660, 30, 160, 20);
+		textBox[TextBoxType.Tesuji.id].setBounds(660, 50, 160, 20);
+		textBox[TextBoxType.Castle.id].setBounds(660, 70, 160, 20);
+		textBox[TextBoxType.LoadFile.id].setBounds(940, 10, 50, 20);
+		textBox[TextBoxType.LoadStep.id].setBounds(990, 10, 50, 20);
+		textBox[TextBoxType.LoadYear.id].setBounds(1040, 10, 50, 20);
+		label[LabelType.Sente.id].setText("▲Sente");
+		label[LabelType.Sente.id].setBounds(840, 60, 100, 20);
+		textBox[TextBoxType.Player1.id].setBounds(835, 80, 120, 20);
 		textBox[TextBoxType.Player1.id].addActionListener(enterActionListener);
-		label[LabelType.Gote.id].setText("Gote");
-		label[LabelType.Gote.id].setBounds(965, 55, 100, 20);
-		textBox[TextBoxType.Player2.id].setBounds(965, 75, 120, 20);
+		label[LabelType.Gote.id].setText("△Gote");
+		label[LabelType.Gote.id].setBounds(965, 60, 100, 20);
+		textBox[TextBoxType.Player2.id].setBounds(965, 80, 120, 20);
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
 	}
 	public void initializeCheckBox() {
-		checkBoxEditMode.setBounds(660, 20, 60, 10);
-		checkBoxReverse.setBounds(720, 20, 80, 10);
+		checkBoxEditMode.setBounds(660, 15, 60, 10);
+		checkBoxReverse.setBounds(720, 15, 80, 10);
 		checkBoxReverse.addActionListener(checkActionListener);
-		radioButtonSente.setBounds(660, 95, 70, 10);
-		radioButtonGote.setBounds(720, 95, 70, 10);
+		radioButtonSente.setBounds(660, 95, 70, 14);
+		radioButtonGote.setBounds(720, 95, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
 		buttonGroup.add(radioButtonSente);
 		buttonGroup.add(radioButtonGote);
@@ -273,8 +273,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	public void initializePlayerIconLabel() {
 		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
-		playerIconLabel[SenteGote.Sente.id].setBounds(840, 65, 100, 200);
-		playerIconLabel[SenteGote.Gote.id].setBounds(970, 65, 100, 200);
+		playerIconLabel[SenteGote.Sente.id].setBounds(840, 75, 100, 200);
+		playerIconLabel[SenteGote.Gote.id].setBounds(970, 75, 100, 200);
 		castleIconLabel.setBounds(880, 460, 200, 252);
 	}
 	public void clearTextBox() {
