@@ -1199,6 +1199,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 						}
 						if(kdb.castleName[SenteGote.Sente.id].equals("")) {
 							kdb.castleName[SenteGote.Sente.id] = checkCastle(shogiDataForKDB, true);
+							//if(kdb.castleName[SenteGote.Sente.id].equals("Yagura")) {
+							//	System.out.println("Yagura:" + kdb.index);
+							//}
 						}
 						if(kdb.castleName[SenteGote.Gote.id].equals("")) {
 							kdb.castleName[SenteGote.Gote.id] = checkCastle(shogiDataForKDB, false);
