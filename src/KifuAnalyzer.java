@@ -69,7 +69,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JLabel playerIconLabel[] = new JLabel[2];
 	
 	public enum ButtonType {
-		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4), Tesuji(5);
+		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4), Tesuji(5), Kifu(6);
 		private final int id;
 		private ButtonType(final int id) {
 			this.id = id;
@@ -207,6 +207,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		button[ButtonType.Strategy.id].setBounds(580, 30, 80, 20);
 		button[ButtonType.Tesuji.id].setBounds(580, 50, 80, 20);
 		button[ButtonType.Castle.id].setBounds(580, 70, 80, 20);
+		button[ButtonType.Kifu.id].setBounds(580, 90, 80, 20);
 	}
 	public void initializeTextBoxSetting() {
 		for(TextBoxType t: TextBoxType.values()) {
@@ -1314,6 +1315,40 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			System.out.println(er);
 		}
 	}
+	public void actionForKifu() {
+		int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		listModel[ListBoxType.Info.id].addElement("<Kifus of Same Position>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
+		
+		for(KifuDataBase kdb: kifuDB) {
+			int i=0;
+			Boolean isSame = true;
+			// check same moves
+			while(i<index && i<kdb.db.size()) {
+				if( kifuData.get(i).k.type != kdb.db.get(i).k.type ||
+						kifuData.get(i).x != kdb.db.get(i).x || 
+						kifuData.get(i).y != kdb.db.get(i).y || 
+						kifuData.get(i).p != kdb.db.get(i).p ) {
+					// check same position if moves were different
+					isSame = checkSamePositionKDB(index, kdb);
+					break;
+				}
+				i++;
+			}
+			if(isSame && index < kdb.db.size()) {
+				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
+				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
+				if(kdb.isSenteWin) str+="(Sente Win)";
+				else str+="(Gote Win)";
+				listModel[ListBoxType.Info.id].addElement(str);
+			}
+		}
+		
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand() == button[ButtonType.Initialize.id].getText()) {
@@ -1333,6 +1368,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(e.getActionCommand() == button[ButtonType.Tesuji.id].getText()) {
 			actionForTesuji();
+		}
+		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
+			actionForKifu();
 		}
 	}
 	
@@ -1501,6 +1539,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	public void getLoadNumberOnListBox2() {
+		int index = listBox[ListBoxType.Info.id].getSelectedIndex();
+		if(index < 2) return;
 		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
 		String subStrFile = str.substring(2,5);
 		String subStrStep = str.substring(6,9);
