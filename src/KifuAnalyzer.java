@@ -258,6 +258,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			scrollPane[lb.id] = new JScrollPane();
 			listBox[lb.id].setModel(listModel[lb.id]);
 			listBox[lb.id].addListSelectionListener(this);
+			listBox[lb.id].addMouseListener(this);
 			listBox[lb.id].addKeyListener(this);
 			scrollPane[lb.id].getViewport().setView(listBox[lb.id]);
 		}
@@ -2371,7 +2372,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void keyPressed(KeyEvent e) {
-		//System.out.println("Key Pressed");
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {
@@ -2485,6 +2485,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void mouseClicked(MouseEvent e) {
+		if(e.getClickCount() == 2) {
+			//System.out.println("mouse double clicked");
+			if(e.getSource() == listBox[ListBoxType.Info.id]) {
+				if(!textBox[TextBoxType.LoadFile.id].getText().equals("")) {
+					actionForLoad();
+				}
+			}
+		}
 	}
 	@Override
 	public void mousePressed(MouseEvent e) {
