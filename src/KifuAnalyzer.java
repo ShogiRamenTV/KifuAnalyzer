@@ -257,6 +257,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			listBox[lb.id].setModel(listModel[lb.id]);
 			listBox[lb.id].addListSelectionListener(this);
 			listBox[lb.id].addMouseListener(this);
+			listBox[lb.id].addMouseMotionListener(this);
 			listBox[lb.id].addKeyListener(this);
 			scrollPane[lb.id].getViewport().setView(listBox[lb.id]);
 		}
@@ -2478,6 +2479,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
 	Point mousePointDifference = new Point();
+	Point mousePointBuf = new Point();
 	// 6, @Overrideアノテーションを付ける。
 	public void mouseDragged(MouseEvent e) {
 		//System.out.println("mouse dragged");
@@ -2620,9 +2622,34 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	@Override
 	public void mouseMoved(MouseEvent e) {
 		//System.out.println("Mouse moved");
-		if(shogiData.selectedKoma != null) {
-			Point mp = e.getPoint();			
-			shogiData.selectedKoma.setLocation(mp.x - mousePointDifference.x, mp.y - mousePointDifference.y);
+		if(shogiData.selectedKoma == null) return;
+		
+		Point mp = e.getPoint();
+		
+		if(e.getSource() == listBox[ListBoxType.Info.id]) {
+			mp.x += scrollPane[ListBoxType.Info.id].getBounds().x;
+			mp.y += scrollPane[ListBoxType.Info.id].getBounds().y + shogiData.iconHeight/2;
 		}
+		if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
+			mp.x += scrollPane[ListBoxType.Kifu.id].getBounds().x;
+			mp.y += scrollPane[ListBoxType.Kifu.id].getBounds().y + shogiData.iconHeight/2;
+		}
+		if(e.getSource() == listBox[ListBoxType.Player.id]) {
+			mp.x += scrollPane[ListBoxType.Player.id].getBounds().x;
+			mp.y += scrollPane[ListBoxType.Player.id].getBounds().y + shogiData.iconHeight/2;
+		}
+		if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
+			mp.x += scrollPane[ListBoxType.Strategy.id].getBounds().x;
+			mp.y += scrollPane[ListBoxType.Strategy.id].getBounds().y + shogiData.iconHeight/2;
+		}
+		if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
+			mp.x += scrollPane[ListBoxType.Tesuji.id].getBounds().x;
+			mp.y += scrollPane[ListBoxType.Tesuji.id].getBounds().y + shogiData.iconHeight/2;
+		}
+		if(e.getSource() == listBox[ListBoxType.Castle.id]) {
+			mp.x += scrollPane[ListBoxType.Castle.id].getBounds().x;
+			mp.y += scrollPane[ListBoxType.Castle.id].getBounds().y + shogiData.iconHeight/2;
+		}
+		shogiData.selectedKoma.setLocation(mp.x - mousePointDifference.x, mp.y - mousePointDifference.y);
 	}
 }
