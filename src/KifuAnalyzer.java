@@ -2496,7 +2496,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void mousePressed(MouseEvent e) {
-		//System.out.println("mouse pressed");
+		if(e.getSource() != this && e.getSource() != cv) return;
 		if(shogiData.selectedKoma == null) {
 			selectKoma(e);
 		} else {
