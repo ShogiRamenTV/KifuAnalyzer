@@ -175,6 +175,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void listenerSetting() {
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		cv.addMouseMotionListener(this);
 	}
 	public void initializeSoundSetting() {
 		try {
