@@ -175,8 +175,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void listenerSetting() {
 		addMouseListener(this);
 		addMouseMotionListener(this);
-		cv.addMouseListener(this);
-		cv.addMouseMotionListener(this);
 	}
 	public void initializeSoundSetting() {
 		try {
@@ -1816,8 +1814,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void loadTesujiData() {
 		tesujiDataBase.clear();
-		loadTesujiDataByYear("");
-		loadTesujiDataByYear("2022");
+		String selectedYear = (String)comboBox.getSelectedItem();
+		if(selectedYear.equals("") || selectedYear.equals("all")) loadTesujiDataByYear("");
+		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadTesujiDataByYear("2022");
 	}
 	public void loadTesujiDataByYear(String strY) {
 		System.out.println("Load Tesuji Data");
@@ -2496,7 +2495,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void mousePressed(MouseEvent e) {
-		if(e.getSource() != this && e.getSource() != cv) return;
+		if(e.getSource() != this) return;
 		if(shogiData.selectedKoma == null) {
 			selectKoma(e);
 		} else {
