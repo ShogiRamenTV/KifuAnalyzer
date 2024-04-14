@@ -241,6 +241,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		buttonGroup.add(radioButtonGote);
 		comboBox = new JComboBox<>();
 		comboBox.addItem("");
+		comboBox.addItem("2023");
 		comboBox.addItem("2022");
 		comboBox.addItem("all");
 		comboBox.setBounds(1000, 40, 100, 20);
@@ -1165,6 +1166,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String selectedYear = (String)comboBox.getSelectedItem();
 		if(selectedYear.equals("") || selectedYear.equals("all")) loadKifuDBByYear("");
 		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadKifuDBByYear("2022");
+		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadKifuDBByYear("2023");
 	}
 	public void loadKifuDBByYear(String strY) {
 		try {
@@ -1819,6 +1821,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String selectedYear = (String)comboBox.getSelectedItem();
 		if(selectedYear.equals("") || selectedYear.equals("all")) loadTesujiDataByYear("");
 		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadTesujiDataByYear("2022");
+		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadTesujiDataByYear("2023");
 	}
 	public void loadTesujiDataByYear(String strY) {
 		System.out.println("Load Tesuji Data");
