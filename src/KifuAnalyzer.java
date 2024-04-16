@@ -175,6 +175,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void listenerSetting() {
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		cv.addMouseListener(this);
 		cv.addMouseMotionListener(this);
 	}
 	public void initializeSoundSetting() {
@@ -929,6 +930,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Boolean enableLastPoint;
 		List<Point> drawList = new ArrayList<Point>();
 		List<Point> drawListBase = new ArrayList<Point>();
+		List<Point> drawListTargetRightClick = new ArrayList<Point>();
+		List<Point> drawListBaseRightClick = new ArrayList<Point>();
 		public CanvasBoard() {
 			x = -1;
 			y = -1;
@@ -938,6 +941,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		public void paint(Graphics g) {
 			//System.out.println("repaint()");
+			drawShogiBoard(g);
+			drawMovableArea(g);
+			drawArrowsForKifuAnalysis(g);
+			drawArrowsForRightClick(g);
+			drawLastPoint(g);
+		}
+		
+		public void drawShogiBoard(Graphics g) {
 			g.setColor(boardColor);
 			g.fillRect(20, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
 			
@@ -946,13 +957,31 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				for(int y=0; y<9; y++) {
 					g.drawRect(x*(shogiData.iconWidth+10)+20, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
 				}
-			
+		}
+		
+		public void drawMovableArea(Graphics g) {
 			if(mousePressed) {
 				for(int x=1; x<10; x++) for(int y=1; y<10; y++) {
 					if(shogiData.selectedKoma.isMovable(x, y)) cv.drawPoint(x, y, Color.pink);
 				}
 			}
-			
+		}
+		
+		public void drawLastPoint(Graphics g) {
+			if(enableLastPoint) {
+				int X, Y;
+				if(checkBoxReverse.isSelected()) {
+					X = 10 - x;
+					Y = 10 - y;
+				} else {
+					X = x;
+					Y = y;
+				}
+				drawPoint(X, Y, Color.orange);
+			}
+		}
+		
+		public void drawArrowsForKifuAnalysis(Graphics g) {
 			for(Point p: drawList) {
 				Point pB = drawListBase.get(drawList.indexOf(p));
 				int pBX, pBY, pX, pY;
@@ -974,17 +1003,22 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				g.setColor(Color.blue);
 				ar.draw((Graphics2D)g);
 			}
-			
-			if(enableLastPoint) {
-				int X, Y;
-				if(checkBoxReverse.isSelected()) {
-					X = 10 - x;
-					Y = 10 - y;
-				} else {
-					X = x;
-					Y = y;
-				}
-				drawPoint(X, Y, Color.orange);
+		}
+		
+		public void drawArrowsForRightClick(Graphics g) {
+			for(Point pTarget: drawListTargetRightClick) {
+				Point pBase = drawListBaseRightClick.get(drawListTargetRightClick.indexOf(pTarget));
+				int x = (pTarget.x-25) / (shogiData.iconWidth+10);
+				int y = (pTarget.y-25) / (shogiData.iconHeight+10);
+				pTarget.x = 25+x*(shogiData.iconWidth+10) + shogiData.iconWidth/2;
+				pTarget.y = 25+y*(shogiData.iconHeight+10) + shogiData.iconHeight/2;
+				x = (pBase.x-25) / (shogiData.iconWidth+10);
+				y = (pBase.y-25) / (shogiData.iconHeight+10);
+				pBase.x = 25+x*(shogiData.iconWidth+10) + shogiData.iconWidth/2;
+				pBase.y = 25+y*(shogiData.iconHeight+10) + shogiData.iconHeight/2;
+				Arrow ar = new Arrow(pBase, pTarget);
+				g.setColor(Color.green);
+				ar.draw((Graphics2D)g);
 			}
 		}
 		
@@ -1008,6 +1042,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void clearDrawPoint() {
 			drawList.clear();
 			drawListBase.clear();
+		}
+		
+		public void clearDrawPointForRightClick() {
+			drawListTargetRightClick.clear();
+			drawListBaseRightClick.clear();
 		}
 		
 		public class Arrow {
@@ -2427,6 +2466,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
 		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(listModel[ListBoxType.Kifu.id].size()-1);
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(listModel[ListBoxType.Kifu.id].size()-1);
+		
+		cv.clearDrawPointForRightClick();
 	}
 	public void commonListAction() {
 		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
@@ -2449,6 +2490,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 		if(selectedIndex == 0) cv.setLastPoint(-1, -1, false);
+		cv.clearDrawPointForRightClick();
 		
 		checkKDB(selectedIndex);
 		shogiData.viewKomaOnBoard();
@@ -2501,6 +2543,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void mousePressed(MouseEvent e) {
+		if(e.getButton() == MouseEvent.BUTTON3) { // right click
+			//System.out.println("mouse clicked");
+			cv.drawListBaseRightClick.add(e.getPoint());
+			return;
+		}
 		if(e.getSource() != this) return;
 		if(shogiData.selectedKoma == null) {
 			selectKoma(e);
@@ -2552,6 +2599,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	@Override
 	public void mouseReleased(MouseEvent e) {
 		//System.out.println("mouse released");
+		if(e.getButton() != MouseEvent.BUTTON3) return;
+		cv.drawListTargetRightClick.add(e.getPoint());
+		cv.repaint();
 	}
 	
 	public void releaseKoma() {
