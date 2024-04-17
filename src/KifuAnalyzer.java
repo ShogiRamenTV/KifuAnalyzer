@@ -1,3 +1,4 @@
+import java.awt.BasicStroke;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -1000,8 +1001,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 				Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 				Arrow ar = new Arrow(pBase, pTarget);
+				BasicStroke stroke = new BasicStroke(1.0f);
 				g.setColor(Color.blue);
-				ar.draw((Graphics2D)g);
+				ar.draw((Graphics2D)g, stroke);
 			}
 		}
 		
@@ -1017,8 +1019,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				pBase.x = 25+x*(shogiData.iconWidth+10) + shogiData.iconWidth/2;
 				pBase.y = 25+y*(shogiData.iconHeight+10) + shogiData.iconHeight/2;
 				Arrow ar = new Arrow(pBase, pTarget);
-				g.setColor(Color.green);
-				ar.draw((Graphics2D)g);
+				BasicStroke stroke = new BasicStroke(4.0f);
+				g.setColor(Color.magenta);
+				ar.draw((Graphics2D)g, stroke);
 			}
 		}
 		
@@ -1063,7 +1066,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			protected Path2D makeArrowHead(Dimension size) {
 				Path2D path = new Path2D.Double();
 				double t = size.height;
-				double w = size.width * .5;
+				//double w = size.width * .5;
+				double w = size.width * .8;
 				path.moveTo(0d, -w);
 				path.lineTo(t, 0d);
 				path.lineTo(0d, w);
@@ -1071,7 +1075,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				return path;
 			}
 			
-			public void draw(Graphics2D g2) {
+			public void draw(Graphics2D g2, BasicStroke stroke) {
+				g2.setStroke(stroke);
 				g2.drawLine(start.x, start.y, end.x, end.y);
 				arrowHead.transform(AffineTransform.getRotateInstance(end.getX() - start.getX(), end.getY() - start.getY()));
 				arrowHead.transform(AffineTransform.getTranslateInstance(end.getX(), end.getY()));
