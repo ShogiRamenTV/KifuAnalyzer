@@ -933,6 +933,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Point> drawListBase = new ArrayList<Point>();
 		List<Point> drawListTargetRightClick = new ArrayList<Point>();
 		List<Point> drawListBaseRightClick = new ArrayList<Point>();
+		List<Point> drawListDoubleRightClick = new ArrayList<Point>();
 		public CanvasBoard() {
 			x = -1;
 			y = -1;
@@ -944,6 +945,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//System.out.println("repaint()");
 			drawShogiBoard(g);
 			drawMovableArea(g);
+			drawDoubleClickedPoints(g);
 			drawArrowsForKifuAnalysis(g);
 			drawArrowsForRightClick(g);
 			drawLastPoint(g);
@@ -1010,19 +1012,40 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void drawArrowsForRightClick(Graphics g) {
 			for(Point pTarget: drawListTargetRightClick) {
 				Point pBase = drawListBaseRightClick.get(drawListTargetRightClick.indexOf(pTarget));
-				int x = (pTarget.x-25) / (shogiData.iconWidth+10);
-				int y = (pTarget.y-25) / (shogiData.iconHeight+10);
-				pTarget.x = 25+x*(shogiData.iconWidth+10) + shogiData.iconWidth/2;
-				pTarget.y = 25+y*(shogiData.iconHeight+10) + shogiData.iconHeight/2;
-				x = (pBase.x-25) / (shogiData.iconWidth+10);
-				y = (pBase.y-25) / (shogiData.iconHeight+10);
-				pBase.x = 25+x*(shogiData.iconWidth+10) + shogiData.iconWidth/2;
-				pBase.y = 25+y*(shogiData.iconHeight+10) + shogiData.iconHeight/2;
-				Arrow ar = new Arrow(pBase, pTarget);
+				Point pBaseConverted = convertMousePointToCentralSquare(pBase);
+				Point pTargetConverted = convertMousePointToCentralSquare(pTarget);
+				if(pBaseConverted.x == pTargetConverted.x && pBaseConverted.y == pTargetConverted.y) continue;
+				Arrow ar = new Arrow(pBaseConverted, pTargetConverted);
 				BasicStroke stroke = new BasicStroke(4.0f);
 				g.setColor(Color.magenta);
 				ar.draw((Graphics2D)g, stroke);
 			}
+		}
+		
+		public void drawDoubleClickedPoints(Graphics g) {
+			for(Point p: drawListDoubleRightClick) {
+				Point pShogiXY = convertMousePointToShogiXY(p);
+				drawPoint(pShogiXY.x, pShogiXY.y, new Color(250,150,162));
+			}
+		}
+		
+		public Point convertMousePointToCentralSquare(Point p) {
+			Point pCalculated = new Point();
+			int x = (p.x-25) / (shogiData.iconWidth+10);
+			int y = (p.y-25) / (shogiData.iconHeight+10);
+			pCalculated.x = 25+x*(shogiData.iconWidth+10) + shogiData.iconWidth/2;
+			pCalculated.y = 25+y*(shogiData.iconHeight+10) + shogiData.iconHeight/2;
+			
+			return pCalculated;
+		}
+		
+		public Point convertMousePointToShogiXY(Point p) {
+			Point pCalculated = new Point();
+			pCalculated.x = 9 - (p.x-25) / (shogiData.iconWidth+10);
+			pCalculated.y = 1 + (p.y-25) / (shogiData.iconHeight+10);
+			//System.out.println(pCalculated);
+			
+			return pCalculated;
 		}
 		
 		public void drawPoint(int x, int y, Color cl) {
@@ -1050,6 +1073,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void clearDrawPointForRightClick() {
 			drawListTargetRightClick.clear();
 			drawListBaseRightClick.clear();
+			drawListDoubleRightClick.clear();
 		}
 		
 		public class Arrow {
@@ -2543,6 +2567,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(!textBox[TextBoxType.LoadFile.id].getText().equals("")) {
 					actionForLoad();
 				}
+			}
+			if(e.getButton() == MouseEvent.BUTTON3) {
+				//System.out.println("Right Double Clicked");
+				cv.drawListDoubleRightClick.add(e.getPoint());
 			}
 		}
 	}
