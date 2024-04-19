@@ -2581,7 +2581,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			cv.drawListBaseRightClick.add(e.getPoint());
 			return;
 		}
-		if(e.getSource() != this) return;
+		if(e.getSource() != this && e.getSource() != cv) {
+			return;
+		}
 		if(shogiData.selectedKoma == null) {
 			selectKoma(e);
 		} else {
