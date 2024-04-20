@@ -95,6 +95,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JTextField textBox[] = new JTextField[TextBoxType.values().length];
 	JCheckBox checkBoxEditMode = new JCheckBox("Edit", false);
 	JCheckBox checkBoxReverse = new JCheckBox("Reverse", false);
+	JCheckBox checkBoxDraw = new JCheckBox("Draw", false);
 	JRadioButton radioButtonSente = new JRadioButton("Sente", true);
 	JRadioButton radioButtonGote = new JRadioButton("Gote");
 	JComboBox<String> comboBox;
@@ -165,6 +166,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		getContentPane().add(castleIconLabel);
 		getContentPane().add(checkBoxEditMode);
 		getContentPane().add(checkBoxReverse);
+		getContentPane().add(checkBoxDraw);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
 		getContentPane().add(comboBox);
@@ -236,6 +238,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		checkBoxEditMode.setBounds(660, 15, 60, 10);
 		checkBoxReverse.setBounds(720, 15, 80, 10);
 		checkBoxReverse.addActionListener(checkActionListener);
+		checkBoxDraw.setBounds(820, 35, 80, 10);
 		radioButtonSente.setBounds(660, 95, 70, 14);
 		radioButtonGote.setBounds(720, 95, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
@@ -251,6 +254,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void clearCheckBox() {
 		checkBoxEditMode.setSelected(false);
 		checkBoxReverse.setSelected(false);
+		checkBoxDraw.setSelected(false);
 		radioButtonSente.setSelected(true);
 	}
 	public void initializeListBoxSetting() {
@@ -1151,6 +1155,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			fw.write(textBox[TextBoxType.Player1.id].getText() + "\n");
 			fw.write(textBox[TextBoxType.Player2.id].getText() + "\n");
 			for(Kifu kf: kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
+			if(checkBoxDraw.isSelected()) fw.write("-1");
 			fw.close();
 			
 			System.out.println(fileName + " is saved.");
@@ -1197,6 +1202,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				StringTokenizer st = new StringTokenizer(content,",");
 				while(st.hasMoreTokens()) {
 					int i = Integer.parseInt(st.nextToken()); // index
+					if(i == -1) continue; // Draw game
 					int x = Integer.parseInt(st.nextToken()); // x
 					int y = Integer.parseInt(st.nextToken()); // y
 					int p = Integer.parseInt(st.nextToken()); // promote
@@ -1258,6 +1264,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					StringTokenizer st = new StringTokenizer(content,",");
 					while(st.hasMoreTokens()) {
 						int i = Integer.parseInt(st.nextToken()); // index
+						if(i == -1) { // Draw game
+							kdb.isSenteWin = -1;
+							continue;
+						}
 						int x = Integer.parseInt(st.nextToken()); // x
 						int y = Integer.parseInt(st.nextToken()); // y
 						int p = Integer.parseInt(st.nextToken()); // promote
@@ -1281,7 +1291,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					}
 				}
 				br.close();
-				kdb.isSenteWin = isSenteWin(kdb);
+				if(kdb.isSenteWin != -1) kdb.isSenteWin = isSenteWin(kdb);
 				kifuDB.add(kdb);
 				fileIndex++;
 			}
@@ -1411,8 +1421,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(isSame && index < kdb.db.size()) {
 				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
 				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
-				if(kdb.isSenteWin) str+="(Sente Win)";
-				else str+="(Gote Win)";
+				if(kdb.isSenteWin == 1) str+="(Sente Win)";
+				else if(kdb.isSenteWin == 0) str+="(Gote Win)";
+				else str+="(Draw)";
 				listModel[ListBoxType.Info.id].addElement(str);
 			}
 		}
@@ -1521,7 +1532,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			for(StringCount sc: strategyCountData) {
 				if(sc.str.equals(kdb.strategyName)) {
 					sc.cnt++;
-					if(kdb.isSenteWin) sc.senteWinCnt++;
+					if(kdb.isSenteWin == 1) sc.senteWinCnt++;
 					found = true;
 				}
 			}
@@ -1592,8 +1603,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(kdb.strategyName.equals(strategy)) {
 				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
 				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
-				if(kdb.isSenteWin) str+="(Sente Win)";
-				else str+="(Gote Win)";
+				if(kdb.isSenteWin == 1) str+="(Sente Win)";
+				else if(kdb.isSenteWin == 0) str+="(Gote Win)";
+				else str+="(Draw)";
 				if(playerName.equals("") && castleName.equals("")) {
 					listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("") && !castleName.equals("")) {
@@ -1766,8 +1778,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName)) {
 				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
 				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
-				if(kdb.isSenteWin) str+="(Sente Win)";
-				else str+="(Gote Win)";
+				if(kdb.isSenteWin == 1) str+="(Sente Win)";
+				else if(kdb.isSenteWin == 0) str+="(Gote Win)";
+				else str+="(Draw)";
 				
 				if(strategyName.equals("") && playerName.equals("")) {
 					listModel[ListBoxType.Info.id].addElement(str);
@@ -1932,7 +1945,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 			if(!found) {
-				StringCount sc = new StringCount(td.name, true);
+				StringCount sc = new StringCount(td.name, 1);
 				tesujiCountData.add(sc);
 			}
 		}
@@ -2000,13 +2013,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Point base;
 		int index;
 		int senteWinCnt;
-		StringCount(String s, Boolean isSenteWin) {
+		StringCount(String s, int isSenteWin) {
 			str = s;
 			cnt = 1;
-			if(isSenteWin) {
+			if(isSenteWin == 1) {
 				senteWinCnt = 1;
 			}
-			else {
+			else if(isSenteWin == 0) {
 				senteWinCnt = 0;
 			}
 		}
@@ -2018,7 +2031,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String castleName[] = new String[2];
 		String year;
 		int index;
-		Boolean isSenteWin;
+		//Boolean isSenteWin;
+		int isSenteWin;
 		
 		KifuDataBase() {
 			strategyName = "";
@@ -2098,7 +2112,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(StringCount sc: listSC) {
 			if(sc.str.equals(str)) {
 				sc.cnt++;
-				if(isSenteWin(kdb)) sc.senteWinCnt++;
+				if(isSenteWin(kdb) == 1) sc.senteWinCnt++;
 				found = true;
 			}
 		}
@@ -2111,10 +2125,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	
-	public Boolean isSenteWin(KifuDataBase kdb) {
+	public int isSenteWin(KifuDataBase kdb) {
 		int index = kdb.db.size()-1;
-		if((index%2) == 0) return true;
-		return false;
+		if((index%2) == 0) return 1;
+		return 0;
 	}
 	
 	public Boolean checkSamePositionKDB(int index, KifuDataBase kdb) {
@@ -2156,7 +2170,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public class GameResult {
 		String strategy;
 		String castle;
-		Boolean isPlayerWin;
+		int isPlayerWin;
 		Boolean isSente;
 		
 		GameResult() {}
@@ -2166,22 +2180,30 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int cnt;
 		int senteWinCnt = 0;
 		int senteLoseCnt = 0;
+		int senteDrawCnt = 0;
 		int goteWinCnt = 0;
 		int goteLoseCnt = 0;
-		GameResultCount(String s, Boolean isPlayerWin, Boolean isSenteWin) {
+		int goteDrawCnt = 0;
+		GameResultCount(String s, int isPlayerWin, Boolean isSente) {
 			str = s;
 			cnt = 1;
-			if(isPlayerWin) {
-				if(isSenteWin) {
+			if(isPlayerWin == 1) {
+				if(isSente) {
 					senteWinCnt = 1;
 				} else {
 					goteWinCnt = 1;
 				}
-			} else {
-				if(isSenteWin) {
+			} else if(isPlayerWin == 0) {
+				if(isSente) {
 					senteLoseCnt = 1;
 				} else {
 					goteLoseCnt = 1;
+				}
+			} else {
+				if(isSente) {
+					senteDrawCnt = 1;
+				} else {
+					goteDrawCnt = 1;
 				}
 			}
 		}
@@ -2200,13 +2222,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			grG.strategy = kdb.strategyName;
 			grS.isSente = true;
 			grG.isSente = false;
-			if(kdb.isSenteWin) {
-				grS.isPlayerWin = true;
-				grG.isPlayerWin = false;
+			if(kdb.isSenteWin == 1) {
+				grS.isPlayerWin = 1;
+				grG.isPlayerWin = 0;
 			}
-			else {
-				grS.isPlayerWin = false;
-				grG.isPlayerWin = true;
+			else if(kdb.isSenteWin == 0) {
+				grS.isPlayerWin = 0;
+				grG.isPlayerWin = 1;
+			} else { // Draw
+				grS.isPlayerWin = -1;
+				grG.isPlayerWin = -1;
 			}
 			grS.castle = kdb.castleName[SenteGote.Sente.id];
 			grG.castle = kdb.castleName[SenteGote.Gote.id];
@@ -2275,28 +2300,36 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		int totalCnt = 0;
 		int totalWinCnt = 0;
+		int totalLoseCnt = 0;
+		int totalDrawCnt = 0;
 		int totalSenteWinCnt = 0;
 		int totalGoteWinCnt = 0;
 		int totalSenteLoseCnt = 0;
 		int totalGoteLoseCnt = 0;
+		int totalSenteDrawCnt = 0;
+		int totalGoteDrawCnt = 0;
 		for(GameResultCount grc: grcList) {
 			totalCnt += grc.cnt;
 			totalWinCnt += grc.senteWinCnt + grc.goteWinCnt;
+			totalLoseCnt += grc.senteLoseCnt + grc.goteLoseCnt;
+			totalDrawCnt += grc.senteDrawCnt + grc.goteDrawCnt;
 			totalSenteWinCnt += grc.senteWinCnt;
 			totalGoteWinCnt += grc.goteWinCnt;
 			totalSenteLoseCnt += grc.senteLoseCnt;
 			totalGoteLoseCnt += grc.goteLoseCnt;
+			totalSenteDrawCnt += grc.senteDrawCnt;
+			totalGoteDrawCnt += grc.goteDrawCnt;
 		}
-		String str = "Total " + String.format("%d games %d Win:%d Lose", totalCnt, totalWinCnt, totalCnt-totalWinCnt);
-		Double d = (double)totalWinCnt/(double)(totalCnt)*100;
+		String str = "Total " + String.format("%d games %d Win:%d Lose %d Draw", totalCnt, totalWinCnt, totalLoseCnt, totalDrawCnt);
+		Double d = (double)totalWinCnt/(double)(totalWinCnt+totalLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
 		listModel[ListBoxType.Info.id].addElement(str);
 		
-		str = String.format("Sente %d games %d Win:%d Lose", totalSenteWinCnt+totalSenteLoseCnt, totalSenteWinCnt, totalSenteLoseCnt);
+		str = String.format("Sente %d games %d Win:%d Lose %d Draw", totalSenteWinCnt+totalSenteLoseCnt+totalSenteDrawCnt, totalSenteWinCnt, totalSenteLoseCnt, totalSenteDrawCnt);
 		d = (double)totalSenteWinCnt/(double)(totalSenteWinCnt+totalSenteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
 		listModel[ListBoxType.Info.id].addElement(str);
-		str = String.format("Gote %d games %d Win:%d Lose", totalGoteWinCnt+totalGoteLoseCnt, totalGoteWinCnt, totalGoteLoseCnt);
+		str = String.format("Gote %d games %d Win:%d Lose: %d Draw", totalGoteWinCnt+totalGoteLoseCnt+totalGoteDrawCnt, totalGoteWinCnt, totalGoteLoseCnt, totalGoteDrawCnt);
 		d = (double)totalGoteWinCnt/(double)(totalGoteWinCnt+totalGoteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
 		listModel[ListBoxType.Info.id].addElement(str);
@@ -2328,12 +2361,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(grc.str.equals(gr.strategy)) {
 					found = true;
 					grc.cnt++;
-					if(gr.isPlayerWin) {
+					if(gr.isPlayerWin == 1) {
 						if(gr.isSente) grc.senteWinCnt++;
 						else grc.goteWinCnt++;
-					} else {
+					} else if(gr.isPlayerWin == 0) {
 						if(gr.isSente) grc.senteLoseCnt++;
 						else grc.goteLoseCnt++;
+					} else {
+						if(gr.isSente) grc.senteDrawCnt++;
+						else grc.goteDrawCnt++;
 					}
 				}
 			}
@@ -2363,7 +2399,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 			if(!found) {
-				StringCount sc = new StringCount(gr.castle, true);
+				StringCount sc = new StringCount(gr.castle, 1);
 				strList.add(sc);
 			}
 		}
