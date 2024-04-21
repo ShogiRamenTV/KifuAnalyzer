@@ -2631,21 +2631,21 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Point mp = e.getPoint();
 		for(Koma k: shogiData.listKomaOnBoard) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
+			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth+10 && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight+10) {
 				commonMousePressed(mp, lp, k, true);
 				return;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Sente.id)) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
+			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth+10 && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight+10) {
 				commonMousePressed(mp, lp, k, false);
 				return;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Gote.id)) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight*2) {
+			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth+10 && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight+10) {
 				commonMousePressed(mp, lp, k, false);
 				return;
 			}
