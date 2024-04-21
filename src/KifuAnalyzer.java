@@ -39,10 +39,14 @@ import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
@@ -51,7 +55,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
-	ActionListener, ListSelectionListener, KeyListener {
+	ActionListener, ListSelectionListener, KeyListener{
 	Color boardColor = new Color(255, 238, 203);
 	
 	String imgFilePath = "./img/";
@@ -113,6 +117,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	@SuppressWarnings("unchecked")
 	JList<String> listBox[] = new JList[ListBoxType.values().length];
 	Clip soundKoma;
+	
+	JMenuBar menuBar = new JMenuBar();
+	JMenu menu = new JMenu("Menu");
+	JMenuItem menuItemColor = new JMenuItem("Color");
 
 	public static void main(String[] args) {
 		KifuAnalyzer ka = new KifuAnalyzer();
@@ -151,6 +159,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeListBoxSetting();
 		initializeCanvasSetting();
 		initializeSoundSetting();
+		initializeMenuBar();
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
@@ -278,13 +287,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		scrollPane[ListBoxType.Player.id].setBounds(910, 250, 165, 100);
 		scrollPane[ListBoxType.Tesuji.id].setBounds(910, 350, 165, 100);
 	}
-	
-	
 	public void initializePlayerIconLabel() {
 		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
 		playerIconLabel[SenteGote.Sente.id].setBounds(840, 75, 100, 200);
 		playerIconLabel[SenteGote.Gote.id].setBounds(970, 75, 100, 200);
-		castleIconLabel.setBounds(880, 460, 200, 252);
+		castleIconLabel.setBounds(880, 450, 200, 252);
 	}
 	public void clearTextBox() {
 		textBox[TextBoxType.Player1.id].setText("");
@@ -295,6 +302,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.LoadFile.id].setText("");
 		textBox[TextBoxType.LoadStep.id].setText("");
 		textBox[TextBoxType.LoadYear.id].setText("");
+	}
+	public void initializeMenuBar() {
+		menuItemColor.addActionListener(this);
+		menu.add(menuItemColor);
+		menuBar.add(menu);
+		this.setJMenuBar(menuBar);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -497,6 +510,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			
 			return null;
+		}
+		
+		public void changeKomaColor(Color color) {
+			for(int x=0; x<40; x++) {
+				k[x].setBackground(color);
+			}
 		}
 		
 		public void initializeLabelSetting() {
@@ -1454,6 +1473,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
 			actionForKifu();
 		}
+		if(e.getSource() == menuItemColor) {
+			actionForMenuColor();
+		}
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1874,7 +1896,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		castleIconLabel.setIcon(null);
 		ImageIcon castleIcon = new ImageIcon(imgFilePath + castleName + ".jpg");
 		Image image = castleIcon.getImage();
-		Image newImage = image.getScaledInstance(200, 252, java.awt.Image.SCALE_SMOOTH);
+		Image newImage = image.getScaledInstance(180, 230, java.awt.Image.SCALE_SMOOTH);
 		castleIcon = new ImageIcon(newImage);
 		castleIconLabel.setIcon(castleIcon);
 	}
@@ -2587,6 +2609,18 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	
 	// -------------------------------------------------------------------------
+	// ----------------------- << Menu Action >> -----------------------------
+	// -------------------------------------------------------------------------
+	public void actionForMenuColor() {
+		Color color = JColorChooser.showDialog(this, "Select color", Color.white);
+		if(color != null) {
+			boardColor = color;
+			shogiData.changeKomaColor(boardColor);
+			cv.repaint();
+		}
+	}
+	
+	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
 	Point mousePointDifference = new Point();
@@ -2629,23 +2663,27 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void selectKoma(MouseEvent e) {
 		shogiData.selectedKoma = null;
 		Point mp = e.getPoint();
+		Point tp = new Point(mp.x, mp.y);
+		if(e.getSource() != cv) {
+			tp.y -= 50;
+		}
 		for(Koma k: shogiData.listKomaOnBoard) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth+10 && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight+10) {
+			if(tp.x > lp.x-5 && tp.x < lp.x+shogiData.iconWidth+5 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
 				commonMousePressed(mp, lp, k, true);
 				return;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Sente.id)) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth+10 && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight+10) {
+			if(tp.x > lp.x && tp.x < lp.x+shogiData.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
 				commonMousePressed(mp, lp, k, false);
 				return;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Gote.id)) {
 			Point lp = k.getLocation();
-			if(mp.x > lp.x && mp.x < lp.x+shogiData.iconWidth+10 && mp.y > lp.y && mp.y < lp.y+shogiData.iconHeight+10) {
+			if(tp.x > lp.x && tp.x < lp.x+shogiData.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
 				commonMousePressed(mp, lp, k, false);
 				return;
 			}
