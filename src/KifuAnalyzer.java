@@ -1,4 +1,5 @@
 import java.awt.BasicStroke;
+import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -51,8 +52,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.JTree;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener{
@@ -121,6 +124,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JMenuBar menuBar = new JMenuBar();
 	JMenu menu = new JMenu("Menu");
 	JMenuItem menuItemColor = new JMenuItem("Color");
+	JMenuItem menuItemTree = new JMenuItem("Tree");
 
 	public static void main(String[] args) {
 		KifuAnalyzer ka = new KifuAnalyzer();
@@ -305,7 +309,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void initializeMenuBar() {
 		menuItemColor.addActionListener(this);
+		menuItemTree.addActionListener(this);
 		menu.add(menuItemColor);
+		menu.add(menuItemTree);
 		menuBar.add(menu);
 		this.setJMenuBar(menuBar);
 	}
@@ -1476,6 +1482,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getSource() == menuItemColor) {
 			actionForMenuColor();
 		}
+		if(e.getSource() == menuItemTree) {
+			actionForMenuTree();
+		}
 	}
 	
 	// -------------------------------------------------------------------------
@@ -2619,6 +2628,34 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			cv.repaint();
 		}
 	}
+	public void actionForMenuTree() {
+		JFrame frame = new JFrame("Tree");
+	    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	    frame.setSize(400,400);
+	    frame.setLocationRelativeTo(null);
+	    frame.setVisible(true);
+	    
+	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
+	    DefaultMutableTreeNode rootNode1 = new DefaultMutableTreeNode("Strategy");
+	    for(StringCount sc: strategyCountData) {
+	    	DefaultMutableTreeNode childNode1 = new DefaultMutableTreeNode(sc.str);
+	    	DefaultMutableTreeNode childNode2 = new DefaultMutableTreeNode(sc.cnt);
+	    	childNode1.add(childNode2);
+	    	rootNode1.add(childNode1);
+	    }
+	    DefaultMutableTreeNode rootNode2 = new DefaultMutableTreeNode("Castle");
+	    for(StringCount sc: castleCountData) {
+	    	DefaultMutableTreeNode childNode1 = new DefaultMutableTreeNode(sc.str);
+	    	DefaultMutableTreeNode childNode2 = new DefaultMutableTreeNode(sc.cnt);
+	    	childNode1.add(childNode2);
+	    	rootNode2.add(childNode1);
+	    }
+	    root.add(rootNode1);
+	    root.add(rootNode2);
+	    JTree tree = new JTree(root);
+	    
+	    frame.getContentPane().add(tree, BorderLayout.CENTER);
+	}
 	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
@@ -2640,7 +2677,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			if(e.getButton() == MouseEvent.BUTTON3) {
 				//System.out.println("Right Double Clicked");
-				cv.drawListDoubleRightClick.add(e.getPoint());
+				Point mp = e.getPoint();
+				if(e.getSource() != cv) mp.y -= 50;
+				cv.drawListDoubleRightClick.add(mp);
 			}
 		}
 	}
@@ -2648,7 +2687,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void mousePressed(MouseEvent e) {
 		if(e.getButton() == MouseEvent.BUTTON3) { // right click
 			//System.out.println("mouse clicked");
-			cv.drawListBaseRightClick.add(e.getPoint());
+			Point mp = e.getPoint();
+			if(e.getSource() != cv) mp.y -= 50;
+			cv.drawListBaseRightClick.add(mp);
 			return;
 		}
 		if(e.getSource() != this && e.getSource() != cv) {
@@ -2700,8 +2741,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			return;
 		}
 		shogiData.selectedKoma = k;
-		mousePointDifference.x = mp.x - lp.x;
-		mousePointDifference.y = mp.y - lp.y;
 		if(isOnBoard) cv.mousePressed = true;
 		cv.repaint();
 	}
@@ -2709,7 +2748,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void mouseReleased(MouseEvent e) {
 		//System.out.println("mouse released");
 		if(e.getButton() != MouseEvent.BUTTON3) return;
-		cv.drawListTargetRightClick.add(e.getPoint());
+		Point mp = e.getPoint();
+		if(e.getSource() != cv) mp.y -= 50;
+		cv.drawListTargetRightClick.add(mp);
 		cv.repaint();
 	}
 	
@@ -2813,6 +2854,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			mp.x += scrollPane[ListBoxType.Castle.id].getBounds().x;
 			mp.y += scrollPane[ListBoxType.Castle.id].getBounds().y + shogiData.iconHeight/2;
 		}
-		shogiData.selectedKoma.setLocation(mp.x - mousePointDifference.x, mp.y - mousePointDifference.y);
+		//shogiData.selectedKoma.setLocation(mp.x - mousePointDifference.x, mp.y - mousePointDifference.y);
+		if(e.getSource() != cv) mp.y -= 50;
+		shogiData.selectedKoma.setLocation(mp.x - shogiData.iconWidth/2, mp.y - shogiData.iconHeight/2);
 	}
 }
