@@ -100,9 +100,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JTextField textBox[] = new JTextField[TextBoxType.values().length];
-	JCheckBox checkBoxEditMode = new JCheckBox("Edit", false);
-	JCheckBox checkBoxReverse = new JCheckBox("Reverse", false);
-	JCheckBox checkBoxDraw = new JCheckBox("Draw", false);
+	public enum CheckBoxType {
+		Edit(0), Reverse(1), Draw(2);
+		private final int id;
+		private CheckBoxType(final int id) {
+			this.id = id;
+		}
+	};
+	JCheckBox checkBox[] = new JCheckBox[CheckBoxType.values().length];
 	JRadioButton radioButtonSente = new JRadioButton("Sente", true);
 	JRadioButton radioButtonGote = new JRadioButton("Gote");
 	JComboBox<String> comboBox;
@@ -176,10 +181,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(TextBoxType t: TextBoxType.values()) getContentPane().add(textBox[t.id]);
 		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(scrollPane[lb.id]);
 		for(SenteGote sg: SenteGote.values()) getContentPane().add(playerIconLabel[sg.id]);
+		for(CheckBoxType cb: CheckBoxType.values()) getContentPane().add(checkBox[cb.id]);
 		getContentPane().add(castleIconLabel);
-		getContentPane().add(checkBoxEditMode);
-		getContentPane().add(checkBoxReverse);
-		getContentPane().add(checkBoxDraw);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
 		getContentPane().add(comboBox);
@@ -248,10 +251,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
 	}
 	public void initializeCheckBox() {
-		checkBoxEditMode.setBounds(660, 15, 60, 10);
-		checkBoxReverse.setBounds(720, 15, 80, 10);
-		checkBoxReverse.addActionListener(checkActionListener);
-		checkBoxDraw.setBounds(820, 35, 80, 10);
+		for(CheckBoxType cb: CheckBoxType.values()) {
+			checkBox[cb.id] = new JCheckBox(cb.name());
+		}
+		checkBox[CheckBoxType.Edit.id].setBounds(660, 15, 60, 10);
+		checkBox[CheckBoxType.Reverse.id].setBounds(720, 15, 80, 10);
+		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListener);
+		checkBox[CheckBoxType.Draw.id].setBounds(820, 35, 80, 10);
 		radioButtonSente.setBounds(660, 95, 70, 14);
 		radioButtonGote.setBounds(720, 95, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
@@ -265,9 +271,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		comboBox.setBounds(1000, 40, 100, 20);
 	}
 	public void clearCheckBox() {
-		checkBoxEditMode.setSelected(false);
-		checkBoxReverse.setSelected(false);
-		checkBoxDraw.setSelected(false);
+		for(CheckBoxType cb: CheckBoxType.values()) {
+			checkBox[cb.id].setSelected(false);
+		}
 		radioButtonSente.setSelected(true);
 	}
 	public void initializeListBoxSetting() {
@@ -385,7 +391,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			k[0].setLocation(600, 0); // なぜかCanvas枠外で一度描画が必要
 			for(Koma k: listKomaOnBoard) {
 				int X, Y;
-				if(checkBoxReverse.isSelected()) {
+				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					X = 10 - k.px;
 					Y = 10 - k.py;
 				} else {
@@ -501,7 +507,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				listKomaOnBoard.add(k[x]);
 			}
 			
-			if(checkBoxReverse.isSelected()) {
+			if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 				for(int x=0; x<40; x++) {
 					k[x].reverse();
 				}
@@ -1002,7 +1008,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void drawLastPoint(Graphics g) {
 			if(enableLastPoint) {
 				int X, Y;
-				if(checkBoxReverse.isSelected()) {
+				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					X = 10 - x;
 					Y = 10 - y;
 				} else {
@@ -1017,7 +1023,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			for(Point p: drawList) {
 				Point pB = drawListBase.get(drawList.indexOf(p));
 				int pBX, pBY, pX, pY;
-				if(checkBoxReverse.isSelected()) {
+				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					pBX = 10 - pB.x;
 					pBY = 10 - pB.y;
 					pX = 10 - p.x;
@@ -1180,7 +1186,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			fw.write(textBox[TextBoxType.Player1.id].getText() + "\n");
 			fw.write(textBox[TextBoxType.Player2.id].getText() + "\n");
 			for(Kifu kf: kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
-			if(checkBoxDraw.isSelected()) fw.write("-1");
+			if(checkBox[CheckBoxType.Draw.id].isSelected()) fw.write("-1");
 			fw.close();
 			
 			System.out.println(fileName + " is saved.");
@@ -2732,11 +2738,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	
 	public void commonMousePressed(Point mp, Point lp, Koma k, Boolean isOnBoard) {
-		if(shogiData.turnIsSente && k.sente == 1 && !checkBoxEditMode.isSelected()) {
+		if(shogiData.turnIsSente && k.sente == 1 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
 			shogiData.selectedKoma = null;
 			return;
 		}
-		if(!shogiData.turnIsSente && k.sente == 0 && !checkBoxEditMode.isSelected()) {
+		if(!shogiData.turnIsSente && k.sente == 0 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
 			shogiData.selectedKoma = null;
 			return;
 		}
@@ -2764,7 +2770,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int preP = selectedKoma.promoted;
 		
 		int X, Y;
-		if(checkBoxReverse.isSelected()) {
+		if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 			X = 10 - (9-x);
 			Y = 10 - y;
 		} else {
@@ -2772,7 +2778,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Y = y;
 		}
 		
-		System.out.println("moveKoma("+X+","+Y+")");
+		//System.out.println("moveKoma("+X+","+Y+")");
 		Boolean result = selectedKoma.moveKoma(shogiData, X, Y, -1);
 		soundKoma();
 		shogiData.viewKomaOnBoard();
