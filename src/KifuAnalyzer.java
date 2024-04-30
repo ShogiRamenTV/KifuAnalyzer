@@ -130,6 +130,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JMenu menu = new JMenu("Menu");
 	JMenuItem menuItemColor = new JMenuItem("Color");
 	JMenuItem menuItemTree = new JMenuItem("Tree");
+	
+	JLabel labelNumberRow[] = new JLabel[9];
+	JLabel labelNumberCol[] = new JLabel[9];
 
 	public static void main(String[] args) {
 		KifuAnalyzer ka = new KifuAnalyzer();
@@ -169,6 +172,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeCanvasSetting();
 		initializeSoundSetting();
 		initializeMenuBar();
+		initializeNumberRowCol();
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
@@ -188,6 +192,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		getContentPane().add(comboBox);
 		for(SenteGote sg: SenteGote.values()) {
 			for(int x=0; x<8; x++) getContentPane().add(shogiData.labelNumOfKoma[sg.id][x]);
+		}
+		for(int x=0; x<9; x++) {
+			getContentPane().add(labelNumberRow[x]);
+			getContentPane().add(labelNumberCol[x]);
 		}
 		getContentPane().add(cv);
 	}
@@ -290,12 +298,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		listModel[ListBoxType.Kifu.id].addElement("--------");
-		scrollPane[ListBoxType.Kifu.id].setBounds(580, 250, 165, 100);
-		scrollPane[ListBoxType.Info.id].setBounds(580, 350, 165, 100);
-		scrollPane[ListBoxType.Strategy.id].setBounds(745, 250, 165, 100);
-		scrollPane[ListBoxType.Castle.id].setBounds(745, 350, 165, 100);
-		scrollPane[ListBoxType.Player.id].setBounds(910, 250, 165, 100);
-		scrollPane[ListBoxType.Tesuji.id].setBounds(910, 350, 165, 100);
+		scrollPane[ListBoxType.Kifu.id].setBounds(590, 250, 165, 100);
+		scrollPane[ListBoxType.Info.id].setBounds(590, 350, 165, 100);
+		scrollPane[ListBoxType.Strategy.id].setBounds(755, 250, 165, 100);
+		scrollPane[ListBoxType.Castle.id].setBounds(755, 350, 165, 100);
+		scrollPane[ListBoxType.Player.id].setBounds(920, 250, 165, 100);
+		scrollPane[ListBoxType.Tesuji.id].setBounds(920, 350, 165, 100);
 	}
 	public void initializePlayerIconLabel() {
 		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
@@ -320,6 +328,28 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		menu.add(menuItemTree);
 		menuBar.add(menu);
 		this.setJMenuBar(menuBar);
+	}
+	public void initializeNumberRowCol() {
+		for(int x=0; x<9; x++) {
+			labelNumberRow[x] = new JLabel();
+			labelNumberCol[x] = new JLabel();
+			labelNumberRow[x].setText(String.valueOf(9-x));
+			labelNumberRow[x].setBounds(45 + x * (shogiData.iconWidth+10), 5, 10, 10);
+			labelNumberCol[x].setText(String.valueOf(x+1));
+			labelNumberCol[x].setBounds(565, 50 + x * (shogiData.iconHeight+10), 10, 10);
+		}
+	}
+	public void reverseNumberRowCol() {
+		for(int x=0; x<9; x++) {
+			if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
+				labelNumberRow[x].setText(String.valueOf(x+1));
+				labelNumberCol[x].setText(String.valueOf(9-x));
+			}
+			else {
+				labelNumberRow[x].setText(String.valueOf(9-x));
+				labelNumberCol[x].setText(String.valueOf(x+1));
+			}
+		}
 	}
 	
 	// -------------------------------------------------------------------------
@@ -1151,6 +1181,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void actionForInitialize() {
 		clearTextBox();
 		clearCheckBox();
+		reverseNumberRowCol();
 		initializePlayerIcon();
 		initializeCastleIcon();
 		shogiData.resetAllKoma();	
@@ -2482,6 +2513,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
         		k.reverse();
         	}
         	shogiData.viewKomaOnBoard();
+        	reverseNumberRowCol();
         }
     };
 
