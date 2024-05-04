@@ -1,5 +1,5 @@
+import java.awt.AWTException;
 import java.awt.BasicStroke;
-import java.awt.BorderLayout;
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -8,6 +8,8 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -17,6 +19,7 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -32,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import javax.imageio.ImageIO;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
@@ -52,10 +56,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JTree;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.tree.DefaultMutableTreeNode;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener{
@@ -129,7 +131,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JMenuBar menuBar = new JMenuBar();
 	JMenu menu = new JMenu("Menu");
 	JMenuItem menuItemColor = new JMenuItem("Color");
-	JMenuItem menuItemTree = new JMenuItem("Tree");
+	JMenuItem menuItemCapture = new JMenuItem("Capture");
 	
 	JLabel labelNumberRow[] = new JLabel[9];
 	JLabel labelNumberCol[] = new JLabel[9];
@@ -323,9 +325,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void initializeMenuBar() {
 		menuItemColor.addActionListener(this);
-		menuItemTree.addActionListener(this);
+		menuItemCapture.addActionListener(this);
 		menu.add(menuItemColor);
-		menu.add(menuItemTree);
+		menu.add(menuItemCapture);
 		menuBar.add(menu);
 		this.setJMenuBar(menuBar);
 	}
@@ -1519,8 +1521,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getSource() == menuItemColor) {
 			actionForMenuColor();
 		}
-		if(e.getSource() == menuItemTree) {
-			actionForMenuTree();
+		if(e.getSource() == menuItemCapture) {
+			actionForCaptureBoard();
 		}
 	}
 	
@@ -2666,33 +2668,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			cv.repaint();
 		}
 	}
-	public void actionForMenuTree() {
-		JFrame frame = new JFrame("Tree");
-	    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-	    frame.setSize(400,400);
-	    frame.setLocationRelativeTo(null);
-	    frame.setVisible(true);
-	    
-	    DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
-	    DefaultMutableTreeNode rootNode1 = new DefaultMutableTreeNode("Strategy");
-	    for(StringCount sc: strategyCountData) {
-	    	DefaultMutableTreeNode childNode1 = new DefaultMutableTreeNode(sc.str);
-	    	DefaultMutableTreeNode childNode2 = new DefaultMutableTreeNode(sc.cnt);
-	    	childNode1.add(childNode2);
-	    	rootNode1.add(childNode1);
-	    }
-	    DefaultMutableTreeNode rootNode2 = new DefaultMutableTreeNode("Castle");
-	    for(StringCount sc: castleCountData) {
-	    	DefaultMutableTreeNode childNode1 = new DefaultMutableTreeNode(sc.str);
-	    	DefaultMutableTreeNode childNode2 = new DefaultMutableTreeNode(sc.cnt);
-	    	childNode1.add(childNode2);
-	    	rootNode2.add(childNode1);
-	    }
-	    root.add(rootNode1);
-	    root.add(rootNode2);
-	    JTree tree = new JTree(root);
-	    
-	    frame.getContentPane().add(tree, BorderLayout.CENTER);
+	public void actionForCaptureBoard() {
+		try {
+			Rectangle bounds = this.getBounds();
+			Robot robot = new Robot();
+			BufferedImage image = robot.createScreenCapture(bounds);
+			image = image.getSubimage(20, 70, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
+			String dirName = "./img/";
+			String fileName = "CaptureBoard.jpg";
+			ImageIO.write(image, "jpg", new File(dirName, fileName));
+		} catch (AWTException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	// -------------------------------------------------------------------------
