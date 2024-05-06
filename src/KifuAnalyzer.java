@@ -128,10 +128,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JList<String> listBox[] = new JList[ListBoxType.values().length];
 	Clip soundKoma;
 	
+	public enum MenuType {
+		Color(0), Capture(1), KomaInHand(2);
+		private final int id;		
+		private MenuType(final int id) {
+			this.id = id;
+		}
+	};
 	JMenuBar menuBar = new JMenuBar();
 	JMenu menu = new JMenu("Menu");
-	JMenuItem menuItemColor = new JMenuItem("Color");
-	JMenuItem menuItemCapture = new JMenuItem("Capture");
+	JMenuItem menuItem[] = new JMenuItem[MenuType.values().length];
 	
 	JLabel labelNumberRow[] = new JLabel[9];
 	JLabel labelNumberCol[] = new JLabel[9];
@@ -324,10 +330,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.LoadYear.id].setText("");
 	}
 	public void initializeMenuBar() {
-		menuItemColor.addActionListener(this);
-		menuItemCapture.addActionListener(this);
-		menu.add(menuItemColor);
-		menu.add(menuItemCapture);
+		for(MenuType mt: MenuType.values()) {
+			menuItem[mt.id] = new JMenuItem(mt.name());
+			menuItem[mt.id].addActionListener(this);
+			menu.add(menuItem[mt.id]);
+		}
 		menuBar.add(menu);
 		this.setJMenuBar(menuBar);
 	}
@@ -571,6 +578,18 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				labelNumOfKoma[SenteGote.Gote.id][x] = new JLabel("0");
 				labelNumOfKoma[SenteGote.Gote.id][x].setBounds((10+(x%4))*(iconWidth+10)+38, (3-(x/4))*(iconHeight+10)+15, 80, 20);
 				labelNumOfKoma[SenteGote.Gote.id][x].setVisible(false);
+			}
+		}
+		
+		public void putAllKomaInHand() {
+			resetAllKoma();
+			listKomaOnBoard.clear();
+			for(int x=0; x<20; x++) {
+				listKomaOnHandForSente.add(k[x]);
+			}
+			for(int x=20; x<40; x++) {
+				k[x].reverse();
+				listKomaOnHandForSente.add(k[x]);
 			}
 		}
 	}
@@ -1518,11 +1537,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
 			actionForKifu();
 		}
-		if(e.getSource() == menuItemColor) {
+		if(e.getSource() == menuItem[MenuType.Color.id]) {
 			actionForMenuColor();
 		}
-		if(e.getSource() == menuItemCapture) {
+		if(e.getSource() == menuItem[MenuType.Capture.id]) {
 			actionForCaptureBoard();
+		}
+		if(e.getSource() == menuItem[MenuType.KomaInHand.id]) {
+			actionForKomaInHand();
 		}
 	}
 	
@@ -2682,6 +2704,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	public void actionForKomaInHand() {
+		shogiData.putAllKomaInHand();
+		shogiData.viewKomaOnBoard();
+		shogiData.viewKomaOnHand();
 	}
 	
 	// -------------------------------------------------------------------------
