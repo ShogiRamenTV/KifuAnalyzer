@@ -2729,6 +2729,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					actionForLoad();
 				}
 			}
+			if(e.getButton() == MouseEvent.BUTTON1) {
+				//System.out.println("Left Double Clicked");
+				Koma k = searchKoma(e);
+				if(k != null) {
+					if(shogiData.listKomaOnBoard.indexOf(k) != -1) k.reverse();
+				}
+			}
 			if(e.getButton() == MouseEvent.BUTTON3) {
 				//System.out.println("Right Double Clicked");
 				Point mp = e.getPoint();
@@ -2757,6 +2764,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void selectKoma(MouseEvent e) {
 		shogiData.selectedKoma = null;
+		Koma selectedKoma = searchKoma(e);
+		if(selectedKoma == null) return;
+		Boolean isOnBoard = false;
+		if(shogiData.listKomaOnBoard.indexOf(selectedKoma) != -1) isOnBoard = true;
+		commonMousePressed(selectedKoma, isOnBoard);
+	}
+	public Koma searchKoma(MouseEvent e) {
 		Point mp = e.getPoint();
 		Point tp = new Point(mp.x, mp.y);
 		if(e.getSource() != cv) {
@@ -2765,27 +2779,25 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(Koma k: shogiData.listKomaOnBoard) {
 			Point lp = k.getLocation();
 			if(tp.x > lp.x-5 && tp.x < lp.x+shogiData.iconWidth+5 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
-				commonMousePressed(mp, lp, k, true);
-				return;
+				return k;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Sente.id)) {
 			Point lp = k.getLocation();
 			if(tp.x > lp.x && tp.x < lp.x+shogiData.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
-				commonMousePressed(mp, lp, k, false);
-				return;
+				return k;
 			}
 		}
 		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Gote.id)) {
 			Point lp = k.getLocation();
 			if(tp.x > lp.x && tp.x < lp.x+shogiData.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
-				commonMousePressed(mp, lp, k, false);
-				return;
+				return k;
 			}
 		}
+		return null;
 	}
 	
-	public void commonMousePressed(Point mp, Point lp, Koma k, Boolean isOnBoard) {
+	public void commonMousePressed(Koma k, Boolean isOnBoard) {
 		if(shogiData.turnIsSente && k.sente == 1 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
 			shogiData.selectedKoma = null;
 			return;
