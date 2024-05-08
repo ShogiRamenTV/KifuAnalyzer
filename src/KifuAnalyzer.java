@@ -61,6 +61,9 @@ import javax.swing.event.ListSelectionListener;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener{
+	// -------------------------------------------------------------------------
+	// ----------------------- << Global Variables >> --------------------------
+	// -------------------------------------------------------------------------
 	Color boardColor = new Color(255, 238, 203);
 	
 	String imgFilePath = "./img/";
@@ -141,7 +144,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	JLabel labelNumberRow[] = new JLabel[9];
 	JLabel labelNumberCol[] = new JLabel[9];
-
+	
+	// -------------------------------------------------------------------------
+	// ----------------------- << Main >> --------------------------------------
+	// -------------------------------------------------------------------------
 	public static void main(String[] args) {
 		KifuAnalyzer ka = new KifuAnalyzer();
 		ka.setTitle("KifuAnalyzer");
@@ -585,11 +591,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			resetAllKoma();
 			listKomaOnBoard.clear();
 			for(int x=0; x<20; x++) {
-				listKomaOnHandForSente.add(k[x]);
+				if(radioButtonSente.isSelected()) {
+					listKomaOnHandForSente.add(k[x]);
+				} else {
+					k[x].reverse();
+					listKomaOnHandForGote.add(k[x]);
+				}
 			}
 			for(int x=20; x<40; x++) {
-				k[x].reverse();
-				listKomaOnHandForSente.add(k[x]);
+				if(radioButtonSente.isSelected()) {
+					k[x].reverse();
+					listKomaOnHandForSente.add(k[x]);
+				} else {
+					listKomaOnHandForGote.add(k[x]);
+				}
 			}
 		}
 	}
@@ -1011,8 +1026,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	CanvasBoard cv = new CanvasBoard();
 	public class CanvasBoard extends Canvas {
-		int x;
-		int y;
+		int lastPointX;
+		int lastPointY;
 		Boolean mousePressed;
 		Boolean enableLastPoint;
 		List<Point> drawList = new ArrayList<Point>();
@@ -1021,8 +1036,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Point> drawListBaseRightClick = new ArrayList<Point>();
 		List<Point> drawListDoubleRightClick = new ArrayList<Point>();
 		public CanvasBoard() {
-			x = -1;
-			y = -1;
+			lastPointX = -1;
+			lastPointY = -1;
 			mousePressed = false;
 			enableLastPoint = false;
 		}
@@ -1060,11 +1075,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(enableLastPoint) {
 				int X, Y;
 				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
-					X = 10 - x;
-					Y = 10 - y;
+					X = 10 - lastPointX;
+					Y = 10 - lastPointY;
 				} else {
-					X = x;
-					Y = y;
+					X = lastPointX;
+					Y = lastPointY;
 				}
 				drawPoint(X, Y, Color.orange);
 			}
@@ -1141,8 +1156,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		public void setLastPoint(int px, int py, Boolean enable) {
-			x = px;
-			y = py;
+			lastPointX = px;
+			lastPointY = py;
 			enableLastPoint = enable;
 		}
 		
