@@ -898,6 +898,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			int preX = this.px;
 			int preY = this.py;
 			
+			if(x == preX && y == preY) {
+				this.setLocation((9-preX)*(shogiData.iconWidth+10)+25, (preY-1)*(shogiData.iconHeight+10)+25);
+				return false;
+			}
+			
 			if(promoted == -1) {
 				if(!this.confirmPromotion(x, y, preX, preY, sd)) {
 					// case of cancel
