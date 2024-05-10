@@ -2911,31 +2911,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		Point mp = e.getPoint();
 		
-		if(e.getSource() == listBox[ListBoxType.Info.id]) {
-			mp.x += scrollPane[ListBoxType.Info.id].getBounds().x;
-			mp.y += scrollPane[ListBoxType.Info.id].getBounds().y + shogiData.iconHeight/2;
+		for(ListBoxType lb: ListBoxType.values()) {
+			if(e.getSource() == listBox[lb.id]) {
+				mp.x += scrollPane[lb.id].getBounds().x;
+				mp.y += scrollPane[lb.id].getBounds().y + shogiData.iconHeight/2 + 20;
+				break;
+			}
 		}
-		if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
-			mp.x += scrollPane[ListBoxType.Kifu.id].getBounds().x;
-			mp.y += scrollPane[ListBoxType.Kifu.id].getBounds().y + shogiData.iconHeight/2;
-		}
-		if(e.getSource() == listBox[ListBoxType.Player.id]) {
-			mp.x += scrollPane[ListBoxType.Player.id].getBounds().x;
-			mp.y += scrollPane[ListBoxType.Player.id].getBounds().y + shogiData.iconHeight/2;
-		}
-		if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
-			mp.x += scrollPane[ListBoxType.Strategy.id].getBounds().x;
-			mp.y += scrollPane[ListBoxType.Strategy.id].getBounds().y + shogiData.iconHeight/2;
-		}
-		if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
-			mp.x += scrollPane[ListBoxType.Tesuji.id].getBounds().x;
-			mp.y += scrollPane[ListBoxType.Tesuji.id].getBounds().y + shogiData.iconHeight/2;
-		}
-		if(e.getSource() == listBox[ListBoxType.Castle.id]) {
-			mp.x += scrollPane[ListBoxType.Castle.id].getBounds().x;
-			mp.y += scrollPane[ListBoxType.Castle.id].getBounds().y + shogiData.iconHeight/2;
-		}
-		//shogiData.selectedKoma.setLocation(mp.x - mousePointDifference.x, mp.y - mousePointDifference.y);
 		if(e.getSource() != cv) mp.y -= 50;
 		shogiData.selectedKoma.setLocation(mp.x - shogiData.iconWidth/2, mp.y - shogiData.iconHeight/2);
 	}
