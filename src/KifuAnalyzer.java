@@ -56,6 +56,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
@@ -65,6 +66,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
 	Color boardColor = new Color(255, 238, 203);
+	Color backGroundColor = new Color(220, 245, 240);
+	Color buttonColor = new Color(180, 245, 200);
+	Color buttonBorderColor = new Color(0, 145, 20);
 	
 	String imgFilePath = "./img/";
 	String kifuFilePath = "./kifu";
@@ -142,7 +146,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		@Override protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2 = (Graphics2D) g.create();
-			g2.setColor(new Color(200, 245, 220));
+			g2.setColor(backGroundColor);
 			g2.fillRect(0, 0, getWidth(), getHeight());
 			g2.dispose();
 			}
@@ -198,7 +202,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
-		getContentPane().setBackground(new Color(230, 250, 240));
+		getContentPane().setBackground(backGroundColor);
 		
 		for(int x=0; x<40; x++) {
 			getContentPane().add(shogiData.k[x]);
@@ -251,8 +255,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			button[b.id] = new JButton(b.name());
 			button[b.id].addActionListener(this);
 			button[b.id].setOpaque(true);
-			button[b.id].setBackground(new Color(200, 245, 220));
-			button[b.id].setBorder(null);
+			button[b.id].setBackground(buttonColor);
+			LineBorder border = new LineBorder(buttonBorderColor, 1, true);
+			button[b.id].setBorder(border);
 		}
 		button[ButtonType.Initialize.id].setBounds(580, 10, 80, 20);
 		button[ButtonType.Save.id].setBounds(820, 10, 60, 20);
@@ -324,12 +329,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		listModel[ListBoxType.Kifu.id].addElement("--------");
-		scrollPane[ListBoxType.Kifu.id].setBounds(590, 250, 165, 100);
-		scrollPane[ListBoxType.Info.id].setBounds(590, 350, 165, 100);
-		scrollPane[ListBoxType.Strategy.id].setBounds(755, 250, 165, 100);
-		scrollPane[ListBoxType.Castle.id].setBounds(755, 350, 165, 100);
-		scrollPane[ListBoxType.Player.id].setBounds(920, 250, 165, 100);
-		scrollPane[ListBoxType.Tesuji.id].setBounds(920, 350, 165, 100);
+		scrollPane[ListBoxType.Kifu.id].setBounds(590, 260, 165, 90);
+		scrollPane[ListBoxType.Info.id].setBounds(590, 350, 165, 90);
+		scrollPane[ListBoxType.Strategy.id].setBounds(755, 260, 165, 90);
+		scrollPane[ListBoxType.Castle.id].setBounds(755, 350, 165, 90);
+		scrollPane[ListBoxType.Player.id].setBounds(920, 260, 165, 90);
+		scrollPane[ListBoxType.Tesuji.id].setBounds(920, 350, 165, 90);
 	}
 	public void initializePlayerIconLabel() {
 		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
@@ -474,7 +479,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//for(Koma k: listKomaOnHandForSente) {
 			for(Koma k: listKomaOnHand.get(SenteGote.Sente.id)) {
 				k.setOpaque(false);
-				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (6+(k.type.id/4))*(iconHeight+10)+25);
+				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (6+(k.type.id/4))*(iconHeight+10)+5);
 				numOfKoma[SenteGote.Sente.id][k.type.id]++;
 				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Sente.id][k.type.id]).toString());
 				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setVisible(true);
@@ -590,7 +595,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void initializeLabelSetting() {
 			for(int x=0; x<8; x++) {
 				labelNumOfKoma[SenteGote.Sente.id][x] = new JLabel("0");
-				labelNumOfKoma[SenteGote.Sente.id][x].setBounds((10+(x%4))*(iconWidth+10)+38, (6+(x/4))*(iconHeight+10)+30, 80, 20);
+				labelNumOfKoma[SenteGote.Sente.id][x].setBounds((10+(x%4))*(iconWidth+10)+38, (6+(x/4))*(iconHeight+10)+10, 80, 20);
 				labelNumOfKoma[SenteGote.Sente.id][x].setVisible(false);
 				
 				labelNumOfKoma[SenteGote.Gote.id][x] = new JLabel("0");
@@ -1078,6 +1083,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				for(int y=0; y<9; y++) {
 					g.drawRect(x*(shogiData.iconWidth+10)+20, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
 				}
+			
+			Graphics2D g2 = (Graphics2D)g;
+			BasicStroke bs2 = new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL, 1.0f, new float[] {4}, 0);
+			g2.setStroke(bs2);
+			g2.drawRect(590, 112, 248, 145);
+			g2.drawRect(590, 442, 248, 145);
 		}
 		
 		public void drawMovableArea(Graphics g) {
