@@ -68,6 +68,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Color boardColor = new Color(255, 238, 203);
 	Color backGroundColor = new Color(220, 245, 240);
 	Color buttonColor = new Color(180, 245, 200);
+	Color buttonFocusedColor = new Color(120, 245, 140);
 	Color buttonBorderColor = new Color(0, 145, 20);
 	
 	String imgFilePath = "./img/";
@@ -254,6 +255,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(ButtonType b: ButtonType.values()) {
 			button[b.id] = new JButton(b.name());
 			button[b.id].addActionListener(this);
+			button[b.id].addMouseListener(this);
 			button[b.id].setOpaque(true);
 			button[b.id].setBackground(buttonColor);
 			LineBorder border = new LineBorder(buttonBorderColor, 1, true);
@@ -2928,9 +2930,21 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	@Override
 	public void mouseEntered(MouseEvent e) {
+		for(ButtonType bt: ButtonType.values()) {
+			if(e.getSource() == button[bt.id]) {
+				//System.out.println("mouse entered " + button[bt.id].getText());
+				button[bt.id].setBackground(buttonFocusedColor);
+			}
+		}
 	}
 	@Override
 	public void mouseExited(MouseEvent e) {
+		for(ButtonType bt: ButtonType.values()) {
+			if(e.getSource() == button[bt.id]) {
+				//System.out.println("mouse exited " + button[bt.id].getText());
+				button[bt.id].setBackground(buttonColor);
+			}
+		}
 	}
 	@Override
 	public void mouseMoved(MouseEvent e) {
