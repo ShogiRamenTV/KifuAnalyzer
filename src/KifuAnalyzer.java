@@ -138,7 +138,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			this.id = id;
 		}
 	};
-	JMenuBar menuBar = new JMenuBar();
+	JMenuBar menuBar = new JMenuBar() {
+		@Override protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			Graphics2D g2 = (Graphics2D) g.create();
+			g2.setColor(new Color(200, 245, 220));
+			g2.fillRect(0, 0, getWidth(), getHeight());
+			g2.dispose();
+			}
+		};
 	JMenu menu = new JMenu("Menu");
 	JMenuItem menuItem[] = new JMenuItem[MenuType.values().length];
 	
@@ -242,6 +250,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(ButtonType b: ButtonType.values()) {
 			button[b.id] = new JButton(b.name());
 			button[b.id].addActionListener(this);
+			button[b.id].setOpaque(true);
+			button[b.id].setBackground(new Color(200, 245, 220));
+			button[b.id].setBorder(null);
 		}
 		button[ButtonType.Initialize.id].setBounds(580, 10, 80, 20);
 		button[ButtonType.Save.id].setBounds(820, 10, 60, 20);
