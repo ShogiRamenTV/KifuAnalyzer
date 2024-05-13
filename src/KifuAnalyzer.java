@@ -190,6 +190,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
+		getContentPane().setBackground(new Color(230, 250, 240));
 		
 		for(int x=0; x<40; x++) {
 			getContentPane().add(shogiData.k[x]);
