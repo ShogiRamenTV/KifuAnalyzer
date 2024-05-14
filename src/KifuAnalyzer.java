@@ -489,7 +489,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			
 			for(Koma k: listKomaOnHand.get(SenteGote.Gote.id)) {
 				k.setOpaque(false);
-				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (2-(k.type.id/4))*(iconHeight+10)+40);
+				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (2-(k.type.id/4))*(iconHeight+10)+47);
 				numOfKoma[SenteGote.Gote.id][k.type.id]++;
 				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Gote.id][k.type.id]).toString());
 				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setVisible(true);
@@ -1089,8 +1089,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Graphics2D g2 = (Graphics2D)g;
 			BasicStroke bs2 = new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL, 1.0f, new float[] {4}, 0);
 			g2.setStroke(bs2);
-			g2.drawRect(590, 112, 248, 145);
-			g2.drawRect(590, 442, 248, 145);
+			g2.drawRect(590, 119, 248, 138);
+			g2.drawRect(590, 442, 248, 138);
 		}
 		
 		public void drawMovableArea(Graphics g) {
