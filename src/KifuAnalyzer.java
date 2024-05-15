@@ -2953,6 +2953,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(shogiData.selectedKoma == null) return;
 		
 		Point mp = e.getPoint();
+		//System.out.println(mp);
+		if(mp.x < 550) {
+			shogiData.selectedKoma.setOpaque(true);
+		} else {
+			shogiData.selectedKoma.setOpaque(false);
+		}
 		
 		for(ListBoxType lb: ListBoxType.values()) {
 			if(e.getSource() == listBox[lb.id]) {
