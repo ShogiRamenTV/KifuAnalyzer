@@ -1058,7 +1058,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Point> drawListBase = new ArrayList<Point>();
 		List<Point> drawListTargetRightClick = new ArrayList<Point>();
 		List<Point> drawListBaseRightClick = new ArrayList<Point>();
-		List<Point> drawListDoubleRightClick = new ArrayList<Point>();
+		List<Point> drawListRightClick = new ArrayList<Point>();
 		public CanvasBoard() {
 			lastPointX = -1;
 			lastPointY = -1;
@@ -1070,7 +1070,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//System.out.println("repaint()");
 			drawShogiBoard(g);
 			drawMovableArea(g);
-			drawDoubleClickedPoints(g);
+			drawRightClickedPoints(g);
 			drawArrowsForKifuAnalysis(g);
 			drawArrowsForRightClick(g);
 			drawLastPoint(g);
@@ -1154,10 +1154,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 		
-		public void drawDoubleClickedPoints(Graphics g) {
-			for(Point p: drawListDoubleRightClick) {
+		public void drawRightClickedPoints(Graphics g) {
+			for(Point p: drawListRightClick) {
 				Point pShogiXY = convertMousePointToShogiXY(p);
-				drawPoint(pShogiXY.x, pShogiXY.y, new Color(250,150,162));
+				BasicStroke stroke = new BasicStroke(4.0f);
+				Graphics2D g2 = (Graphics2D)g;
+				g2.setStroke(stroke);
+				g2.setColor(new Color(250,150,162));
+				g2.drawOval((9-pShogiXY.x)*(shogiData.iconWidth+10)+25, (pShogiXY.y-1)*(shogiData.iconHeight+10)+32, 50, 50);
 			}
 		}
 		
@@ -1205,7 +1209,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void clearDrawPointForRightClick() {
 			drawListTargetRightClick.clear();
 			drawListBaseRightClick.clear();
-			drawListDoubleRightClick.clear();
+			drawListRightClick.clear();
 		}
 		
 		public class Arrow {
@@ -2786,12 +2790,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					if(shogiData.listKomaOnBoard.indexOf(k) != -1) k.reverse();
 				}
 			}
-			if(e.getButton() == MouseEvent.BUTTON3) {
-				//System.out.println("Right Double Clicked");
-				Point mp = e.getPoint();
-				if(e.getSource() != cv) mp.y -= 50;
-				cv.drawListDoubleRightClick.add(mp);
-			}
+		}
+		if(e.getButton() == MouseEvent.BUTTON3) {
+			//System.out.println("Right Clicked");
+			Point mp = e.getPoint();
+			if(e.getSource() != cv) mp.y -= 50;
+			cv.drawListRightClick.add(mp);
 		}
 	}
 	@Override
