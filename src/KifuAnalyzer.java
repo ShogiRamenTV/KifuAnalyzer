@@ -1086,6 +1086,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					g.drawRect(x*(shogiData.iconWidth+10)+20, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
 				}
 			
+			// draw area for Koma in hand
 			Graphics2D g2 = (Graphics2D)g;
 			BasicStroke bs2 = new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL, 1.0f, new float[] {4}, 0);
 			g2.setStroke(bs2);
