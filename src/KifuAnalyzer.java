@@ -2719,6 +2719,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Double d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
 			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
+			if(checkBox[CheckBoxType.Reverse.id].isSelected() && sc.base.x <= 0) {
+				sc.base.x = 10 - sc.base.x;
+				sc.base.y = 10 - sc.base.y;
+			} 
 			cv.addDrawPoint(sc.target,  sc.base);
 			listModel[ListBoxType.Info.id].addElement(str);
 		}
