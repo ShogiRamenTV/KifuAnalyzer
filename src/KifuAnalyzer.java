@@ -626,6 +626,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 		}
+		
+		public void clearAllKomaDrawList() {
+			for(int x=0; x<40; x++) k[x].clearDrawList();
+		}
 	}
 	
 	// -------------------------------------------------------------------------
@@ -645,6 +649,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int sente;
 		int index;
 		int drop;
+		List<Point> drawListBase;
+		List<Point> drawListTarget;
 		KomaType type;
 		Koma(KomaType t, int x, int y, int s, int i) {
 			this.setIcon(shogiData.icon[t.id][0+s*2]);
@@ -658,6 +664,28 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			promoted = 0;
 			index = i;
 			drop = 0;
+			drawListBase = new ArrayList<Point>();
+			drawListTarget = new ArrayList<Point>();
+		}
+		
+		protected void paintComponent(Graphics g) {
+			super.paintComponent(g);
+			
+			if(drawListBase.size() >= 1) {
+				Graphics2D g2 = (Graphics2D)g;
+				BasicStroke stroke = new BasicStroke(4.0f);
+				g2.setStroke(stroke);
+				g2.setColor(Color.magenta);
+				for(Point base: drawListBase) {
+					Point target = drawListTarget.get(drawListBase.indexOf(base));
+					g2.drawLine(base.x-getX(), base.y-getY(), target.x-getX(), target.y-getY());
+				}
+			}
+		}
+		
+		public void clearDrawList() {
+			drawListBase.clear();
+			drawListTarget.clear();
 		}
 		
 		public void reset(KomaType t, int x, int y, int s) {
@@ -1141,12 +1169,113 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 		
+		public void findKomaOnLine(Point p1, Point p2) {
+			for(int x=0; x<40; x++) {
+				Boolean isOnline = false;
+				Boolean isBaseDetected = false;
+				int X = shogiData.k[x].getX();
+				int Y = shogiData.k[x].getY();
+				Point p[] = new Point[4];
+				p[0] = new Point(X, Y);
+				p[1] = new Point(X+shogiData.iconWidth, Y);
+				p[2] = new Point(X+shogiData.iconWidth, Y+shogiData.iconHeight);
+				p[3] = new Point(X, Y+shogiData.iconHeight);
+				
+				double d[] = new double[4];
+				Point v1 = new Point(p2.x-p1.x, p2.y-p1.y);
+				Point v2[] = new Point[4];
+				for(int k=0; k<4; k++) {
+					v2[k] = new Point(p[k].x-p1.x, p[k].y-p1.y);
+				}
+				for(int k=0; k<4; k++) {
+					d[k] = v1.x * v2[k].y - v2[k].x * v1.y;
+				}
+				if(d[0]*d[1] >= 0 && d[1]*d[2] >= 0 && d[2]*d[3] >= 0 && d[3]*d[0] >= 0) {
+					continue;
+				}
+				
+				Point center = new Point(X + shogiData.iconWidth/2, Y + shogiData.iconHeight/2);
+				if(isCentralPoint(center, p1, p2)) isOnline = true;
+				
+				if(!isOnline) continue;
+				
+				if(d[0]*d[1] < 0) {
+					isBaseDetected = addDrawPointOnKoma(isBaseDetected, shogiData.k[x], p1, p2, p[0], p[1]);
+				}
+				if(d[1]*d[2] < 0) {
+					isBaseDetected = addDrawPointOnKoma(isBaseDetected, shogiData.k[x], p1, p2, p[1], p[2]);
+				}
+				if(d[2]*d[3] < 0) {
+					isBaseDetected = addDrawPointOnKoma(isBaseDetected, shogiData.k[x], p1, p2, p[2], p[3]);
+				}
+				if(d[3]*d[0] < 0) {
+					isBaseDetected = addDrawPointOnKoma(isBaseDetected, shogiData.k[x], p1, p2, p[3], p[0]);
+				}
+				shogiData.k[x].repaint();
+			}
+		}
+		
+		public Boolean addDrawPointOnKoma(Boolean isBaseDetected, Koma k, Point p1, Point p2, Point p3, Point p4) {
+			Point pCross = calcCrossPoint(p1, p2, p3, p4);
+			if(!isBaseDetected) {
+				k.drawListBase.add(pCross);
+				return true;
+			}
+			
+			Point pBase = k.drawListBase.get(k.drawListBase.size()-1);
+			if(isCentralPoint(p1, pBase, pCross) && isCentralPoint(pBase, p1, p2)) {
+				k.drawListTarget.add(p1);
+			} else if(isCentralPoint(p1, pBase, pCross) && isCentralPoint(pCross, p1, p2)) {
+				k.drawListBase.remove(k.drawListBase.size()-1);
+				k.drawListBase.add(p1);
+				k.drawListTarget.add(pCross);
+			} else {
+				k.drawListTarget.add(pCross);
+			}
+			
+			return true;
+		}
+		
+		public Boolean isCentralPoint(Point p1, Point base, Point target) {
+			Boolean result = false;
+			if(p1.x >= base.x && p1.x <= target.x && p1.y >= base.y && p1.y <= target.y) result = true;
+			else if(p1.x >= base.x && p1.x <= target.x && p1.y <= base.y && p1.y >= target.y) result = true;
+			else if(p1.x <= base.x && p1.x >= target.x && p1.y >= base.y && p1.y <= target.y) result = true;
+			else if(p1.x <= base.x && p1.x >= target.x && p1.y <= base.y && p1.y >= target.y) result = true;
+			
+			return result;
+		}
+		
+		public Point calcCrossPoint(Point p1, Point p2, Point p3, Point p4) {
+			Point pCross = new Point();
+			double a;
+			if(p2.x == p1.x) a = 0;
+			else a = (double)(p2.y - p1.y) / (double)(p2.x - p1.x);
+			double b = p1.y - a * p1.x;
+			double c;
+			if(p4.x == p3.x) c = 0;
+			else c = (double)(p4.y - p3.y) / (double)(p4.x - p3.x);
+			double d;
+			if(p2.y == p1.y) d = p1.y;
+			else d = p3.y - c * p3.x;
+			
+			if(p1.x==p2.x) pCross.x = p1.x;
+			else if(p1.y==p2.y) pCross.x = p3.x;
+			else if(p3.x==p4.x) pCross.x = p3.x;
+			else pCross.x = (int)((d-b) / (a-c));
+			if(p3.x==p4.x) pCross.y = (int)(a*(double)pCross.x + b);
+			else pCross.y = (int)(c * pCross.x) + (int)d;
+			
+			return pCross;
+		}
+		
 		public void drawArrowsForRightClick(Graphics g) {
 			for(Point pTarget: drawListTargetRightClick) {
 				Point pBase = drawListBaseRightClick.get(drawListTargetRightClick.indexOf(pTarget));
 				Point pBaseConverted = convertMousePointToCentralSquare(pBase);
 				Point pTargetConverted = convertMousePointToCentralSquare(pTarget);
 				if(pBaseConverted.x == pTargetConverted.x && pBaseConverted.y == pTargetConverted.y) continue;
+				findKomaOnLine(pBaseConverted, pTargetConverted);
 				Arrow ar = new Arrow(pBaseConverted, pTargetConverted);
 				BasicStroke stroke = new BasicStroke(4.0f);
 				g.setColor(Color.magenta);
@@ -2676,6 +2805,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(listModel[ListBoxType.Kifu.id].size()-1);
 		
 		cv.clearDrawPointForRightClick();
+		shogiData.clearAllKomaDrawList();
 	}
 	public void commonListAction() {
 		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
@@ -2699,6 +2829,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(selectedIndex == 0) cv.setLastPoint(-1, -1, false);
 		cv.clearDrawPointForRightClick();
+		shogiData.clearAllKomaDrawList();
 		
 		checkKDB(selectedIndex);
 		shogiData.viewKomaOnBoard();
