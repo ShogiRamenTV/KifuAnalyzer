@@ -66,9 +66,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
 	Color boardColor = new Color(255, 238, 203);
-	Color backGroundColor = new Color(220, 245, 240);
-	Color buttonColor = new Color(180, 245, 200);
-	Color buttonFocusedColor = new Color(120, 245, 140);
+	Color backGroundColor = new Color(224, 255, 255);
+	Color buttonColor = new Color(180, 245, 250);
+	Color buttonFocusedColor = new Color(120, 245, 250);
 	Color buttonBorderColor = new Color(0, 145, 20);
 	
 	String imgFilePath = "./img/";
@@ -1086,7 +1086,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Point> drawListBase = new ArrayList<Point>();
 		List<Point> drawListTargetRightClick = new ArrayList<Point>();
 		List<Point> drawListBaseRightClick = new ArrayList<Point>();
-		List<Point> drawListRightClick = new ArrayList<Point>();
+		List<Point> drawListLeftClick = new ArrayList<Point>();
 		public CanvasBoard() {
 			lastPointX = -1;
 			lastPointY = -1;
@@ -1098,7 +1098,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//System.out.println("repaint()");
 			drawShogiBoard(g);
 			drawMovableArea(g);
-			drawRightClickedPoints(g);
+			drawLeftClickedPoints(g);
 			drawArrowsForKifuAnalysis(g);
 			drawArrowsForRightClick(g);
 			drawLastPoint(g);
@@ -1283,8 +1283,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 		
-		public void drawRightClickedPoints(Graphics g) {
-			for(Point p: drawListRightClick) {
+		public void drawLeftClickedPoints(Graphics g) {
+			for(Point p: drawListLeftClick) {
 				Point pShogiXY = convertMousePointToShogiXY(p);
 				BasicStroke stroke = new BasicStroke(4.0f);
 				Graphics2D g2 = (Graphics2D)g;
@@ -1338,7 +1338,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void clearDrawPointForRightClick() {
 			drawListTargetRightClick.clear();
 			drawListBaseRightClick.clear();
-			drawListRightClick.clear();
+			drawListLeftClick.clear();
 		}
 		
 		public class Arrow {
@@ -2904,6 +2904,25 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// 6, @Overrideアノテーションを付ける。
 	public void mouseDragged(MouseEvent e) {
 		//System.out.println("mouse dragged");
+		if(shogiData.selectedKoma == null) return;
+		
+		Point mp = e.getPoint();
+		//System.out.println(mp);
+		if(mp.x < 550) {
+			shogiData.selectedKoma.setOpaque(true);
+		} else {
+			shogiData.selectedKoma.setOpaque(false);
+		}
+		
+		for(ListBoxType lb: ListBoxType.values()) {
+			if(e.getSource() == listBox[lb.id]) {
+				mp.x += scrollPane[lb.id].getBounds().x;
+				mp.y += scrollPane[lb.id].getBounds().y + shogiData.iconHeight/2 + 20;
+				break;
+			}
+		}
+		if(e.getSource() != cv) mp.y -= 50;
+		shogiData.selectedKoma.setLocation(mp.x - shogiData.iconWidth/2, mp.y - shogiData.iconHeight/2);
 	}
 	@Override
 	public void mouseClicked(MouseEvent e) {
@@ -2922,11 +2941,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 		}
-		if(e.getButton() == MouseEvent.BUTTON3) {
+		if(e.getButton() == MouseEvent.BUTTON1) {
 			//System.out.println("Right Clicked");
 			Point mp = e.getPoint();
 			if(e.getSource() != cv) mp.y -= 50;
-			cv.drawListRightClick.add(mp);
+			cv.drawListLeftClick.add(mp);
+			cv.repaint();
 		}
 	}
 	@Override
@@ -2943,9 +2963,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(shogiData.selectedKoma == null) {
 			selectKoma(e);
-		} else {
-			releaseKoma();
-		}
+		} 
 	}
 	public void selectKoma(MouseEvent e) {
 		shogiData.selectedKoma = null;
@@ -2997,6 +3015,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void mouseReleased(MouseEvent e) {
+		if(shogiData.selectedKoma != null) {
+			releaseKoma();
+		} 
 		//System.out.println("mouse released");
 		if(e.getButton() != MouseEvent.BUTTON3) return;
 		Point mp = e.getPoint();
@@ -3088,25 +3109,5 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		//System.out.println("Mouse moved");
-		if(shogiData.selectedKoma == null) return;
-		
-		Point mp = e.getPoint();
-		//System.out.println(mp);
-		if(mp.x < 550) {
-			shogiData.selectedKoma.setOpaque(true);
-		} else {
-			shogiData.selectedKoma.setOpaque(false);
-		}
-		
-		for(ListBoxType lb: ListBoxType.values()) {
-			if(e.getSource() == listBox[lb.id]) {
-				mp.x += scrollPane[lb.id].getBounds().x;
-				mp.y += scrollPane[lb.id].getBounds().y + shogiData.iconHeight/2 + 20;
-				break;
-			}
-		}
-		if(e.getSource() != cv) mp.y -= 50;
-		shogiData.selectedKoma.setLocation(mp.x - shogiData.iconWidth/2, mp.y - shogiData.iconHeight/2);
 	}
 }
