@@ -676,7 +676,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			
 			if(drawListBase.size() >= 1) {
 				Graphics2D g2 = (Graphics2D)g;
-				BasicStroke stroke = new BasicStroke(4.0f);
+				BasicStroke stroke = new BasicStroke(8.0f);
 				g2.setStroke(stroke);
 				g2.setColor(Color.magenta);
 				for(Point base: drawListBase) {
@@ -1281,7 +1281,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(pBaseConverted.x == pTargetConverted.x && pBaseConverted.y == pTargetConverted.y) continue;
 				findKomaOnLine(pBaseConverted, pTargetConverted);
 				Arrow ar = new Arrow(pBaseConverted, pTargetConverted);
-				BasicStroke stroke = new BasicStroke(4.0f);
+				BasicStroke stroke = new BasicStroke(8.0f);
 				g.setColor(Color.magenta);
 				ar.draw((Graphics2D)g, stroke);
 			}
