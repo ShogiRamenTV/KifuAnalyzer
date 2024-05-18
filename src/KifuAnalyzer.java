@@ -628,7 +628,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		public void clearAllKomaDrawList() {
-			for(int x=0; x<40; x++) k[x].clearDrawList();
+			for(int x=0; x<40; x++) {
+				k[x].clearDrawList();
+				k[x].repaint();
+			}
 		}
 	}
 	
@@ -1096,6 +1099,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		public void paint(Graphics g) {
 			//System.out.println("repaint()");
+			shogiData.clearAllKomaDrawList();
 			drawShogiBoard(g);
 			drawMovableArea(g);
 			drawLeftClickedPoints(g);
@@ -2904,6 +2908,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// 6, @Overrideアノテーションを付ける。
 	public void mouseDragged(MouseEvent e) {
 		//System.out.println("mouse dragged");
+		if(e.getButton() == MouseEvent.BUTTON3) {
+			Point mp = e.getPoint();
+			if(e.getSource() != cv) mp.y -= 50;
+			if(cv.drawListTargetRightClick.size() != 0 ) {
+				cv.drawListTargetRightClick.remove(cv.drawListTargetRightClick.size()-1);
+			}
+			cv.drawListTargetRightClick.add(mp);
+			cv.repaint();
+		}
+		
 		if(shogiData.selectedKoma == null) return;
 		
 		Point mp = e.getPoint();
@@ -2942,9 +2956,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 		if(e.getButton() == MouseEvent.BUTTON1) {
-			//System.out.println("Right Clicked");
+			//System.out.println("Left Clicked");
+			if(e.getSource() != cv) return;
 			Point mp = e.getPoint();
-			if(e.getSource() != cv) mp.y -= 50;
 			cv.drawListLeftClick.add(mp);
 			cv.repaint();
 		}
