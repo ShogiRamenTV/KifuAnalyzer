@@ -26,6 +26,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -137,7 +140,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Clip soundKoma;
 	
 	public enum MenuType {
-		Color(0), Capture(1), KomaInHand(2);
+		Color(0), Capture(1), KomaInHand(2), StartEngine(3), StopEngine(4);
 		private final int id;		
 		private MenuType(final int id) {
 			this.id = id;
@@ -1090,6 +1093,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Point> drawListTargetRightClick = new ArrayList<Point>();
 		List<Point> drawListBaseRightClick = new ArrayList<Point>();
 		List<Point> drawListLeftClick = new ArrayList<Point>();
+		List<Point> drawListEngineBase = new ArrayList<Point>();
+		List<Point> drawListEngineTarget = new ArrayList<Point>();
 		public CanvasBoard() {
 			lastPointX = -1;
 			lastPointY = -1;
@@ -1105,6 +1110,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			drawLeftClickedPoints(g);
 			drawArrowsForKifuAnalysis(g);
 			drawArrowsForRightClick(g);
+			drawArrowForEngine(g);
 			drawLastPoint(g);
 		}
 		
@@ -1170,6 +1176,45 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				BasicStroke stroke = new BasicStroke(1.0f);
 				g.setColor(Color.blue);
 				ar.draw((Graphics2D)g, stroke);
+			}
+		}
+		
+		public void drawArrowForEngine(Graphics g) {
+			if(out == null) return;
+			float bs = 10.0f;
+			Color c;
+			int red = 0;
+			int green = 250;
+			int blue = 0;
+			// for safe access in multi thread
+			synchronized(drawListEngineBase) {
+				for(Point p: drawListEngineTarget) {
+					int pBX, pBY, pX, pY;
+					Point pB = drawListEngineBase.get(drawListEngineTarget.indexOf(p));
+					pBX = pB.x;
+					pBY = pB.y;
+					pX = p.x;
+					pY = p.y;
+					
+					Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+					Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+					
+					Arrow ar = new Arrow(pBase, pTarget);
+					BasicStroke stroke = new BasicStroke(bs);
+					c = new Color(red, green, blue);
+					g.setColor(c);
+					ar.draw((Graphics2D)g, stroke);
+					bs -= 3.0f;
+					green -= 80;
+				}
+			}
+		}
+		
+		public void clearDrawListForEngine() {
+			// for safe access in multi thread
+			synchronized(drawListEngineBase) {
+				drawListEngineBase.clear();
+				drawListEngineTarget.clear();
 			}
 		}
 		
@@ -1728,6 +1773,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(e.getSource() == menuItem[MenuType.KomaInHand.id]) {
 			actionForKomaInHand();
+		}
+		if(e.getSource() == menuItem[MenuType.StartEngine.id]) {
+			actionForStartEngine();
+		}
+		if(e.getSource() == menuItem[MenuType.StopEngine.id]) {
+			actionForStopEngine();
 		}
 	}
 	
@@ -2838,6 +2889,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		checkKDB(selectedIndex);
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
+
+		sendCommandToEngine();
 	}
 	public void updateListBox2(List<StringCount> listSC) {
 		listModel[ListBoxType.Info.id].clear();
@@ -2898,6 +2951,239 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		shogiData.putAllKomaInHand();
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
+	}
+
+	public void actionForStartEngine() {
+		Process process = createEngine();
+        if(process == null) {
+        	System.out.println("create engine failed");
+        	return;
+        }
+        createReceiverThread(process);
+        sendInitialCommandToEngine(process);
+        sendCommandToEngine();
+	}
+	public void actionForStopEngine() {
+		sendFinalCommandToEngine();
+	}
+	
+	// -------------------------------------------------------------------------
+	// ----------------------- << Interface for Engine >> ----------------------
+	// -------------------------------------------------------------------------
+	PrintStream out = null;
+	MyThreadReceiver receiver;
+	String enginePath = "../../../Shogi Ramen/Suisho5/source/source/YaneuraOu-by-clang";
+	int numOfMultiPV = 3;
+	public Process createEngine() {
+		ProcessBuilder p = new ProcessBuilder(enginePath);
+		Process process = null;
+		try {
+			process = p.start();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return process;
+	}
+	public void createReceiverThread(Process process) {
+		receiver = new MyThreadReceiver(process);
+        receiver.start();
+	}
+	public void sendInitialCommandToEngine(Process process) {
+		out = new PrintStream(process.getOutputStream());
+		out.println("usi");
+		out.flush();
+		out.println("setoption name MultiPV value" + " " + numOfMultiPV);
+		out.flush();
+		out.println("isready");
+		out.flush();
+		out.println("usinewgame");
+		out.flush();
+	}
+	public void sendFinalCommandToEngine() {
+		if(out == null) return;
+		out.println("quit");
+		out.flush();
+		out = null;
+		cv.repaint();
+	}
+	
+	public void sendCommandToEngine() {
+		if(out == null) return;
+		out.println("stop");
+		out.flush();
+		out.println(createCommandForEngine());
+		out.flush();
+		out.println("go infinite");
+		out.flush();
+	}
+	
+	public String createCommandForEngine() {
+		String cmd = "position sfen ";
+		String str[] = new String[9];
+		int empty;
+		for(int y=0; y<9; y++) {
+			empty = 0;
+			str[y] = "";
+			for(int x=8; x>=0; x--) {
+				Koma k = getKomaByPosition(x+1, y+1);
+				if(k == null) {
+					empty++;
+					if(x == 0) str[y] += empty;
+					continue;
+				}
+				if(empty != 0) {
+					str[y] += empty;
+					empty = 0;
+				}
+				String s = k.type.name().substring(0, 1);
+				if(k.type.name().equals("Knight")) s = "N";
+				if(k.type.name().equals("Rance")) s = "L";
+				if(k.sente == 1) s = s.toLowerCase();
+				str[y] += s;
+				if(k.promoted == 1) str[y] += '+';
+			}
+			if(y != 8) str[y] += '/';
+		}
+		for(int i=0; i<9; i++) {
+			cmd += str[i];
+		}
+		if(shogiData.turnIsSente) cmd += " b ";
+		else cmd += " w ";
+		cmd += getStringOfKomaInHand();
+		cmd += " 1";
+		System.out.println(cmd);
+		return cmd;
+	}
+	public String getStringOfKomaInHand() {
+		String str = "";
+		str += createStringOfKomaInHand(shogiData.listKomaOnHandForSente, true);
+		str += createStringOfKomaInHand(shogiData.listKomaOnHandForGote, false);
+		if(str.equals("")) str = "-";
+		return str;
+	}
+	
+	public String createStringOfKomaInHand(List<Koma> listKomaOnHand, Boolean isSente) {
+		String str = "";
+		List<StringCount> listSC = new ArrayList<StringCount>();
+		Boolean found;
+		for(Koma k: listKomaOnHand) {
+			found = false;
+			for(StringCount sc: listSC) {
+				if(sc.str.equals(k.type.name())) {
+					sc.cnt++;
+					found = true;
+				}
+			}
+			if(!found) {
+				StringCount sc = new StringCount(k.type.name(), 0);
+				listSC.add(sc);
+			}
+		}
+		// order is defined as follows
+		str += addStrByKomaName(listSC, "Rook", isSente);
+		str += addStrByKomaName(listSC, "Bishop", isSente);
+		str += addStrByKomaName(listSC, "Gold", isSente);
+		str += addStrByKomaName(listSC, "Silver", isSente);
+		str += addStrByKomaName(listSC, "Knight", isSente);
+		str += addStrByKomaName(listSC, "Rance", isSente);
+		str += addStrByKomaName(listSC, "Pawn", isSente);
+		return str;
+	}
+	
+	public String addStrByKomaName(List<StringCount> listSC, String name, Boolean isTurnSente) {
+		String str = "";
+		for(StringCount sc: listSC) {
+			if(!sc.str.equals(name)) continue;
+			String s = sc.str.substring(0, 1);
+			if(sc.str.equals("Knight")) s = "N";
+			if(sc.str.equals("Rance")) s = "L";
+			if(!isTurnSente) s = s.toLowerCase();
+			if(sc.cnt == 1) {
+				str += s;
+			} else {
+				str += sc.cnt + s;
+			}
+		}
+		return str;
+	}
+	
+	public Koma getKomaByPosition(int x, int y) {
+		Koma koma = null;
+		for(Koma k: shogiData.k) {
+			if(k.px == x && k.py == y) koma = k;
+		}
+		return koma;
+	}
+	
+	class MyThreadReceiver extends Thread {
+		Process process;
+		MyThreadReceiver(Process p) {
+			process = p;
+		}
+		@Override
+		public void run() {
+			super.run();
+			System.out.println("thread started");
+			try {
+				BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset()));
+				String line;
+				while ((line = r.readLine()) != null) {
+					if(line.contains("info depth")) {
+						//System.out.println(line);
+						getPointFromInfo(line);
+						cv.repaint();
+					}
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			System.out.println("thread stopped");
+		}
+	}
+	public void getPointFromInfo(String info) {
+		Point base = new Point();
+		Point target = new Point();
+		if(info.contains("multipv 1")) cv.clearDrawListForEngine();
+		
+		String[] names = info.split(" ");
+		String str = "";
+		for(int i=0; i<names.length; i++) {
+			if(names[i].equals("pv")) str = names[i+1];
+		}
+		convertStringPosToPoints(str, base, target);
+		// for safe access in multi thread
+		synchronized(cv.drawListEngineBase) {
+			cv.drawListEngineBase.add(base);
+			cv.drawListEngineTarget.add(target);
+		}
+	}
+	public void convertStringPosToPoints(String strPos, Point base, Point target) {
+		char ch[] = strPos.toCharArray();
+		// drop a piece
+		if(ch[1] == '*') {
+			if(ch[0] == 'P' || ch[0] == 'p' || ch[0] == 'G' || ch[0] == 'g') {
+				base.x = 0;
+			} else if(ch[0] == 'B' || ch[0] == 'b' || ch[0] == 'L' || ch[0] == 'l') {
+				base.x = -1;
+			} else if(ch[0] == 'N' || ch[0] == 'n' || ch[0] == 'R' || ch[0] == 'r') {
+				base.x = -2;
+			} else if(ch[0] == 'S' || ch[0] == 's' || ch[0] == 'K' || ch[0] == 'k') {
+				base.x = -3;
+			}
+			if(shogiData.turnIsSente) {
+				if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S') base.y = 7;
+				else base.y = 8;
+			} else {
+				if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S') base.y = 3;
+				else base.y = 2;
+			}
+		}
+		else {
+			base.x = ch[0] - '0';
+			base.y = ch[1] - 96;
+		}
+		target.x = ch[2] - '0';
+		target.y = ch[3] - 96;
 	}
 	
 	// -------------------------------------------------------------------------
@@ -3087,6 +3373,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			kifuData.add(kf);
 			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
 			shogiData.turnIsSente = !shogiData.turnIsSente;
+			sendCommandToEngine();
 		}
 		
 		// check strategy
