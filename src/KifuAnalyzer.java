@@ -22,7 +22,9 @@ import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -36,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Properties;
 import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
@@ -140,7 +143,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Clip soundKoma;
 	
 	public enum MenuType {
-		Color(0), Capture(1), KomaInHand(2), StartEngine(3), StopEngine(4);
+		Color(0), Capture(1), KomaInHand(2), StartEngine(3), StopEngine(4), SetEngine(5);
 		private final int id;		
 		private MenuType(final int id) {
 			this.id = id;
@@ -1794,6 +1797,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getSource() == menuItem[MenuType.StopEngine.id]) {
 			actionForStopEngine();
 		}
+		if(e.getSource() == menuItem[MenuType.SetEngine.id]) {
+			actionForSetEngine();
+		}
 	}
 	
 	// -------------------------------------------------------------------------
@@ -2980,23 +2986,60 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void actionForStopEngine() {
 		sendFinalCommandToEngine();
 	}
+	public void actionForSetEngine() {
+		setProperty();
+	}
 	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Interface for Engine >> ----------------------
 	// -------------------------------------------------------------------------
 	PrintStream out = null;
 	MyThreadReceiver receiver;
-	String enginePath = "../../../Shogi Ramen/Suisho5/source/source/YaneuraOu-by-clang";
+	String propertyFile = "KifuAnalyzer.properties";
 	int numOfMultiPV = 5;
 	public Process createEngine() {
+		String enginePath = loadProperty();
+		if(enginePath == null) {
+			setProperty();
+			enginePath = loadProperty();
+		}
+		if(enginePath == null) return null;
 		ProcessBuilder p = new ProcessBuilder(enginePath);
 		Process process = null;
 		try {
 			process = p.start();
 		} catch (IOException e) {
 			System.out.println("engine is not installed");
+			setProperty();
 		}
 		return process;
+	}
+	public String loadProperty() {
+		Properties settings = new Properties();
+		FileInputStream in = null;
+		try {
+			in = new FileInputStream(propertyFile);
+			settings.load(in);
+		} catch (IOException e) {
+			System.out.println(e);
+			return null;
+		}
+		return settings.getProperty("Engine");
+	}
+	public void setProperty() {
+		Path path = Paths.get("").toAbsolutePath();
+		FileDialog fd = new FileDialog(this, "Load", FileDialog.LOAD);
+		fd.setDirectory(path.toString());
+		fd.setVisible(true);
+		if(fd.getFile() == null) return;
+		String fileName = fd.getDirectory() + fd.getFile();
+		Properties properties = new Properties();
+		try {
+			properties.setProperty("Engine", fileName);
+			properties.store(new FileOutputStream(propertyFile), "Comments");
+		} catch (IOException e) {
+			System.out.println(e);
+		}
 	}
 	public void createReceiverThread(Process process) {
 		receiver = new MyThreadReceiver(process);
