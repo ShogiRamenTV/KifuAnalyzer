@@ -2980,7 +2980,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		try {
 			process = p.start();
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("engine is not installed");
 		}
 		return process;
 	}
@@ -3039,8 +3039,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(k.type.name().equals("Knight")) s = "N";
 				if(k.type.name().equals("Rance")) s = "L";
 				if(k.sente == 1) s = s.toLowerCase();
-				str[y] += s;
 				if(k.promoted == 1) str[y] += '+';
+				str[y] += s;
 			}
 			if(y != 8) str[y] += '/';
 		}
