@@ -126,7 +126,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JComboBox<String> comboBox;
 	
 	public enum ListBoxType {
-		Kifu(0), Info(1), Strategy(2), Player(3), Castle(4), Tesuji(5);
+		Kifu(0), Info(1), Strategy(2), Player(3), Castle(4), Tesuji(5), Engine(6);
 		private final int id;		
 		private ListBoxType(final int id) {
 			this.id = id;
@@ -340,6 +340,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		scrollPane[ListBoxType.Castle.id].setBounds(755, 350, 165, 90);
 		scrollPane[ListBoxType.Player.id].setBounds(920, 260, 165, 90);
 		scrollPane[ListBoxType.Tesuji.id].setBounds(920, 350, 165, 90);
+		scrollPane[ListBoxType.Engine.id].setBounds(590, 590, 165, 90);
+		
+		for(int index=0; index<numOfMultiPV; index++) {
+			listModel[ListBoxType.Engine.id].addElement("");
+		}
 	}
 	public void initializePlayerIconLabel() {
 		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
@@ -1093,8 +1098,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Point> drawListTargetRightClick = new ArrayList<Point>();
 		List<Point> drawListBaseRightClick = new ArrayList<Point>();
 		List<Point> drawListLeftClick = new ArrayList<Point>();
-		List<Point> drawListEngineBase = new ArrayList<Point>();
-		List<Point> drawListEngineTarget = new ArrayList<Point>();
+		List<PointWithScore> drawListForEngine = new ArrayList<PointWithScore>();
 		public CanvasBoard() {
 			lastPointX = -1;
 			lastPointY = -1;
@@ -1103,7 +1107,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		public void paint(Graphics g) {
-			//System.out.println("repaint()");
 			shogiData.clearAllKomaDrawList();
 			drawShogiBoard(g);
 			drawMovableArea(g);
@@ -1186,15 +1189,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			int red = 0;
 			int green = 250;
 			int blue = 0;
+			int count = 0;
 			// for safe access in multi thread
-			synchronized(drawListEngineBase) {
-				for(Point p: drawListEngineTarget) {
+			synchronized(drawListForEngine) {
+				for(PointWithScore ps: drawListForEngine) {
 					int pBX, pBY, pX, pY;
-					Point pB = drawListEngineBase.get(drawListEngineTarget.indexOf(p));
-					pBX = pB.x;
-					pBY = pB.y;
-					pX = p.x;
-					pY = p.y;
+					pBX = ps.base.x;
+					pBY = ps.base.y;
+					pX = ps.target.x;
+					pY = ps.target.y;
 					
 					Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 					Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
@@ -1204,17 +1207,19 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					c = new Color(red, green, blue);
 					g.setColor(c);
 					ar.draw((Graphics2D)g, stroke);
-					bs -= 3.0f;
+					bs -= 2.0f;
 					green -= 80;
+					count++;
+					
+					if(count == 3) break; // only top 3 are shown 
 				}
 			}
 		}
 		
 		public void clearDrawListForEngine() {
 			// for safe access in multi thread
-			synchronized(drawListEngineBase) {
-				drawListEngineBase.clear();
-				drawListEngineTarget.clear();
+			synchronized(drawListForEngine) {
+				drawListForEngine.clear();
 			}
 		}
 		
@@ -1423,7 +1428,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 	}
-	
+	public class PointWithScore {
+		Point base;
+		Point target;
+		int score;
+		public PointWithScore(Point b, Point t, int s) {
+			base = b;
+			target = t;
+			score = s;
+		}
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Button Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -2973,7 +2987,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	PrintStream out = null;
 	MyThreadReceiver receiver;
 	String enginePath = "../../../Shogi Ramen/Suisho5/source/source/YaneuraOu-by-clang";
-	int numOfMultiPV = 3;
+	int numOfMultiPV = 5;
 	public Process createEngine() {
 		ProcessBuilder p = new ProcessBuilder(enginePath);
 		Process process = null;
@@ -3051,7 +3065,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		else cmd += " w ";
 		cmd += getStringOfKomaInHand();
 		cmd += " 1";
-		System.out.println(cmd);
 		return cmd;
 	}
 	public String getStringOfKomaInHand() {
@@ -3123,41 +3136,57 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		@Override
 		public void run() {
 			super.run();
-			System.out.println("thread started");
 			try {
 				BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset()));
 				String line;
 				while ((line = r.readLine()) != null) {
+					//System.out.println(line);
 					if(line.contains("info depth")) {
-						//System.out.println(line);
 						getPointFromInfo(line);
 						cv.repaint();
 					}
 				}
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.out.println(e);
 			}
-			System.out.println("thread stopped");
+			for(int index=0; index<numOfMultiPV; index++) {
+				listModel[ListBoxType.Engine.id].set(index, "");
+			}
 		}
 	}
 	public void getPointFromInfo(String info) {
 		Point base = new Point();
 		Point target = new Point();
-		if(info.contains("multipv 1")) cv.clearDrawListForEngine();
+		if(info.contains("multipv 1")) {
+			cv.clearDrawListForEngine();
+		}
 		
 		String[] names = info.split(" ");
 		String str = "";
+		int score = 0;
+		int index = 0;
+		Point p = new Point(); // for promote and drop
 		for(int i=0; i<names.length; i++) {
 			if(names[i].equals("pv")) str = names[i+1];
+			if(names[i].equals("cp")) score = Integer.parseInt(names[i+1]);
+			if(names[i].equals("multipv")) index = Integer.parseInt(names[i+1]) - 1;
 		}
-		convertStringPosToPoints(str, base, target);
+		convertStringPosToPoints(str, base, target, p);
 		// for safe access in multi thread
-		synchronized(cv.drawListEngineBase) {
-			cv.drawListEngineBase.add(base);
-			cv.drawListEngineTarget.add(target);
+		synchronized(cv.drawListForEngine) {
+			PointWithScore ps = new PointWithScore(base, target, score);
+			cv.drawListForEngine.add(ps);
+			Koma k = getKomaByPosition(base.x, base.y);
+			if(k != null) {
+				if(k.promoted == 1) p.x = 1;
+				String komaMove = createMoveKomaName(k.type, k.sente, target.x, target.y, p.x, k.promoted, p.y);
+				komaMove += " " + score;
+				listModel[ListBoxType.Engine.id].set(index, komaMove);
+				listBox[ListBoxType.Engine.id].setModel(listModel[ListBoxType.Engine.id]);
+			}
 		}
 	}
-	public void convertStringPosToPoints(String strPos, Point base, Point target) {
+	public void convertStringPosToPoints(String strPos, Point base, Point target, Point p) {
 		char ch[] = strPos.toCharArray();
 		// drop a piece
 		if(ch[1] == '*') {
@@ -3177,6 +3206,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S') base.y = 3;
 				else base.y = 2;
 			}
+			p.y = 1; // drop
 		}
 		else {
 			base.x = ch[0] - '0';
@@ -3184,6 +3214,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		target.x = ch[2] - '0';
 		target.y = ch[3] - 96;
+		
+		if(ch.length == 5) {
+			if(ch[4] == '+') p.x = 1; // promote
+		}
 	}
 	
 	// -------------------------------------------------------------------------
