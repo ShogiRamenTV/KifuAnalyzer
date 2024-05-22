@@ -640,6 +640,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		public void clearAllKomaDrawList() {
 			for(int x=0; x<40; x++) {
+				if(k[x].drawListBase.size() == 0) continue;
 				k[x].clearDrawList();
 				k[x].repaint();
 			}
@@ -939,15 +940,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					(this.sente == 0 && preY <= 3) || (this.sente == 1 && preY >= 7) ) {
 				JFrame jf = new JFrame();
 				int result = JOptionPane.showConfirmDialog(jf, "Promote?");
-				if(result == 0) {
-					System.out.println("Yes");
+				if(result == 0) { // yes
 					this.promote();
 					return true;
-				} else if(result == 1) {
-					System.out.println("No");
+				} else if(result == 1) { // no
 					return true;
-				} else {
-					System.out.println("Cancel");
+				} else { // cancel
 					return false;
 				}
 			}
