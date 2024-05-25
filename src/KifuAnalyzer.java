@@ -77,6 +77,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Color buttonFocusedColor = new Color(120, 245, 250);
 	Color buttonBorderColor = new Color(0, 145, 20);
 	int baseXPosForItems = 720;
+	String loadFile = "";
+	String loadStep = "";
+	String loadYear = "";
 	
 	String imgFilePath = "./img/";
 	String kifuFilePath = "./kifu";
@@ -94,7 +97,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JLabel playerIconLabel[] = new JLabel[2];
 	
 	public enum ButtonType {
-		Initialize(0), Save(1), Load(2), Strategy(3), Castle(4), Tesuji(5), Kifu(6);
+		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
 		private final int id;
 		private ButtonType(final int id) {
 			this.id = id;
@@ -110,7 +113,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	};
 	JLabel label[] = new JLabel[LabelType.values().length];
 	public enum TextBoxType {
-		LoadFile(0), LoadStep(1), LoadYear(2), Player1(3), Player2(4), Strategy(5), Tesuji(6), Castle(7);
+		Player1(0), Player2(1), Strategy(2), Tesuji(3), Castle(4);
 		private final int id;
 		private TextBoxType(final int id) {
 			this.id = id;
@@ -270,12 +273,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			button[b.id].setBorder(border);
 		}
 		button[ButtonType.Initialize.id].setBounds(baseXPosForItems, 10, 80, 20);
-		button[ButtonType.Save.id].setBounds(baseXPosForItems+240, 10, 60, 20);
-		button[ButtonType.Load.id].setBounds(baseXPosForItems+300, 10, 60, 20);
-		button[ButtonType.Strategy.id].setBounds(baseXPosForItems, 30, 80, 20);
-		button[ButtonType.Tesuji.id].setBounds(baseXPosForItems, 50, 80, 20);
-		button[ButtonType.Castle.id].setBounds(baseXPosForItems, 70, 80, 20);
-		button[ButtonType.Kifu.id].setBounds(baseXPosForItems, 90, 80, 20);
+		button[ButtonType.Save.id].setBounds(baseXPosForItems, 30, 80, 20);
+		button[ButtonType.Kifu.id].setBounds(baseXPosForItems, 50, 80, 20);
+		button[ButtonType.Strategy.id].setBounds(baseXPosForItems+280, 10, 80, 20);
+		button[ButtonType.Tesuji.id].setBounds(baseXPosForItems+280, 30, 80, 20);
+		button[ButtonType.Castle.id].setBounds(baseXPosForItems+280, 50, 80, 20);
+		
 	}
 	public void initializeTextBoxSetting() {
 		for(TextBoxType t: TextBoxType.values()) {
@@ -284,31 +287,28 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(LabelType l: LabelType.values()) {
 			label[l.id] = new JLabel();
 		}
-		textBox[TextBoxType.Strategy.id].setBounds(baseXPosForItems+80, 30, 160, 20);
-		textBox[TextBoxType.Tesuji.id].setBounds(baseXPosForItems+80, 50, 160, 20);
-		textBox[TextBoxType.Castle.id].setBounds(baseXPosForItems+80, 70, 160, 20);
-		textBox[TextBoxType.LoadFile.id].setBounds(baseXPosForItems+360, 10, 50, 20);
-		textBox[TextBoxType.LoadStep.id].setBounds(baseXPosForItems+410, 10, 50, 20);
-		textBox[TextBoxType.LoadYear.id].setBounds(baseXPosForItems+460, 10, 50, 20);
+		textBox[TextBoxType.Strategy.id].setBounds(baseXPosForItems+360, 10, 140, 20);
+		textBox[TextBoxType.Tesuji.id].setBounds(baseXPosForItems+360, 30, 140, 20);
+		textBox[TextBoxType.Castle.id].setBounds(baseXPosForItems+360, 50, 140, 20);
 		label[LabelType.Sente.id].setText("▲Sente");
-		label[LabelType.Sente.id].setBounds(baseXPosForItems+260, 60, 100, 20);
-		textBox[TextBoxType.Player1.id].setBounds(baseXPosForItems+255, 80, 120, 20);
+		label[LabelType.Sente.id].setBounds(baseXPosForItems, 80, 100, 20);
+		textBox[TextBoxType.Player1.id].setBounds(baseXPosForItems, 100, 120, 20);
 		textBox[TextBoxType.Player1.id].addActionListener(enterActionListener);
 		label[LabelType.Gote.id].setText("△Gote");
-		label[LabelType.Gote.id].setBounds(baseXPosForItems+385, 60, 100, 20);
-		textBox[TextBoxType.Player2.id].setBounds(baseXPosForItems+385, 80, 120, 20);
+		label[LabelType.Gote.id].setBounds(baseXPosForItems+120, 80, 100, 20);
+		textBox[TextBoxType.Player2.id].setBounds(baseXPosForItems+120, 100, 120, 20);
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
 	}
 	public void initializeCheckBox() {
 		for(CheckBoxType cb: CheckBoxType.values()) {
 			checkBox[cb.id] = new JCheckBox(cb.name());
 		}
-		checkBox[CheckBoxType.Edit.id].setBounds(baseXPosForItems+80, 15, 60, 10);
-		checkBox[CheckBoxType.Reverse.id].setBounds(baseXPosForItems+140, 15, 80, 10);
+		checkBox[CheckBoxType.Edit.id].setBounds(baseXPosForItems+140, 35, 60, 10);
+		checkBox[CheckBoxType.Reverse.id].setBounds(baseXPosForItems+190, 35, 80, 10);
 		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListener);
-		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+240, 35, 80, 10);
-		radioButtonSente.setBounds(baseXPosForItems+80, 95, 70, 14);
-		radioButtonGote.setBounds(baseXPosForItems+140, 95, 70, 14);
+		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+80, 35, 80, 10);
+		radioButtonSente.setBounds(baseXPosForItems+360, 75, 70, 14);
+		radioButtonGote.setBounds(baseXPosForItems+420, 75, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
 		buttonGroup.add(radioButtonSente);
 		buttonGroup.add(radioButtonGote);
@@ -317,7 +317,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		comboBox.addItem("2023");
 		comboBox.addItem("2022");
 		comboBox.addItem("all");
-		comboBox.setBounds(baseXPosForItems+420, 40, 100, 20);
+		comboBox.setBounds(baseXPosForItems+80, 8, 100, 25);
 	}
 	public void clearCheckBox() {
 		for(CheckBoxType cb: CheckBoxType.values()) {
@@ -339,13 +339,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		listModel[ListBoxType.Kifu.id].addElement("--------");
-		scrollPane[ListBoxType.Kifu.id].setBounds(baseXPosForItems+10, 260, 165, 90);
-		scrollPane[ListBoxType.Info.id].setBounds(baseXPosForItems+10, 350, 165, 90);
-		scrollPane[ListBoxType.Strategy.id].setBounds(baseXPosForItems+175, 260, 165, 90);
-		scrollPane[ListBoxType.Castle.id].setBounds(baseXPosForItems+175, 350, 165, 90);
-		scrollPane[ListBoxType.Player.id].setBounds(baseXPosForItems+340, 260, 165, 90);
-		scrollPane[ListBoxType.Tesuji.id].setBounds(baseXPosForItems+340, 350, 165, 90);
-		scrollPane[ListBoxType.Engine.id].setBounds(baseXPosForItems+10, 590, 165, 90);
+		scrollPane[ListBoxType.Kifu.id].setBounds(baseXPosForItems, 280, 165, 140);
+		scrollPane[ListBoxType.Info.id].setBounds(baseXPosForItems, 420, 165, 140);
+		scrollPane[ListBoxType.Strategy.id].setBounds(baseXPosForItems+165, 280, 165, 140);
+		scrollPane[ListBoxType.Castle.id].setBounds(baseXPosForItems+165, 420, 165, 140);
+		scrollPane[ListBoxType.Player.id].setBounds(baseXPosForItems+330, 280, 165, 140);
+		scrollPane[ListBoxType.Tesuji.id].setBounds(baseXPosForItems+330, 420, 165, 140);
+		scrollPane[ListBoxType.Engine.id].setBounds(baseXPosForItems, 590, 165, 90);
 		
 		for(int index=0; index<numOfMultiPV; index++) {
 			listModel[ListBoxType.Engine.id].addElement("");
@@ -353,9 +353,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void initializePlayerIconLabel() {
 		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
-		playerIconLabel[SenteGote.Sente.id].setBounds(baseXPosForItems+260, 75, 100, 200);
-		playerIconLabel[SenteGote.Gote.id].setBounds(baseXPosForItems+390, 75, 100, 200);
-		castleIconLabel.setBounds(baseXPosForItems+300, 450, 200, 252);
+		playerIconLabel[SenteGote.Sente.id].setBounds(baseXPosForItems, 95, 100, 200);
+		playerIconLabel[SenteGote.Gote.id].setBounds(baseXPosForItems+130, 95, 100, 200);
+		castleIconLabel.setBounds(baseXPosForItems+300, 80, 150, 200);
 	}
 	public void clearTextBox() {
 		textBox[TextBoxType.Player1.id].setText("");
@@ -363,9 +363,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Strategy.id].setText("");
 		textBox[TextBoxType.Castle.id].setText("");
 		textBox[TextBoxType.Tesuji.id].setText("");
-		textBox[TextBoxType.LoadFile.id].setText("");
-		textBox[TextBoxType.LoadStep.id].setText("");
-		textBox[TextBoxType.LoadYear.id].setText("");
+		loadFile = "";
+		loadStep = "";
+		loadYear = "";
 	}
 	public void initializeMenuBar() {
 		for(MenuType mt: MenuType.values()) {
@@ -1466,9 +1466,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	
 	public void actionForLoad() {
-		loadByNumber(textBox[TextBoxType.LoadFile.id].getText(), 
-				textBox[TextBoxType.LoadStep.id].getText(),
-				textBox[TextBoxType.LoadYear.id].getText());
+		loadByNumber(loadFile, loadStep, loadYear);
 	}
 	public void loadByNumber(String numStrFile, String numStrStep, String numStrYear) {
 		String fileName;
@@ -1683,11 +1681,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			FileWriter fw = new FileWriter(file);
 		
 			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
-			if(textBox[TextBoxType.LoadFile.id].getText().equals("")) {
+			if(loadFile.equals("")) {
 				fw.write(String.format("%03d", kifuDB.size()+1) + "\n");
 			}
 			else {
-				fw.write(textBox[TextBoxType.LoadFile.id].getText() + "\n");
+				fw.write(loadFile + "\n");
 			}
 			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
@@ -1739,9 +1737,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(e.getActionCommand() == button[ButtonType.Save.id].getText()) {
 			actionForSave();
-		}
-		if(e.getActionCommand() == button[ButtonType.Load.id].getText()) {
-			actionForLoad();
 		}
 		if(e.getActionCommand() == button[ButtonType.Strategy.id].getText()) {
 			actionForStrategy();
@@ -1947,12 +1942,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String subStrFile = str.substring(2,5);
 		String subStrStep = str.substring(6,9);
 		String subStrYear = str.substring(10,14);
-		textBox[TextBoxType.LoadFile.id].setText("");
-		textBox[TextBoxType.LoadStep.id].setText("");
-		textBox[TextBoxType.LoadYear.id].setText("");
-		if(subStrFile.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.LoadFile.id].setText(subStrFile);
-		if(subStrStep.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.LoadStep.id].setText(subStrStep);
-		if(subStrYear.matches("[+-]?\\d*(\\.\\d+)?")) textBox[TextBoxType.LoadYear.id].setText(subStrYear);
+		loadFile = "";
+		loadStep = "";
+		loadYear = "";
+		if(subStrFile.matches("[+-]?\\d*(\\.\\d+)?")) loadFile = subStrFile;
+		if(subStrStep.matches("[+-]?\\d*(\\.\\d+)?")) loadStep = subStrStep;
+		if(subStrYear.matches("[+-]?\\d*(\\.\\d+)?")) loadYear = subStrYear;
 	}
 	
 	// -------------------------------------------------------------------------
@@ -2193,7 +2188,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		castleIconLabel.setIcon(null);
 		ImageIcon castleIcon = new ImageIcon(imgFilePath + castleName + ".jpg");
 		Image image = castleIcon.getImage();
-		Image newImage = image.getScaledInstance(180, 230, java.awt.Image.SCALE_SMOOTH);
+		Image newImage = image.getScaledInstance(120, 160, java.awt.Image.SCALE_SMOOTH);
 		castleIcon = new ImageIcon(newImage);
 		castleIconLabel.setIcon(castleIcon);
 	}
@@ -3287,7 +3282,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getClickCount() == 2) {
 			//System.out.println("mouse double clicked");
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
-				if(!textBox[TextBoxType.LoadFile.id].getText().equals("")) {
+				if(!loadFile.equals("")) {
 					actionForLoad();
 				}
 			}
