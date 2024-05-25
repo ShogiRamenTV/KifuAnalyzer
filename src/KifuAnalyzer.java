@@ -76,6 +76,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Color buttonColor = new Color(180, 245, 250);
 	Color buttonFocusedColor = new Color(120, 245, 250);
 	Color buttonBorderColor = new Color(0, 145, 20);
+	int baseXPosForItems = 720;
 	
 	String imgFilePath = "./img/";
 	String kifuFilePath = "./kifu";
@@ -181,7 +182,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	KifuAnalyzer() {		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		shogiData.initializeIcon();
-		setSize(shogiData.iconWidth*22, shogiData.iconHeight*12);
+		System.out.println("icon width=" + shogiData.iconWidth + ", height=" + shogiData.iconHeight);
+		setSize(shogiData.iconWidth*25, shogiData.iconHeight*12);
 		initializeAppIcon();
 		initializeGUISetting();
 		contentPaneSetting();
@@ -267,13 +269,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			LineBorder border = new LineBorder(buttonBorderColor, 1, true);
 			button[b.id].setBorder(border);
 		}
-		button[ButtonType.Initialize.id].setBounds(580, 10, 80, 20);
-		button[ButtonType.Save.id].setBounds(820, 10, 60, 20);
-		button[ButtonType.Load.id].setBounds(880, 10, 60, 20);
-		button[ButtonType.Strategy.id].setBounds(580, 30, 80, 20);
-		button[ButtonType.Tesuji.id].setBounds(580, 50, 80, 20);
-		button[ButtonType.Castle.id].setBounds(580, 70, 80, 20);
-		button[ButtonType.Kifu.id].setBounds(580, 90, 80, 20);
+		button[ButtonType.Initialize.id].setBounds(baseXPosForItems, 10, 80, 20);
+		button[ButtonType.Save.id].setBounds(baseXPosForItems+240, 10, 60, 20);
+		button[ButtonType.Load.id].setBounds(baseXPosForItems+300, 10, 60, 20);
+		button[ButtonType.Strategy.id].setBounds(baseXPosForItems, 30, 80, 20);
+		button[ButtonType.Tesuji.id].setBounds(baseXPosForItems, 50, 80, 20);
+		button[ButtonType.Castle.id].setBounds(baseXPosForItems, 70, 80, 20);
+		button[ButtonType.Kifu.id].setBounds(baseXPosForItems, 90, 80, 20);
 	}
 	public void initializeTextBoxSetting() {
 		for(TextBoxType t: TextBoxType.values()) {
@@ -282,31 +284,31 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(LabelType l: LabelType.values()) {
 			label[l.id] = new JLabel();
 		}
-		textBox[TextBoxType.Strategy.id].setBounds(660, 30, 160, 20);
-		textBox[TextBoxType.Tesuji.id].setBounds(660, 50, 160, 20);
-		textBox[TextBoxType.Castle.id].setBounds(660, 70, 160, 20);
-		textBox[TextBoxType.LoadFile.id].setBounds(940, 10, 50, 20);
-		textBox[TextBoxType.LoadStep.id].setBounds(990, 10, 50, 20);
-		textBox[TextBoxType.LoadYear.id].setBounds(1040, 10, 50, 20);
+		textBox[TextBoxType.Strategy.id].setBounds(baseXPosForItems+80, 30, 160, 20);
+		textBox[TextBoxType.Tesuji.id].setBounds(baseXPosForItems+80, 50, 160, 20);
+		textBox[TextBoxType.Castle.id].setBounds(baseXPosForItems+80, 70, 160, 20);
+		textBox[TextBoxType.LoadFile.id].setBounds(baseXPosForItems+360, 10, 50, 20);
+		textBox[TextBoxType.LoadStep.id].setBounds(baseXPosForItems+410, 10, 50, 20);
+		textBox[TextBoxType.LoadYear.id].setBounds(baseXPosForItems+460, 10, 50, 20);
 		label[LabelType.Sente.id].setText("▲Sente");
-		label[LabelType.Sente.id].setBounds(840, 60, 100, 20);
-		textBox[TextBoxType.Player1.id].setBounds(835, 80, 120, 20);
+		label[LabelType.Sente.id].setBounds(baseXPosForItems+260, 60, 100, 20);
+		textBox[TextBoxType.Player1.id].setBounds(baseXPosForItems+255, 80, 120, 20);
 		textBox[TextBoxType.Player1.id].addActionListener(enterActionListener);
 		label[LabelType.Gote.id].setText("△Gote");
-		label[LabelType.Gote.id].setBounds(965, 60, 100, 20);
-		textBox[TextBoxType.Player2.id].setBounds(965, 80, 120, 20);
+		label[LabelType.Gote.id].setBounds(baseXPosForItems+385, 60, 100, 20);
+		textBox[TextBoxType.Player2.id].setBounds(baseXPosForItems+385, 80, 120, 20);
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
 	}
 	public void initializeCheckBox() {
 		for(CheckBoxType cb: CheckBoxType.values()) {
 			checkBox[cb.id] = new JCheckBox(cb.name());
 		}
-		checkBox[CheckBoxType.Edit.id].setBounds(660, 15, 60, 10);
-		checkBox[CheckBoxType.Reverse.id].setBounds(720, 15, 80, 10);
+		checkBox[CheckBoxType.Edit.id].setBounds(baseXPosForItems+80, 15, 60, 10);
+		checkBox[CheckBoxType.Reverse.id].setBounds(baseXPosForItems+140, 15, 80, 10);
 		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListener);
-		checkBox[CheckBoxType.Draw.id].setBounds(820, 35, 80, 10);
-		radioButtonSente.setBounds(660, 95, 70, 14);
-		radioButtonGote.setBounds(720, 95, 70, 14);
+		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+240, 35, 80, 10);
+		radioButtonSente.setBounds(baseXPosForItems+80, 95, 70, 14);
+		radioButtonGote.setBounds(baseXPosForItems+140, 95, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
 		buttonGroup.add(radioButtonSente);
 		buttonGroup.add(radioButtonGote);
@@ -315,7 +317,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		comboBox.addItem("2023");
 		comboBox.addItem("2022");
 		comboBox.addItem("all");
-		comboBox.setBounds(1000, 40, 100, 20);
+		comboBox.setBounds(baseXPosForItems+420, 40, 100, 20);
 	}
 	public void clearCheckBox() {
 		for(CheckBoxType cb: CheckBoxType.values()) {
@@ -337,13 +339,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		listModel[ListBoxType.Kifu.id].addElement("--------");
-		scrollPane[ListBoxType.Kifu.id].setBounds(590, 260, 165, 90);
-		scrollPane[ListBoxType.Info.id].setBounds(590, 350, 165, 90);
-		scrollPane[ListBoxType.Strategy.id].setBounds(755, 260, 165, 90);
-		scrollPane[ListBoxType.Castle.id].setBounds(755, 350, 165, 90);
-		scrollPane[ListBoxType.Player.id].setBounds(920, 260, 165, 90);
-		scrollPane[ListBoxType.Tesuji.id].setBounds(920, 350, 165, 90);
-		scrollPane[ListBoxType.Engine.id].setBounds(590, 590, 165, 90);
+		scrollPane[ListBoxType.Kifu.id].setBounds(baseXPosForItems+10, 260, 165, 90);
+		scrollPane[ListBoxType.Info.id].setBounds(baseXPosForItems+10, 350, 165, 90);
+		scrollPane[ListBoxType.Strategy.id].setBounds(baseXPosForItems+175, 260, 165, 90);
+		scrollPane[ListBoxType.Castle.id].setBounds(baseXPosForItems+175, 350, 165, 90);
+		scrollPane[ListBoxType.Player.id].setBounds(baseXPosForItems+340, 260, 165, 90);
+		scrollPane[ListBoxType.Tesuji.id].setBounds(baseXPosForItems+340, 350, 165, 90);
+		scrollPane[ListBoxType.Engine.id].setBounds(baseXPosForItems+10, 590, 165, 90);
 		
 		for(int index=0; index<numOfMultiPV; index++) {
 			listModel[ListBoxType.Engine.id].addElement("");
@@ -351,9 +353,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void initializePlayerIconLabel() {
 		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
-		playerIconLabel[SenteGote.Sente.id].setBounds(840, 75, 100, 200);
-		playerIconLabel[SenteGote.Gote.id].setBounds(970, 75, 100, 200);
-		castleIconLabel.setBounds(880, 450, 200, 252);
+		playerIconLabel[SenteGote.Sente.id].setBounds(baseXPosForItems+260, 75, 100, 200);
+		playerIconLabel[SenteGote.Gote.id].setBounds(baseXPosForItems+390, 75, 100, 200);
+		castleIconLabel.setBounds(baseXPosForItems+300, 450, 200, 252);
 	}
 	public void clearTextBox() {
 		textBox[TextBoxType.Player1.id].setText("");
@@ -379,9 +381,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			labelNumberRow[x] = new JLabel();
 			labelNumberCol[x] = new JLabel();
 			labelNumberRow[x].setText(String.valueOf(9-x));
-			labelNumberRow[x].setBounds(45 + x * (shogiData.iconWidth+10), 5, 10, 10);
+			labelNumberRow[x].setBounds(105 + x * (shogiData.iconWidth+10), 5, 10, 10);
 			labelNumberCol[x].setText(String.valueOf(x+1));
-			labelNumberCol[x].setBounds(565, 50 + x * (shogiData.iconHeight+10), 10, 10);
+			labelNumberCol[x].setBounds(625, 50 + x * (shogiData.iconHeight+10), 10, 10);
 		}
 	}
 	public void reverseNumberRowCol() {
@@ -474,7 +476,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					Y = k.py;
 				}
 				k.setOpaque(true);
-				k.setLocation((9-X)*(iconWidth+10)+25, (Y-1)*(iconHeight+10)+25);
+				k.setLocation((9-X)*(iconWidth+10)+85, (Y-1)*(iconHeight+10)+25);
 			}
 		}
 		
@@ -492,17 +494,19 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//for(Koma k: listKomaOnHandForSente) {
 			for(Koma k: listKomaOnHand.get(SenteGote.Sente.id)) {
 				k.setOpaque(false);
-				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (6+(k.type.id/4))*(iconHeight+10)+5);
+				k.setLocation((iconWidth+10)*10+50, (iconHeight+10)*(k.type.id+1)+25);
 				numOfKoma[SenteGote.Sente.id][k.type.id]++;
 				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Sente.id][k.type.id]).toString());
+				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setLocation((iconWidth+10)*11+35, (iconHeight+10)*(k.type.id+1)+30);
 				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setVisible(true);
 			}
 			
 			for(Koma k: listKomaOnHand.get(SenteGote.Gote.id)) {
 				k.setOpaque(false);
-				k.setLocation((9+(k.type.id%4))*(iconWidth+10)+55, (2-(k.type.id/4))*(iconHeight+10)+47);
+				k.setLocation(10, (iconHeight+10)*(7-k.type.id)+25);
 				numOfKoma[SenteGote.Gote.id][k.type.id]++;
 				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Gote.id][k.type.id]).toString());
+				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setLocation(55, (iconHeight+10)*(7-k.type.id)+70);
 				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setVisible(true);
 			}
 		}
@@ -958,14 +962,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			int preY = this.py;
 			
 			if(x == preX && y == preY) {
-				this.setLocation((9-preX)*(shogiData.iconWidth+10)+25, (preY-1)*(shogiData.iconHeight+10)+25);
+				this.setLocation((9-preX)*(shogiData.iconWidth+10)+85, (preY-1)*(shogiData.iconHeight+10)+25);
 				return false;
 			}
 			
 			if(promoted == -1) {
 				if(!this.confirmPromotion(x, y, preX, preY, sd)) {
 					// case of cancel
-					this.setLocation((9-preX)*(shogiData.iconWidth+10)+25, (preY-1)*(shogiData.iconHeight+10)+25);
+					this.setLocation((9-preX)*(shogiData.iconWidth+10)+85, (preY-1)*(shogiData.iconHeight+10)+25);
 					return false;
 				}
 			}
@@ -974,13 +978,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			this.px = x;
 			this.py = y;
 			this.drop = 0;
-			this.setLocation((9-x)*(shogiData.iconWidth+10)+25, (y-1)*(shogiData.iconHeight+10)+25);
+			this.setLocation((9-x)*(shogiData.iconWidth+10)+85, (y-1)*(shogiData.iconHeight+10)+25);
 			
 			if(x>0 && x<10 && y>0 && y<10) {
 				if( sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1 ) moveFromStoB(sd);
 				else if( sd.listKomaOnHand.get(SenteGote.Gote.id).indexOf(this) != -1) moveFromGtoB(sd);
 				else moveFromBtoB(sd);
-			} else if(y>5) {
+			} else if(x<=0) {
 				if(sd.listKomaOnBoard.indexOf(this) != -1) moveFromBtoS(sd);
 				else if(sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1) moveFromStoS(sd);
 				else moveFromGtoS(sd);
@@ -1002,35 +1006,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(k.promoted == 1) k.promote();
 				if(this.sente == 0) {
 					if(k.sente == 1) k.reverse();
-					if(k.type == KomaType.Pawn) k.px = 0;
-					if(k.type == KomaType.Rance) k.px = -1;
-					if(k.type == KomaType.Knight) k.px = -2;
-					if(k.type == KomaType.Silver) k.px = -3;
-					if(k.type == KomaType.Gold) k.px = 0;
-					if(k.type == KomaType.Bishop) k.px = -1;
-					if(k.type == KomaType.Rook) k.px = -2;
-					if(k.type == KomaType.King) k.px = -3;
-					if(k.type == KomaType.Pawn || k.type == KomaType.Rance 
-							|| k.type == KomaType.Knight || k.type == KomaType.Silver) k.py = 7;
-					else {
-						k.py = 8;
-					}
+					k.px = 0;
+					k.py = k.type.id+2;
 					sd.listKomaOnHand.get(SenteGote.Sente.id).add(k);
 				} else {
 					if(k.sente == 0) k.reverse();
-					if(k.type == KomaType.Pawn) k.px = 0;
-					if(k.type == KomaType.Rance) k.px = -1;
-					if(k.type == KomaType.Knight) k.px = -2;
-					if(k.type == KomaType.Silver) k.px = -3;
-					if(k.type == KomaType.Gold) k.px = 0;
-					if(k.type == KomaType.Bishop) k.px = -1;
-					if(k.type == KomaType.Rook) k.px = -2;
-					if(k.type == KomaType.King) k.px = -3;
-					if(k.type == KomaType.Pawn || k.type == KomaType.Rance 
-							|| k.type == KomaType.Knight || k.type == KomaType.Silver) k.py = 3;
-					else {
-						k.py = 2;
-					}
+					k.px = 10;
+					k.py = 8-k.type.id;
 					sd.listKomaOnHand.get(SenteGote.Gote.id).add(k);
 				}
 			}
@@ -1120,20 +1102,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		public void drawShogiBoard(Graphics g) {
 			g.setColor(boardColor);
-			g.fillRect(20, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
+			g.fillRect(80, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
 			
 			g.setColor(Color.black);
 			for(int x=0; x<9; x++)
 				for(int y=0; y<9; y++) {
-					g.drawRect(x*(shogiData.iconWidth+10)+20, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
+					g.drawRect(x*(shogiData.iconWidth+10)+80, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
 				}
-			
-			// draw area for Koma in hand
-			Graphics2D g2 = (Graphics2D)g;
-			BasicStroke bs2 = new BasicStroke(1, BasicStroke.CAP_ROUND, BasicStroke.JOIN_BEVEL, 1.0f, new float[] {4}, 0);
-			g2.setStroke(bs2);
-			g2.drawRect(590, 119, 248, 138);
-			g2.drawRect(590, 442, 248, 138);
 		}
 		
 		public void drawMovableArea(Graphics g) {
@@ -1174,8 +1149,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					pY = p.y;
 				}
 				
-				Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
-				Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+				Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+				Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 				Arrow ar = new Arrow(pBase, pTarget);
 				BasicStroke stroke = new BasicStroke(1.0f);
 				g.setColor(Color.blue);
@@ -1200,8 +1175,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					pX = ps.target.x;
 					pY = ps.target.y;
 					
-					Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
-					Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+25+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+					Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+					Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 					
 					Arrow ar = new Arrow(pBase, pTarget);
 					BasicStroke stroke = new BasicStroke(bs);
@@ -1371,7 +1346,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void drawPoint(int x, int y, Color cl) {
 			Graphics g = getGraphics();
 			g.setColor(cl);
-			g.fillRect((9-x)*(shogiData.iconWidth+10)+22, (y-1)*(shogiData.iconHeight+10)+22, shogiData.iconWidth+6, shogiData.iconHeight+6);
+			g.fillRect((9-x)*(shogiData.iconWidth+10)+82, (y-1)*(shogiData.iconHeight+10)+22, shogiData.iconWidth+6, shogiData.iconHeight+6);
 		}
 		
 		public void setLastPoint(int px, int py, Boolean enable) {
@@ -2932,7 +2907,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(checkBox[CheckBoxType.Reverse.id].isSelected() && sc.base.x <= 0) {
 				sc.base.x = 10 - sc.base.x;
 				sc.base.y = 10 - sc.base.y;
-			} 
+			}
 			cv.addDrawPoint(sc.target,  sc.base);
 			listModel[ListBoxType.Info.id].addElement(str);
 		}
@@ -2955,7 +2930,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Rectangle bounds = this.getBounds();
 			Robot robot = new Robot();
 			BufferedImage image = robot.createScreenCapture(bounds);
-			image = image.getSubimage(20, 70, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
+			image = image.getSubimage(80, 70, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
 			String dirName = "./img/";
 			String fileName = "CaptureBoard.jpg";
 			ImageIO.write(image, "jpg", new File(dirName, fileName));
@@ -3231,21 +3206,29 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		char ch[] = strPos.toCharArray();
 		// drop a piece
 		if(ch[1] == '*') {
-			if(ch[0] == 'P' || ch[0] == 'p' || ch[0] == 'G' || ch[0] == 'g') {
-				base.x = 0;
-			} else if(ch[0] == 'B' || ch[0] == 'b' || ch[0] == 'L' || ch[0] == 'l') {
-				base.x = -1;
-			} else if(ch[0] == 'N' || ch[0] == 'n' || ch[0] == 'R' || ch[0] == 'r') {
-				base.x = -2;
-			} else if(ch[0] == 'S' || ch[0] == 's' || ch[0] == 'K' || ch[0] == 'k') {
-				base.x = -3;
+			if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S' || ch[0] == 'G' || ch[0] == 'B' || ch[0] == 'R') {
+				if(shogiData.turnIsSente) {
+					base.x = 0;
+				} else {
+					base.x = 10;
+				}
 			}
 			if(shogiData.turnIsSente) {
-				if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S') base.y = 7;
-				else base.y = 8;
+				if(ch[0] == 'P') base.y = 2;
+				else if(ch[0] == 'L') base.y = 3;
+				else if(ch[0] == 'N') base.y = 4;
+				else if(ch[0] == 'S') base.y = 5;
+				else if(ch[0] == 'G') base.y = 6;
+				else if(ch[0] == 'B') base.y = 7;
+				else if(ch[0] == 'R') base.y = 8;
 			} else {
-				if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S') base.y = 3;
-				else base.y = 2;
+				if(ch[0] == 'P') base.y = 8;
+				else if(ch[0] == 'L') base.y = 7;
+				else if(ch[0] == 'N') base.y = 6;
+				else if(ch[0] == 'S') base.y = 5;
+				else if(ch[0] == 'G') base.y = 4;
+				else if(ch[0] == 'B') base.y = 3;
+				else if(ch[0] == 'R') base.y = 2;
 			}
 			p.y = 1; // drop
 		}
@@ -3404,7 +3387,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void releaseKoma() {
 		Koma selectedKoma = shogiData.selectedKoma;
 		if(selectedKoma == null) return;
-		int x = (selectedKoma.getLocation().x - 20 + shogiData.iconWidth/2) / (shogiData.iconWidth+10);
+		double d = (double)(selectedKoma.getLocation().x - 70 + shogiData.iconWidth/2) / (double)(shogiData.iconWidth+10);
+		int x;
+		if(d>0) x = (int)d;
+		else x = -1;
 		int y = (selectedKoma.getLocation().y - 20 + shogiData.iconHeight/2) / (shogiData.iconHeight+10) + 1;
 		int preX = selectedKoma.px;
 		int preY = selectedKoma.py;
@@ -3418,8 +3404,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			X = (9-x);
 			Y = y;
 		}
-		
-		//System.out.println("moveKoma("+X+","+Y+")");
 		Boolean result = selectedKoma.moveKoma(shogiData, X, Y, -1);
 		soundKoma();
 		shogiData.viewKomaOnBoard();
