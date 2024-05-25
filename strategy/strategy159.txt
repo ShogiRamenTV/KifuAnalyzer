@@ -1,4 +1,4 @@
-Double Ranging Rook
+Ai Furibisha
 1,6
 2,7
 3,7

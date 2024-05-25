@@ -1,12 +1,12 @@
-Rejection Side Pawn Capture
+Denied Yokofudori
 1,7
-0,3
+10,8
 3,7
 4,7
 5,7
 6,7
 7,6
-0,3
+10,8
 9,7
 9,9
 1,9
@@ -20,13 +20,13 @@ Rejection Side Pawn Capture
 8,8
 5,9
 1,3
-0,7
+0,2
 3,4
 4,3
 5,3
 6,3
 7,3
-0,7
+0,2
 9,3
 9,1
 1,1

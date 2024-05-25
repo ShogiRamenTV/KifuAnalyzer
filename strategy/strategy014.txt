@@ -1,4 +1,4 @@
-One Move Loss Bishop Exchange
+One move loss Kakugawari
 1,7
 2,6
 3,7
@@ -17,7 +17,7 @@ One Move Loss Bishop Exchange
 6,9
 4,9
 2,8
--1,2
+10,3
 5,9
 1,3
 2,3
@@ -37,5 +37,5 @@ One Move Loss Bishop Exchange
 6,1
 4,1
 8,2
--1,8
+0,7
 5,1

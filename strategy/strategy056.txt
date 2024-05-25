@@ -1,4 +1,4 @@
-Direct Opposing Rook
+Direct Mukaibisha
 1,7
 2,5
 3,7
@@ -17,7 +17,7 @@ Direct Opposing Rook
 6,9
 4,9
 2,8
--1,2
+10,3
 6,8
 1,3
 2,3
@@ -37,5 +37,5 @@ Direct Opposing Rook
 6,1
 4,1
 2,2
--1,8
+0,7
 5,1

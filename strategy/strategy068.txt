@@ -1,7 +1,7 @@
-Double Wing Attack
+Rikisen
 1,7
 2,5
-3,7
+3,6
 4,7
 5,7
 6,7
@@ -26,7 +26,7 @@ Double Wing Attack
 5,3
 6,3
 7,3
-8,5
+8,6
 9,4
 9,1
 1,1
