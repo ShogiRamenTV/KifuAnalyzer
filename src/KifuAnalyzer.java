@@ -1459,7 +1459,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(checkBox[CheckBoxType.Draw.id].isSelected()) fw.write("-1");
 			fw.close();
 			
-			System.out.println(fileName + " is saved.");
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
 		} catch(IOException er) {
 			System.out.println(er);
 		}
@@ -1610,6 +1610,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String fileName;
 		int index = 1;
 		
+		if(textBox[TextBoxType.Strategy.id].getText().equals("")) {
+			JOptionPane.showMessageDialog(null, "Strategy name is empty");
+			return;
+		}
+		
 		while(true) {
 			fileName = strategyFilePath + String.format("strategy%03d.txt", index);
 			path = Paths.get(fileName);
@@ -1627,7 +1632,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			fw.close();
 			
-			System.out.println(fileName + " is saved.");
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
 		} catch(IOException er) {
 			System.out.println(er);
 		}
@@ -1636,6 +1641,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Path path;
 		String fileName;
 		int index = 1;
+		
+		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+			JOptionPane.showMessageDialog(null, "Castle name is empty");
+			return;
+		}
 		
 		while(true) {
 			fileName = strategyFilePath + String.format("castle%03d.txt", index);
@@ -1659,7 +1669,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			fw.close();
 			
-			System.out.println(fileName + " is saved.");
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
 		} catch(IOException er) {
 			System.out.println(er);
 		}
@@ -1668,6 +1678,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Path path;
 		String fileName;
 		int index = 1;
+		
+		if(textBox[TextBoxType.Tesuji.id].getText().equals("")) {
+			JOptionPane.showMessageDialog(null, "Tesuji name is empty");
+			return;
+		}
 		
 		while(true) {
 			fileName = kifuFilePath + "/" + String.format("tesuji%03d.txt", index);
@@ -1690,7 +1705,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
 			
-			System.out.println(fileName + " is saved.");
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
 		} catch(IOException er) {
 			System.out.println(er);
 		}
