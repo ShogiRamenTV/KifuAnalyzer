@@ -3298,6 +3298,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//System.out.println("Left Clicked");
 			if(e.getSource() != cv) return;
 			Point mp = e.getPoint();
+			if(mp.x < 80 || mp.y < 20 || mp.x > (shogiData.iconWidth+10)*9+80 || mp.y > (shogiData.iconHeight+10)*9+20) {
+				return;
+			}
 			cv.drawListLeftClick.add(mp);
 			cv.repaint();
 		}
