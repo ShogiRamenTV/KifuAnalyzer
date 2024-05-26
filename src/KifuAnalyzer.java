@@ -72,10 +72,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
 	Color boardColor = new Color(255, 238, 203);
-	Color backGroundColor = new Color(224, 255, 255);
-	Color buttonColor = new Color(180, 245, 250);
-	Color buttonFocusedColor = new Color(120, 245, 250);
-	Color buttonBorderColor = new Color(0, 145, 20);
+
 	int baseXPosForItems = 720;
 	String loadFile = "";
 	String loadStep = "";
@@ -147,7 +144,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Clip soundKoma;
 	
 	public enum MenuType {
-		Color(0), Capture(1), KomaInHand(2), StartEngine(3), StopEngine(4), SetEngine(5);
+		StartEngine(0), StopEngine(1), SetEngine(2), KomaInHand(3), CaptureBoard(4), SetBoardColor(5), SetColor(6);
 		private final int id;		
 		private MenuType(final int id) {
 			this.id = id;
@@ -157,7 +154,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		@Override protected void paintComponent(Graphics g) {
 			super.paintComponent(g);
 			Graphics2D g2 = (Graphics2D) g.create();
-			g2.setColor(backGroundColor);
+			g2.setColor(listColorSet[ColorSetType.Default.id].backGround);
 			g2.fillRect(0, 0, getWidth(), getHeight());
 			g2.dispose();
 			}
@@ -167,6 +164,21 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	JLabel labelNumberRow[] = new JLabel[9];
 	JLabel labelNumberCol[] = new JLabel[9];
+	
+	public enum ColorSetType {
+		Default(0), Sakura(1), GreenTea(2), BlueSky(3);
+		private final int id;		
+		private ColorSetType(final int id) {
+			this.id = id;
+		}
+	};
+	Color buttonColor;
+	Color buttonFocusedColor;
+	ColorSet listColorSet[] = new ColorSet[ColorSetType.values().length];
+	
+	public enum PropertyType {
+		Engine, Color;
+	};
 	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
@@ -211,10 +223,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeSoundSetting();
 		initializeMenuBar();
 		initializeNumberRowCol();
+		initializeColorSet();
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
-		getContentPane().setBackground(backGroundColor);
 		
 		for(int x=0; x<40; x++) {
 			getContentPane().add(shogiData.k[x]);
@@ -268,9 +280,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			button[b.id].addActionListener(this);
 			button[b.id].addMouseListener(this);
 			button[b.id].setOpaque(true);
-			button[b.id].setBackground(buttonColor);
-			LineBorder border = new LineBorder(buttonBorderColor, 1, true);
-			button[b.id].setBorder(border);
 		}
 		button[ButtonType.Initialize.id].setBounds(baseXPosForItems, 10, 80, 20);
 		button[ButtonType.Save.id].setBounds(baseXPosForItems, 30, 80, 20);
@@ -398,7 +407,49 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 	}
-	
+	public void initializeColorSet() {
+		listColorSet[ColorSetType.Default.id] = new ColorSet(
+				new Color(245, 245, 245),
+				new Color(235, 235, 235),
+				new Color(215, 215, 215),
+				new Color(0, 0, 0)
+				);
+		listColorSet[ColorSetType.Sakura.id] = new ColorSet(
+				new Color(254, 244, 244), 
+				new Color(230, 205, 227), 
+				new Color(229, 171, 190), 
+				new Color(201, 117, 134)
+				);
+		listColorSet[ColorSetType.GreenTea.id] = new ColorSet(
+				new Color(244, 254, 244), 
+				new Color(205, 230, 227), 
+				new Color(171, 229, 190), 
+				new Color(117, 201, 134)
+				);
+		listColorSet[ColorSetType.BlueSky.id] = new ColorSet(
+				new Color(213, 248, 253), 
+				new Color(160, 216, 239), 
+				new Color(171, 190, 229), 
+				new Color(117, 134, 201)
+				);
+		setColor();
+	}
+	public void setColor() {
+		String value = loadProperty(PropertyType.Color.name());
+		int select;
+		if(value == null) select = ColorSetType.Default.id;
+		else select = Integer.parseInt(value);
+		
+		buttonColor = listColorSet[select].button;
+		buttonFocusedColor = listColorSet[select].buttonFocused;
+		LineBorder border = new LineBorder(listColorSet[select].buttonBorder, 1, true);
+		for(ButtonType bt: ButtonType.values()) {
+			button[bt.id].setBackground(buttonColor);
+			button[bt.id].setBorder(border);
+		}
+		this.setBackground(listColorSet[select].backGround);
+		this.getContentPane().setBackground(listColorSet[select].backGround);
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Board >> -------------------------------
 	// -------------------------------------------------------------------------
@@ -1765,10 +1816,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
 			actionForKifu();
 		}
-		if(e.getSource() == menuItem[MenuType.Color.id]) {
-			actionForMenuColor();
+		if(e.getSource() == menuItem[MenuType.SetBoardColor.id]) {
+			actionForSetBoardColor();
 		}
-		if(e.getSource() == menuItem[MenuType.Capture.id]) {
+		if(e.getSource() == menuItem[MenuType.SetColor.id]) {
+			actionForSetColor();
+		}
+		if(e.getSource() == menuItem[MenuType.CaptureBoard.id]) {
 			actionForCaptureBoard();
 		}
 		if(e.getSource() == menuItem[MenuType.KomaInHand.id]) {
@@ -2927,12 +2981,44 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Menu Action >> -----------------------------
 	// -------------------------------------------------------------------------
-	public void actionForMenuColor() {
+	public void actionForSetBoardColor() {
 		Color color = JColorChooser.showDialog(this, "Select color", Color.white);
 		if(color != null) {
 			boardColor = color;
 			shogiData.changeKomaColor(boardColor);
 			cv.repaint();
+		}
+	}
+	public class ColorSet {
+		Color backGround;
+		Color button;
+		Color buttonFocused;
+		Color buttonBorder;
+		ColorSet(Color bg, Color b, Color bf, Color bb) {
+			backGround = bg;
+			button = b;
+			buttonFocused = bf;
+			buttonBorder = bb;
+		}
+	}
+	public void actionForSetColor() {
+		String[] selectvalues = new String[ColorSetType.values().length];
+		for(ColorSetType cst: ColorSetType.values()) selectvalues[cst.id] = cst.name();
+		int select = JOptionPane.showOptionDialog(
+				this,
+				"Which color style?",
+				"Color Style",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.QUESTION_MESSAGE,
+				null,
+				selectvalues,
+				selectvalues[0]
+				);
+		if (select == JOptionPane.CLOSED_OPTION) {
+			System.out.println("cancel");
+		} else {
+			setProperty(PropertyType.Color.name(), Integer.valueOf(select).toString());
+			setColor();
 		}
 	}
 	public void actionForCaptureBoard() {
@@ -2970,7 +3056,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sendFinalCommandToEngine();
 	}
 	public void actionForSetEngine() {
-		setProperty();
+		setPropertyForEngine();
 	}
 	
 	// -------------------------------------------------------------------------
@@ -2981,10 +3067,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String propertyFile = "KifuAnalyzer.properties";
 	int numOfMultiPV = 5;
 	public Process createEngine() {
-		String enginePath = loadProperty();
+		String enginePath = loadProperty(PropertyType.Engine.name());
 		if(enginePath == null) {
-			setProperty();
-			enginePath = loadProperty();
+			setPropertyForEngine();
+			enginePath = loadProperty(PropertyType.Engine.name());
 		}
 		if(enginePath == null) return null;
 		ProcessBuilder p = new ProcessBuilder(enginePath);
@@ -2993,11 +3079,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			process = p.start();
 		} catch (IOException e) {
 			System.out.println("engine is not installed");
-			setProperty();
+			setPropertyForEngine();
 		}
 		return process;
 	}
-	public String loadProperty() {
+	public String loadProperty(String key) {
 		Properties settings = new Properties();
 		FileInputStream in = null;
 		try {
@@ -3007,18 +3093,29 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			System.out.println(e);
 			return null;
 		}
-		return settings.getProperty("Engine");
+		return settings.getProperty(key);
 	}
-	public void setProperty() {
+	public void setPropertyForEngine() {
 		Path path = Paths.get("").toAbsolutePath();
 		FileDialog fd = new FileDialog(this, "Load", FileDialog.LOAD);
 		fd.setDirectory(path.toString());
 		fd.setVisible(true);
 		if(fd.getFile() == null) return;
 		String fileName = fd.getDirectory() + fd.getFile();
+		setProperty(PropertyType.Engine.name(), fileName);
+	}
+	public void setProperty(String key, String value) {
 		Properties properties = new Properties();
 		try {
-			properties.setProperty("Engine", fileName);
+			for(PropertyType pt: PropertyType.values()) {
+				String str = loadProperty(pt.name());
+				if(pt.name().equals(key)) {
+					properties.setProperty(key, value);
+				} else {
+					if(str == null) continue;
+					properties.setProperty(pt.name(), str);
+				}
+			}
 			properties.store(new FileOutputStream(propertyFile), "Comments");
 		} catch (IOException e) {
 			System.out.println(e);
