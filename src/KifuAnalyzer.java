@@ -686,6 +686,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			resetAllKoma();
 			listKomaOnBoard.clear();
 			for(int x=0; x<20; x++) {
+				k[x].px = 0;
+				k[x].py = k[x].type.id+2;
 				if(radioButtonSente.isSelected()) {
 					listKomaOnHandForSente.add(k[x]);
 				} else {
@@ -694,6 +696,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 			for(int x=20; x<40; x++) {
+				k[x].px = 10;
+				k[x].py = 8-k[x].type.id;
 				if(radioButtonSente.isSelected()) {
 					k[x].reverse();
 					listKomaOnHandForSente.add(k[x]);
@@ -3237,6 +3241,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		else cmd += " w ";
 		cmd += getStringOfKomaInHand();
 		cmd += " 1";
+		//System.out.println(cmd);
 		return cmd;
 	}
 	public String getStringOfKomaInHand() {
