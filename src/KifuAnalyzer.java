@@ -3075,7 +3075,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Rectangle bounds = this.getBounds();
 			Robot robot = new Robot();
 			BufferedImage image = robot.createScreenCapture(bounds);
-			image = image.getSubimage(80, 70, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
+			image = image.getSubimage(0, 70, (shogiData.iconWidth+10)*11+55, (shogiData.iconHeight+10)*9);
 			String dirName = "./img/";
 			String fileName = "CaptureBoard.jpg";
 			ImageIO.write(image, "jpg", new File(dirName, fileName));
