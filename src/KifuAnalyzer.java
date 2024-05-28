@@ -194,7 +194,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << GUI Setting >> -------------------------------
 	// -------------------------------------------------------------------------
-	KifuAnalyzer() {		
+	KifuAnalyzer() {
+		System.out.print("Initializing KifuAnalyzer ... ");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		shogiData.initializeIcon();
 		//System.out.println("icon width=" + shogiData.iconWidth + ", height=" + shogiData.iconHeight);
@@ -203,6 +204,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeGUISetting();
 		contentPaneSetting();
 		listenerSetting();		
+		System.out.println("Completed.");
 		actionForInitialize();
 	}
 	public void initializeAppIcon() {
@@ -1659,7 +1661,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void loadKifuDBByYear(String strY) {
 		try {
-			System.out.print("Loading Kifu Data ... ");
+			System.out.print("Loading Kifu Data(" + strY + ") ... ");
 			int fileIndex = 1;
 			while(true) {
 				shogiDataForKDB.resetAllKoma();
@@ -2353,7 +2355,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadTesujiDataByYear("2023");
 	}
 	public void loadTesujiDataByYear(String strY) {
-		System.out.print("Loading Tesuji Data ... ");
+		System.out.print("Loading Tesuji Data(" + strY + ") ... ");
 		try {
 			int fileIndex = 1;
 			while(true) {
