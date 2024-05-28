@@ -1233,8 +1233,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		public void drawArrowsForKifuAnalysis(Graphics g) {
+			int index = 0;
+			float bs = 10.0f;
+			int red = 38;
+			int green = 76;
+			int blue = 255;
 			for(Point p: drawList) {
-				Point pB = drawListBase.get(drawList.indexOf(p));
+				Point pB = drawListBase.get(index);
+				System.out.println(p);
+				System.out.println(pB);
 				int pBX, pBY, pX, pY;
 				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					pBX = 10 - pB.x;
@@ -1251,9 +1258,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 				Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 				Arrow ar = new Arrow(pBase, pTarget);
-				BasicStroke stroke = new BasicStroke(1.0f);
-				g.setColor(Color.blue);
+				BasicStroke stroke = new BasicStroke(bs);
+				g.setColor(new Color(red, green, blue));
 				ar.draw((Graphics2D)g, stroke);
+				index++;
+				bs -= 2.0f;
+				if(bs < 1.0f) bs = 1.0f;
+				blue -= 40;
+				if(blue < 40) blue = 40;
 			}
 		}
 		
@@ -1284,7 +1296,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					
 					Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 					Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
-					
 					Arrow ar = new Arrow(pBase, pTarget);
 					BasicStroke stroke = new BasicStroke(bs);
 					c = new Color(red, green, blue);
