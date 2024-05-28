@@ -3314,6 +3314,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				while ((line = r.readLine()) != null) {
 					//System.out.println(line);
 					if(line.contains("info depth")) {
+						System.out.println(line);
 						getPointFromInfo(line);
 						cv.repaint();
 					}
@@ -3331,6 +3332,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Point target = new Point();
 		if(info.contains("multipv 1")) {
 			cv.clearDrawListForEngine();
+			for(int index=0; index<numOfMultiPV; index++) {
+				listModel[ListBoxType.Engine.id].set(index, "");
+			}
+		}
+		if(!info.contains("multipv")) { // case of there are only 1 way to move
+			cv.clearDrawListForEngine();
+			for(int index=0; index<numOfMultiPV; index++) {
+				listModel[ListBoxType.Engine.id].set(index, "");
+			}
 		}
 		
 		String[] names = info.split(" ");
