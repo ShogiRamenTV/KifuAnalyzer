@@ -3314,7 +3314,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				while ((line = r.readLine()) != null) {
 					//System.out.println(line);
 					if(line.contains("info depth")) {
-						System.out.println(line);
 						getPointFromInfo(line);
 						cv.repaint();
 					}
@@ -3472,6 +3471,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(mp.x < 80 || mp.y < 20 || mp.x > (shogiData.iconWidth+10)*9+80 || mp.y > (shogiData.iconHeight+10)*9+20) {
 				return;
 			}
+			Point pShogiXY = cv.convertMousePointToShogiXY(mp);
+			for(Point p: cv.drawListLeftClick) {
+				Point pXY = cv.convertMousePointToShogiXY(p);
+				if(pXY.x == pShogiXY.x && pXY.y == pShogiXY.y) {
+					cv.drawListLeftClick.remove(p);
+					cv.repaint();
+					return;
+				}
+			}
 			cv.drawListLeftClick.add(mp);
 			cv.repaint();
 		}
@@ -3549,8 +3557,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getButton() != MouseEvent.BUTTON3) return;
 		Point mp = e.getPoint();
 		if(e.getSource() != cv) mp.y -= 50;
-		cv.drawListTargetRightClick.add(mp);
-		cv.repaint();
+		Point p = cv.drawListBaseRightClick.get(cv.drawListBaseRightClick.size()-1);
+		if(p.x == mp.x && p.y == mp.y) cv.drawListBaseRightClick.remove(cv.drawListBaseRightClick.size()-1);
+		else {
+			cv.drawListTargetRightClick.add(mp);
+			cv.repaint();
+		}
 	}
 	
 	public void releaseKoma() {
