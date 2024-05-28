@@ -197,7 +197,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	KifuAnalyzer() {		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		shogiData.initializeIcon();
-		System.out.println("icon width=" + shogiData.iconWidth + ", height=" + shogiData.iconHeight);
+		//System.out.println("icon width=" + shogiData.iconWidth + ", height=" + shogiData.iconHeight);
 		setSize(shogiData.iconWidth*25, shogiData.iconHeight*12);
 		initializeAppIcon();
 		initializeGUISetting();
@@ -1240,8 +1240,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			int blue = 255;
 			for(Point p: drawList) {
 				Point pB = drawListBase.get(index);
-				System.out.println(p);
-				System.out.println(pB);
 				int pBX, pBY, pX, pY;
 				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					pBX = 10 - pB.x;
@@ -1661,7 +1659,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void loadKifuDBByYear(String strY) {
 		try {
-			System.out.println("Load Kifu Data");
+			System.out.print("Loading Kifu Data ... ");
 			int fileIndex = 1;
 			while(true) {
 				shogiDataForKDB.resetAllKoma();
@@ -1713,7 +1711,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				fileIndex++;
 			}
 		} catch(FileNotFoundException en) {
-			System.out.println(en);
+			//System.out.println(en);
 		} catch(IOException er) {
 			System.out.println(er);
 		}
@@ -1721,7 +1719,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		commonListAction();
 		
-		System.out.println("Finish");
+		System.out.println("Completed.");
 	}
 	public void actionForStrategy() {
 		Path path;
@@ -1920,7 +1918,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public void loadStrategyData() {
-		System.out.println("Load Strategy Data");
+		System.out.print("Loading Strategy Data ... ");
 		strategyDataBase.clear();
 		try {
 			int fileIndex = 1;
@@ -1947,11 +1945,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				fileIndex++;
 			}
 		} catch(FileNotFoundException en) {
-			System.out.println(en);
+			//System.out.println(en);
 		} catch(IOException er) {
 			System.out.println(er);
 		}
-		System.out.println("Finish");
+		System.out.println("Completed.");
 	}
 	
 	public String checkStrategy(ShogiData sd) {
@@ -2099,7 +2097,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public void loadCastleData() {
-		System.out.println("Load Castle Data");
+		System.out.print("Loading Castle Data ... ");
 		castleDataBase.clear();
 		try {
 			int fileIndex = 1;
@@ -2128,12 +2126,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				//System.out.println(castleData.name);
 			}
 		} catch(FileNotFoundException en) {
-			System.out.println(en);
+			//System.out.println(en);
 		} catch(IOException er) {
 			System.out.println(er);
 		}
 		
-		System.out.println("Finish");
+		System.out.println("Completed.");
 	}
 	
 	public void countCastle() {
@@ -2355,7 +2353,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadTesujiDataByYear("2023");
 	}
 	public void loadTesujiDataByYear(String strY) {
-		System.out.println("Load Tesuji Data");
+		System.out.print("Loading Tesuji Data ... ");
 		try {
 			int fileIndex = 1;
 			while(true) {
@@ -2374,12 +2372,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				//System.out.println(castleData.name);
 			}
 		} catch(FileNotFoundException en) {
-			System.out.println(en);
+			//System.out.println(en);
 		} catch(IOException er) {
 			System.out.println(er);
 		}
 		
-		System.out.println("Finish");
+		System.out.println("Completed.");
 	}
 	public void countTesujiData() {
 		listModel[ListBoxType.Tesuji.id].clear();
