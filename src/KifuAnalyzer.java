@@ -1237,9 +1237,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void drawArrowsForKifuAnalysis(Graphics g) {
 			int index = 0;
 			float bs = 10.0f;
-			int red = 38;
-			int green = 76;
+			int red = 0;
+			int green = 255;
 			int blue = 255;
+			if(isEngineOn) return;
 			for(Point p: drawList) {
 				Point pB = drawListBase.get(index);
 				int pBX, pBY, pX, pY;
@@ -1265,7 +1266,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				bs -= 2.0f;
 				if(bs < 1.0f) bs = 1.0f;
 				blue -= 40;
+				green -= 40;
 				if(blue < 40) blue = 40;
+				if(green < 40) green = 40;
 			}
 		}
 		
@@ -3115,9 +3118,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
         createReceiverThread(process);
         sendInitialCommandToEngine(process);
         sendCommandToEngine();
+        isEngineOn = true;
 	}
 	public void actionForStopEngine() {
 		sendFinalCommandToEngine();
+		isEngineOn = false;
 	}
 	public void actionForSetEngine() {
 		setPropertyForEngine();
@@ -3130,6 +3135,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	MyThreadReceiver receiver;
 	String propertyFile = "KifuAnalyzer.properties";
 	int numOfMultiPV = 5;
+	Boolean isEngineOn = false;
 	public Process createEngine() {
 		String enginePath = loadProperty(PropertyType.Engine.name());
 		if(enginePath == null) {
