@@ -250,6 +250,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			getContentPane().add(labelNumberRow[x]);
 			getContentPane().add(labelNumberCol[x]);
 		}
+		getContentPane().add(maxPointOfEngine);
+		getContentPane().add(minPointOfEngine);
+		getContentPane().add(cve);
 		getContentPane().add(cv);
 	}
 	public void listenerSetting() {
@@ -275,6 +278,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void initializeCanvasSetting() {
 		cv.setBounds(0, 0, this.getSize().width, this.getSize().height);
+		cve.setBounds(baseXPosForItems+165, 590,330, 90);
+		cve.setBackground(Color.white);
+		maxPointOfEngine.setBounds(baseXPosForItems+165, 570, 100, 20);
+		minPointOfEngine.setBounds(baseXPosForItems+165, 680, 100, 20);
 	}
 	public void initializeButtonSetting() {
 		for(ButtonType b: ButtonType.values()) {
@@ -1283,6 +1290,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			// for safe access in multi thread
 			synchronized(drawListForEngine) {
 				for(PointWithScore ps: drawListForEngine) {
+					if(count == 0) bestPointFromEngine = ps.score;
 					int pBX, pBY, pX, pY;
 					
 					if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
@@ -1311,6 +1319,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					if(count == 3) break; // only top 3 are shown 
 				}
 			}
+			cve.repaint();
 		}
 		
 		public void clearDrawListForEngine() {
@@ -1535,6 +1544,71 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			score = s;
 		}
 	}
+	
+	CanvasForEngine cve = new CanvasForEngine();
+	JLabel maxPointOfEngine = new JLabel("4000");
+	JLabel minPointOfEngine = new JLabel("-4000");
+	int bestPointFromEngine = 0;
+	int maxSizeOfKifu = 200;
+	int maxScoreOfEngine = 4000;
+	int sizeOfOval = 6;
+	int[] bestPointData = new int[maxSizeOfKifu];
+	public class CanvasForEngine extends Canvas {
+		public CanvasForEngine() {
+			
+		}
+		public void paint(Graphics g) {
+			drawBaseField(g);
+			getPointFromEngine();
+			drawPointFromEngine(g);
+			drawPointOfCurrentPosition(g);
+		}
+		private void drawBaseField(Graphics g) {
+			g.setColor(Color.black);
+			g.drawLine(0, this.getHeight()/2, this.getWidth(), this.getHeight()/2);
+		}
+		private void getPointFromEngine() {
+			if(!isEngineOn) return;
+			int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+			if(bestPointFromEngine == 0) return;
+			bestPointData[index] = bestPointFromEngine;
+		}
+		private void drawPointFromEngine(Graphics g) {
+			g.setColor(Color.blue);
+			for(int index = 0; index<maxSizeOfKifu-1; index++) {
+				if(bestPointData[index] == 0 || bestPointData[index+1] == 0) continue;
+				int convertedIndex = (int)((double)this.getWidth() * ((double)index/(double)maxSizeOfKifu));
+				int convertedIndex2 = (int)((double)this.getWidth() * ((double)(index+1)/(double)maxSizeOfKifu));
+				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bestPointData[index]/(double)maxScoreOfEngine);
+				if((index%2) == 0) convertedHeight *= -1; 
+				convertedHeight += this.getHeight()/2;
+				int convertedHeight2 = (int)((double)this.getHeight()/2 * (double)bestPointData[index+1]/(double)maxScoreOfEngine);
+				if(((index+1)%2) == 0) convertedHeight2 *= -1; 
+				convertedHeight2 += this.getHeight()/2;
+				g.drawLine(convertedIndex, convertedHeight, convertedIndex2, convertedHeight2);
+			}
+		}
+		private void drawPointOfCurrentPosition(Graphics g) {
+			if(!isEngineOn) {
+				int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+				if(bestPointData[selectedIndex] == 0) return;
+				int convertedIndex = (int)((double)this.getWidth() * ((double)selectedIndex/(double)maxSizeOfKifu));
+				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bestPointData[selectedIndex]/(double)maxScoreOfEngine);
+				if((selectedIndex%2) == 0) convertedHeight *= -1; 
+				convertedHeight += this.getHeight()/2;
+				g.setColor(Color.red);
+				g.drawOval(convertedIndex - sizeOfOval/2, convertedHeight-sizeOfOval/2, sizeOfOval, sizeOfOval);
+				String s = Integer.toString(bestPointData[selectedIndex]);
+				g.drawString(s, 0, 20);
+			}
+		}
+		public void clearBestPointData() {
+			for(int index=0; index<maxSizeOfKifu; index++) {
+				bestPointData[index] = 0;
+			}
+		}
+	}
+	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Button Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -1609,6 +1683,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
 		cv.clearDrawPoint();
+		cve.clearBestPointData();
 		clearTextBox();
 				
 		try {
@@ -3127,7 +3202,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void actionForSetEngine() {
 		setPropertyForEngine();
 	}
-	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Interface for Engine >> ----------------------
 	// -------------------------------------------------------------------------
