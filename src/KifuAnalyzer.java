@@ -144,7 +144,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Clip soundKoma;
 	
 	public enum MenuType {
-		StartEngine(0), StopEngine(1), SetEngine(2), KomaInHand(3), CaptureBoard(4), SetBoardColor(5), SetColor(6);
+		StartEngine(0), StopEngine(1), SetEngine(2), KifuAnalysis(3), KomaInHand(4), CaptureBoard(5), SetBoardColor(6), SetColor(7);
 		private final int id;		
 		private MenuType(final int id) {
 			this.id = id;
@@ -296,7 +296,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		button[ButtonType.Strategy.id].setBounds(baseXPosForItems+280, 10, 80, 20);
 		button[ButtonType.Tesuji.id].setBounds(baseXPosForItems+280, 30, 80, 20);
 		button[ButtonType.Castle.id].setBounds(baseXPosForItems+280, 50, 80, 20);
-		
 	}
 	public void initializeTextBoxSetting() {
 		for(TextBoxType t: TextBoxType.values()) {
@@ -1574,7 +1573,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			bestPointData[index] = bestPointFromEngine;
 		}
 		private void drawPointFromEngine(Graphics g) {
-			g.setColor(Color.blue);
+			Graphics2D g2 = (Graphics2D)g;
+			BasicStroke stroke = new BasicStroke(2.0f);
+			g2.setStroke(stroke);
+			g2.setColor(Color.blue);
 			for(int index = 0; index<maxSizeOfKifu-1; index++) {
 				if(bestPointData[index] == 0 || bestPointData[index+1] == 0) continue;
 				int convertedIndex = (int)((double)this.getWidth() * ((double)index/(double)maxSizeOfKifu));
@@ -1585,7 +1587,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				int convertedHeight2 = (int)((double)this.getHeight()/2 * (double)bestPointData[index+1]/(double)maxScoreOfEngine);
 				if(((index+1)%2) == 0) convertedHeight2 *= -1; 
 				convertedHeight2 += this.getHeight()/2;
-				g.drawLine(convertedIndex, convertedHeight, convertedIndex2, convertedHeight2);
+				g2.drawLine(convertedIndex, convertedHeight, convertedIndex2, convertedHeight2);
 			}
 		}
 		private void drawPointOfCurrentPosition(Graphics g) {
@@ -1624,6 +1626,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		clearListBox();
 		kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
+		cve.clearBestPointData();
 		loadStrategyData();
 		loadCastleData();
 		loadTesujiData();
@@ -1981,6 +1984,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(e.getSource() == menuItem[MenuType.SetEngine.id]) {
 			actionForSetEngine();
+		}
+		if(e.getSource() == menuItem[MenuType.KifuAnalysis.id]) {
+			actionForKifuAnalysis();
 		}
 	}
 	
@@ -3202,6 +3208,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void actionForSetEngine() {
 		setPropertyForEngine();
 	}
+	public void actionForKifuAnalysis() {
+		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
+		actionForStartEngine();
+		if(!isEngineOn) {
+			System.out.println("Failed to start shogi engine");
+			return;
+		}
+		thread.start();
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Interface for Engine >> ----------------------
 	// -------------------------------------------------------------------------
@@ -3209,6 +3224,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	MyThreadReceiver receiver;
 	String propertyFile = "KifuAnalyzer.properties";
 	int numOfMultiPV = 5;
+	int calculatingTimeOfEngine = 1000; // ms
 	Boolean isEngineOn = false;
 	public Process createEngine() {
 		String enginePath = loadProperty(PropertyType.Engine.name());
@@ -3502,6 +3518,30 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		if(ch.length == 5) {
 			if(ch[4] == '+') p.x = 1; // promote
+		}
+	}
+	class MyThreadKifuAnalysis extends Thread {
+		MyThreadKifuAnalysis() {
+		}
+		@Override
+		public void run() {
+			System.out.print("Kifu Analysis start ...");
+			Boolean isUnderAnalysis = true;
+			while(isUnderAnalysis && isEngineOn) {
+				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+				int size = listModel[ListBoxType.Kifu.id].getSize();
+				if(size-1 == index) isUnderAnalysis = false;
+				try {
+					Thread.sleep(calculatingTimeOfEngine);
+				} catch(InterruptedException e) {
+					System.out.println(e);
+				}
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
+				commonListAction();
+			}
+			System.out.println("completed.");
+			actionForStopEngine();
 		}
 	}
 	
