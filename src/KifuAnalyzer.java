@@ -1686,6 +1686,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
 		cv.clearDrawPoint();
+		actionForStopEngine();
 		cve.clearBestPointData();
 		clearTextBox();
 				
@@ -3209,6 +3210,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		setPropertyForEngine();
 	}
 	public void actionForKifuAnalysis() {
+		cve.clearBestPointData();
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+		commonListAction();
 		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
 		actionForStartEngine();
 		if(!isEngineOn) {
@@ -3224,7 +3229,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	MyThreadReceiver receiver;
 	String propertyFile = "KifuAnalyzer.properties";
 	int numOfMultiPV = 5;
-	int calculatingTimeOfEngine = 1000; // ms
+	int calculatingTimeOfEngine = 2000; // ms
 	Boolean isEngineOn = false;
 	public Process createEngine() {
 		String enginePath = loadProperty(PropertyType.Engine.name());
