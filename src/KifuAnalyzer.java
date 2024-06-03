@@ -1565,6 +1565,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		private void drawBaseField(Graphics g) {
 			g.setColor(Color.black);
 			g.drawLine(0, this.getHeight()/2, this.getWidth(), this.getHeight()/2);
+			g.drawRect(0, 0, this.getWidth(), this.getHeight());
 		}
 		private void getPointFromEngine() {
 			if(!isEngineOn) return;
