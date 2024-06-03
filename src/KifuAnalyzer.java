@@ -71,18 +71,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
-	Color boardColor = new Color(255, 238, 203);
-
-	int baseXPosForItems = 720;
-	String loadFile = "";
-	String loadStep = "";
-	String loadYear = "";
-	
 	String imgFilePath = "./img/";
-	String kifuFilePath = "./kifu";
-	String strategyFilePath = "./strategy/";
-	String soundFilePath = "./sound/";
-	JLabel castleIconLabel = new JLabel();
 	
 	public enum SenteGote {
 		Sente(0), Gote(1);
@@ -92,6 +81,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JLabel playerIconLabel[] = new JLabel[2];
+	JLabel castleIconLabel = new JLabel();
 	
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
@@ -101,6 +91,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JButton button[] = new JButton[ButtonType.values().length];
+	
 	public enum LabelType {
 		Strategy(0), Castle(1), Tesuji(2), Sente(3), Gote(4);
 		private final int id;
@@ -109,6 +100,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JLabel label[] = new JLabel[LabelType.values().length];
+	
 	public enum TextBoxType {
 		Player1(0), Player2(1), Strategy(2), Tesuji(3), Castle(4);
 		private final int id;
@@ -117,6 +109,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JTextField textBox[] = new JTextField[TextBoxType.values().length];
+	
 	public enum CheckBoxType {
 		Edit(0), Reverse(1), Draw(2);
 		private final int id;
@@ -141,7 +134,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	DefaultListModel<String> listModel[] = new DefaultListModel[ListBoxType.values().length];
 	@SuppressWarnings("unchecked")
 	JList<String> listBox[] = new JList[ListBoxType.values().length];
-	Clip soundKoma;
 	
 	public enum MenuType {
 		StartEngine(0), StopEngine(1), SetEngine(2), KifuAnalysis(3), KomaInHand(4), CaptureBoard(5), SetBoardColor(6), SetColor(7);
@@ -162,9 +154,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JMenu menu = new JMenu("Menu");
 	JMenuItem menuItem[] = new JMenuItem[MenuType.values().length];
 	
-	JLabel labelNumberRow[] = new JLabel[9];
-	JLabel labelNumberCol[] = new JLabel[9];
-	
 	public enum ColorSetType {
 		Default(0), Sakura(1), GreenTea(2), BlueSky(3);
 		private final int id;		
@@ -179,7 +168,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public enum PropertyType {
 		Engine, Color;
 	};
-	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
 	// -------------------------------------------------------------------------
@@ -190,7 +178,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		ka.setVisible(true);
 		ka.shogiData.viewKomaOnBoard();
 	}
-
 	// -------------------------------------------------------------------------
 	// ----------------------- << GUI Setting >> -------------------------------
 	// -------------------------------------------------------------------------
@@ -261,21 +248,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.addMouseListener(this);
 		cv.addMouseMotionListener(this);
 	}
-	public void initializeSoundSetting() {
-		try {
-			String fileName = soundFilePath + "Koma Oto.wav";
-			AudioInputStream ais = AudioSystem.getAudioInputStream(new File(fileName));
-			soundKoma = AudioSystem.getClip();
-			soundKoma.open(ais);
-		} catch(Exception e) {
-			System.out.println(e);
-		}
-	}
-	public void soundKoma() {
-		soundKoma.stop();
-		soundKoma.setFramePosition(0);
-		soundKoma.start();
-	}
+	int baseXPosForItems = 720;
 	public void initializeCanvasSetting() {
 		cv.setBounds(0, 0, this.getSize().width, this.getSize().height);
 		cve.setBounds(baseXPosForItems+165, 590,330, 90);
@@ -393,6 +366,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		menuBar.add(menu);
 		this.setJMenuBar(menuBar);
 	}
+	JLabel labelNumberRow[] = new JLabel[9];
+	JLabel labelNumberCol[] = new JLabel[9];
 	public void initializeNumberRowCol() {
 		for(int x=0; x<9; x++) {
 			labelNumberRow[x] = new JLabel();
@@ -461,6 +436,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Board >> -------------------------------
 	// -------------------------------------------------------------------------
+	Color boardColor = new Color(255, 238, 203);
 	ShogiData shogiData = new ShogiData();
 	ShogiData shogiDataForKDB = new ShogiData();
 	public class ShogiData {
@@ -1169,7 +1145,25 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			// do nothing
 		}
 	}
-	
+	// -------------------------------------------------------------------------
+	// ----------------------- << Sound >> -------------------------------------
+	// -------------------------------------------------------------------------
+	String soundFilePath = "./sound/Koma Oto.wav";
+	Clip soundKoma;
+	public void initializeSoundSetting() {
+		try {
+			AudioInputStream ais = AudioSystem.getAudioInputStream(new File(soundFilePath));
+			soundKoma = AudioSystem.getClip();
+			soundKoma.open(ais);
+		} catch(Exception e) {
+			System.out.println(e);
+		}
+	}
+	public void soundKoma() {
+		soundKoma.stop();
+		soundKoma.setFramePosition(0);
+		soundKoma.start();
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Canvas >> ------------------------------------
 	// -------------------------------------------------------------------------
@@ -1663,7 +1657,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			System.out.println(er);
 		}
 	}
-	
+	String loadFile = "";
+	String loadStep = "";
+	String loadYear = "";
 	public void actionForLoad() {
 		loadByNumber(loadFile, loadStep, loadYear);
 	}
@@ -1995,6 +1991,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Strategy Data >> -----------------------------
 	// -------------------------------------------------------------------------
+	String strategyFilePath = "./strategy/";
 	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
 	List<StringCount> strategyCountData = new ArrayList<StringCount>();
 	public class StrategyData {
@@ -2540,6 +2537,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Kifu Data >> -----------------------------
 	// -------------------------------------------------------------------------
+	String kifuFilePath = "./kifu";
 	List<Kifu> kifuData = new ArrayList<Kifu>();
 	List<KifuDataBase> kifuDB = new ArrayList<KifuDataBase>();
 	public class StringCount {
