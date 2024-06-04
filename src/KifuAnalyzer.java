@@ -135,24 +135,34 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	@SuppressWarnings("unchecked")
 	JList<String> listBox[] = new JList[ListBoxType.values().length];
 	
-	public enum MenuType {
-		StartEngine(0), StopEngine(1), SetEngine(2), KifuAnalysis(3), KomaInHand(4), CaptureBoard(5), SetBoardColor(6), SetColor(7);
-		private final int id;		
-		private MenuType(final int id) {
+	public enum MenuTypeSetting {
+		SetBoardColor(0), SetColor(1);
+		private final int id;
+		private MenuTypeSetting(final int id) {
 			this.id = id;
 		}
 	};
-	JMenuBar menuBar = new JMenuBar() {
-		@Override protected void paintComponent(Graphics g) {
-			super.paintComponent(g);
-			Graphics2D g2 = (Graphics2D) g.create();
-			g2.setColor(listColorSet[ColorSetType.Default.id].backGround);
-			g2.fillRect(0, 0, getWidth(), getHeight());
-			g2.dispose();
-			}
-		};
-	JMenu menu = new JMenu("Menu");
-	JMenuItem menuItem[] = new JMenuItem[MenuType.values().length];
+	public enum MenuTypeEngine {
+		StartEngine(0), StopEngine(1), SetEngine(2), KifuAnalysis(3);
+		private final int id;
+		private MenuTypeEngine(final int id) {
+			this.id = id;
+		}
+	};
+	public enum MenuTypeUtility {
+		CaptureBoard(0), KomaInHand(1);
+		private final int id;
+		private MenuTypeUtility(final int id) {
+			this.id = id;
+		}
+	};
+	JMenuBar menuBar = new JMenuBar();
+	JMenu menuSetting = new JMenu("Setting");
+	JMenu menuEngine = new JMenu("Engine");
+	JMenu menuUtility = new JMenu("Utility");
+	JMenuItem menuItemSetting[] = new JMenuItem[MenuTypeSetting.values().length];
+	JMenuItem menuItemEngine[] = new JMenuItem[MenuTypeEngine.values().length];
+	JMenuItem menuItemUtility[] = new JMenuItem[MenuTypeEngine.values().length];
 	
 	public enum ColorSetType {
 		Default(0), Sakura(1), GreenTea(2), BlueSky(3);
@@ -358,12 +368,25 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		loadYear = "";
 	}
 	public void initializeMenuBar() {
-		for(MenuType mt: MenuType.values()) {
-			menuItem[mt.id] = new JMenuItem(mt.name());
-			menuItem[mt.id].addActionListener(this);
-			menu.add(menuItem[mt.id]);
+		for(MenuTypeSetting mt: MenuTypeSetting.values()) {
+			menuItemSetting[mt.id] = new JMenuItem(mt.name());
+			menuItemSetting[mt.id].addActionListener(this);
+			menuSetting.add(menuItemSetting[mt.id]);
 		}
-		menuBar.add(menu);
+		menuBar.add(menuSetting);
+		for(MenuTypeEngine mt: MenuTypeEngine.values()) {
+			menuItemEngine[mt.id] = new JMenuItem(mt.name());
+			menuItemEngine[mt.id].addActionListener(this);
+			menuEngine.add(menuItemEngine[mt.id]);
+		}
+		menuBar.add(menuEngine);
+		for(MenuTypeUtility mt: MenuTypeUtility.values()) {
+			menuItemUtility[mt.id] = new JMenuItem(mt.name());
+			menuItemUtility[mt.id].addActionListener(this);
+			menuUtility.add(menuItemUtility[mt.id]);
+		}
+		menuBar.add(menuUtility);
+		
 		this.setJMenuBar(menuBar);
 	}
 	JLabel labelNumberRow[] = new JLabel[9];
@@ -1962,29 +1985,29 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
 			actionForKifu();
 		}
-		if(e.getSource() == menuItem[MenuType.SetBoardColor.id]) {
+		if(e.getSource() == menuItemSetting[MenuTypeSetting.SetBoardColor.id]) {
 			actionForSetBoardColor();
 		}
-		if(e.getSource() == menuItem[MenuType.SetColor.id]) {
+		if(e.getSource() == menuItemSetting[MenuTypeSetting.SetColor.id]) {
 			actionForSetColor();
 		}
-		if(e.getSource() == menuItem[MenuType.CaptureBoard.id]) {
-			actionForCaptureBoard();
-		}
-		if(e.getSource() == menuItem[MenuType.KomaInHand.id]) {
-			actionForKomaInHand();
-		}
-		if(e.getSource() == menuItem[MenuType.StartEngine.id]) {
+		if(e.getSource() == menuItemEngine[MenuTypeEngine.StartEngine.id]) {
 			actionForStartEngine();
 		}
-		if(e.getSource() == menuItem[MenuType.StopEngine.id]) {
+		if(e.getSource() == menuItemEngine[MenuTypeEngine.StopEngine.id]) {
 			actionForStopEngine();
 		}
-		if(e.getSource() == menuItem[MenuType.SetEngine.id]) {
+		if(e.getSource() == menuItemEngine[MenuTypeEngine.SetEngine.id]) {
 			actionForSetEngine();
 		}
-		if(e.getSource() == menuItem[MenuType.KifuAnalysis.id]) {
+		if(e.getSource() == menuItemEngine[MenuTypeEngine.KifuAnalysis.id]) {
 			actionForKifuAnalysis();
+		}
+		if(e.getSource() == menuItemUtility[MenuTypeUtility.CaptureBoard.id]) {
+			actionForCaptureBoard();
+		}
+		if(e.getSource() == menuItemUtility[MenuTypeUtility.KomaInHand.id]) {
+			actionForKomaInHand();
 		}
 	}
 	
@@ -3178,6 +3201,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			String dirName = "./img/";
 			String fileName = "CaptureBoard.jpg";
 			ImageIO.write(image, "jpg", new File(dirName, fileName));
+			
+			JOptionPane.showMessageDialog(null, dirName + fileName + " is saved.");
 		} catch (AWTException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
