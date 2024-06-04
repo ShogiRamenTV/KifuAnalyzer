@@ -461,7 +461,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		this.getContentPane().setBackground(listColorSet[select].backGround);
 	}
 	public void emphasizeSenteGote() {
-		System.out.println(listBox[ListBoxType.Kifu.id].getSelectedIndex());
 		if(listBox[ListBoxType.Kifu.id].getSelectedIndex() == 0) {
 			label[LabelType.Sente.id].setOpaque(true);
 			label[LabelType.Gote.id].setOpaque(false);
@@ -3122,7 +3121,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(Kifu kf: kifuData) {
 			if(kifuData.indexOf(kf) < selectedIndex) {
 				kf.k.moveKoma(shogiData, kf.x, kf.y, kf.p);
-				shogiData.turnIsSente = !shogiData.turnIsSente;
+				if(!checkBox[CheckBoxType.Edit.id].isSelected()) shogiData.turnIsSente = !shogiData.turnIsSente;
 				cv.setLastPoint(kf.x, kf.y, true);
 				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(checkStrategy(shogiData));
 				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
@@ -3255,6 +3254,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void actionForKifuAnalysis() {
 		cve.clearBestPointData();
+		checkBox[CheckBoxType.Edit.id].setSelected(false);
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
@@ -3797,7 +3797,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Kifu kf = new Kifu(selectedKoma, X, Y, promoted, preP, drop);
 			kifuData.add(kf);
 			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
-			shogiData.turnIsSente = !shogiData.turnIsSente;
+			if(!checkBox[CheckBoxType.Edit.id].isSelected()) shogiData.turnIsSente = !shogiData.turnIsSente;
 			sendCommandToEngine();
 			emphasizeSenteGote();
 		}
