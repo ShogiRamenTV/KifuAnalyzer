@@ -291,10 +291,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		textBox[TextBoxType.Tesuji.id].setBounds(baseXPosForItems+360, 30, 140, 20);
 		textBox[TextBoxType.Castle.id].setBounds(baseXPosForItems+360, 50, 140, 20);
 		label[LabelType.Sente.id].setText("▲Sente");
+		label[LabelType.Sente.id].setOpaque(false);
+		label[LabelType.Sente.id].setBackground(new Color(0, 0, 255, 50));
 		label[LabelType.Sente.id].setBounds(baseXPosForItems, 80, 100, 20);
 		textBox[TextBoxType.Player1.id].setBounds(baseXPosForItems, 100, 120, 20);
 		textBox[TextBoxType.Player1.id].addActionListener(enterActionListener);
 		label[LabelType.Gote.id].setText("△Gote");
+		label[LabelType.Gote.id].setOpaque(false);
+		label[LabelType.Gote.id].setBackground(new Color(0, 0, 255, 50));
 		label[LabelType.Gote.id].setBounds(baseXPosForItems+120, 80, 100, 20);
 		textBox[TextBoxType.Player2.id].setBounds(baseXPosForItems+120, 100, 120, 20);
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
@@ -455,6 +459,21 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		this.setBackground(listColorSet[select].backGround);
 		this.getContentPane().setBackground(listColorSet[select].backGround);
+	}
+	public void emphasizeSenteGote() {
+		System.out.println(listBox[ListBoxType.Kifu.id].getSelectedIndex());
+		if(listBox[ListBoxType.Kifu.id].getSelectedIndex() == 0) {
+			label[LabelType.Sente.id].setOpaque(true);
+			label[LabelType.Gote.id].setOpaque(false);
+			return;
+		}
+		if(shogiData.turnIsSente) {
+			label[LabelType.Sente.id].setOpaque(true);
+			label[LabelType.Gote.id].setOpaque(false);
+		} else {
+			label[LabelType.Sente.id].setOpaque(false);
+			label[LabelType.Gote.id].setOpaque(true);
+		}
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Board >> -------------------------------
@@ -3123,6 +3142,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		shogiData.viewKomaOnHand();
 
 		sendCommandToEngine();
+		emphasizeSenteGote();
 	}
 	public void updateListBox2(List<StringCount> listSC) {
 		listModel[ListBoxType.Info.id].clear();
@@ -3779,6 +3799,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
 			shogiData.turnIsSente = !shogiData.turnIsSente;
 			sendCommandToEngine();
+			emphasizeSenteGote();
 		}
 		
 		// check strategy
