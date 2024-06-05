@@ -10,6 +10,11 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.Transferable;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -67,7 +72,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
-	ActionListener, ListSelectionListener, KeyListener{
+	ActionListener, ListSelectionListener, KeyListener {
 	// -------------------------------------------------------------------------
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
@@ -255,8 +260,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void listenerSetting() {
 		addMouseListener(this);
 		addMouseMotionListener(this);
+		addKeyListener(this);
 		cv.addMouseListener(this);
 		cv.addMouseMotionListener(this);
+		cv.addKeyListener(this);
 	}
 	int baseXPosForItems = 720;
 	public void initializeCanvasSetting() {
@@ -690,6 +697,27 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(k != movedKoma && k.px == movedKoma.px && k.py == movedKoma.py) {
 					return k;
 				}
+			}
+			
+			return null;
+		}
+		
+		public Koma findKoma(int x, int y) {
+			for(Koma k: listKomaOnBoard) {
+				if(k.px == x && k.py == y) return k;
+			}
+			return null;
+		}
+		
+		public Koma findKomaInHand(KomaType type, Boolean isSente) {
+			List<Koma> listKomaOnHand;
+			if(isSente) {
+				listKomaOnHand = listKomaOnHandForSente;
+			} else {
+				listKomaOnHand = listKomaOnHandForGote;
+			}
+			for(Koma k: listKomaOnHand) {
+				if(k.type == type) return k;
 			}
 			
 			return null;
@@ -3057,16 +3085,23 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 	}
+	Boolean commandKeyOn = false;
 	@Override
 	public void keyTyped(KeyEvent e) {
-		//System.out.println("Key Typed");
 	}
 	@Override
 	public void keyPressed(KeyEvent e) {
+		if(e.getKeyCode() == KeyEvent.VK_META) {
+			commandKeyOn = true;
+		}
+		if(commandKeyOn && e.getKeyCode() == KeyEvent.VK_V) {
+			actionForLoadShogiWarsKifu();
+		}
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {
 		//System.out.println("Key Released");
+		commandKeyOn = false;
 		if((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_DOWN)) {
 			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
 				commonListAction();
@@ -3271,6 +3306,118 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			return;
 		}
 		thread.start();
+	}
+	public void actionForLoadShogiWarsKifu() {
+		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+		Transferable object = clipboard.getContents(null);
+		String strClipBoard = "";
+		try {
+			strClipBoard = (String)object.getTransferData(DataFlavor.stringFlavor);
+			//System.out.println(strClipBoard);
+		} catch(UnsupportedFlavorException e) {
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return;
+		}
+		
+		shogiData.resetAllKoma();	
+		shogiData.viewKomaOnBoard();
+		clearListBox();
+		kifuData.clear();
+		cv.setLastPoint(-1, -1, false);
+		cv.clearDrawPoint();
+		actionForStopEngine();
+		cve.clearBestPointData();
+		clearTextBox();
+		
+		String content;
+		StringTokenizer stLine = new StringTokenizer(strClipBoard, System.lineSeparator());
+		Boolean startKifu = false;
+		Boolean isSente = true;
+		while(stLine.hasMoreTokens()) {
+			content = stLine.nextToken();
+			//System.out.println(content);
+			if(content.contains("先手：")) {
+				textBox[TextBoxType.Player1.id].setText(content.substring(content.indexOf("：")+1));
+			}
+			if(content.contains("後手：")) {
+				textBox[TextBoxType.Player2.id].setText(content.substring(content.indexOf("：")+1));
+			}
+			if(content.contains("手数----指手---------消費時間--")) {
+				startKifu = true;
+				continue;
+			}
+			if(content.contains("投了")) {
+				continue;
+			}
+			
+			if(!startKifu) continue;
+			StringTokenizer st = new StringTokenizer(content," ");
+			while(st.hasMoreTokens()) {
+				String token = st.nextToken();
+				if(!token.matches("[+-]?\\d*(\\.\\d+)?")) continue;					
+				token = st.nextToken();
+				Kifu kf = convertShogiWarsKifu(token, isSente);
+				if(kf == null) {
+					JOptionPane.showMessageDialog(null, "Loading kifu failed");
+					return;
+				}
+				updateListBox(kf.k.type, kf.x, kf.y, kf.k.sente, kf.p, kf.pp, kf.d);
+				kifuData.add(kf);
+				shogiData.k[kf.k.index].moveKoma(shogiData, kf.x, kf.y, kf.p);
+				isSente = !isSente;
+			}
+		}
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+		commonListAction();
+		updatePlayerIcon();
+	}
+	public Kifu convertShogiWarsKifu(String token, Boolean isSente) {
+		Kifu kf = null;
+		String kanjiNum = "一二三四五六七八九";
+		Koma k = null;
+		KomaType type = null;
+		int x = 0;
+		int y = 0;
+		int p = 0;
+		int drop = 0;
+		int index = 0;
+		while(index<token.length()) {
+			String s = token.substring(index, index+1);
+			if(index == 0) x = Integer.parseInt(s);
+			if(index == 1) {
+				y = kanjiNum.indexOf(s)+1;
+			}
+			if(index == 2) {
+				for(KomaType t: KomaType.values()) {
+					if(shogiData.komaName[t.id].equals(s)) {
+						type = t;
+						break;
+					}
+				}
+			}
+			if(index == 3) {
+				if(s.equals("成")) p = 1;
+				if(s.equals("打")) {
+					drop = 1;
+					k = shogiData.findKomaInHand(type, isSente);
+					if(k == null) return null;
+				}
+			}
+			if(s.equals("(")) {
+				int preX = Integer.parseInt(token.substring(index+1, index+2));
+				int preY = Integer.parseInt(token.substring(index+2, index+3));
+				k = shogiData.findKoma(preX, preY);
+				if(k == null) return null;
+			}
+			index++;
+		}
+		kf = new Kifu(k, x, y, p, k.promoted, drop);
+		
+		return kf;
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Interface for Engine >> ----------------------
