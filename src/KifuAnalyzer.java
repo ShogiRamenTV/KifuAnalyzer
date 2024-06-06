@@ -3308,6 +3308,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		thread.start();
 	}
 	public void actionForLoadShogiWarsKifu() {
+		System.out.print("Importing Kifu ... ");
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		Transferable object = clipboard.getContents(null);
 		String strClipBoard = "";
@@ -3315,10 +3316,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			strClipBoard = (String)object.getTransferData(DataFlavor.stringFlavor);
 			//System.out.println(strClipBoard);
 		} catch(UnsupportedFlavorException e) {
-			e.printStackTrace();
+			System.out.println("Failed.");
 			return;
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Failed.");
 			return;
 		}
 		
@@ -3374,6 +3375,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
 		updatePlayerIcon();
+		if(startKifu) System.out.println("Completed.");
+		else System.out.println("Failed.");
 	}
 	public Kifu convertShogiWarsKifu(String token, Boolean isSente) {
 		Kifu kf = null;
