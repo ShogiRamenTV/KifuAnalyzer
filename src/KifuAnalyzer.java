@@ -1595,6 +1595,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			g2.setColor(Color.blue);
 			for(int index = 0; index<maxSizeOfKifu-1; index++) {
 				if(bestPointData[index] == 0 || bestPointData[index+1] == 0) continue;
+				if(bestPointData[index] > maxScoreOfEngine) bestPointData[index] = maxScoreOfEngine;
+				if(bestPointData[index] < (-1 * maxScoreOfEngine) ) bestPointData[index] = (-1 * maxScoreOfEngine);
+				
 				int convertedIndex = (int)((double)this.getWidth() * ((double)index/(double)maxSizeOfKifu));
 				int convertedIndex2 = (int)((double)this.getWidth() * ((double)(index+1)/(double)maxSizeOfKifu));
 				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bestPointData[index]/(double)maxScoreOfEngine);
