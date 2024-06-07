@@ -1716,7 +1716,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					int p = Integer.parseInt(st.nextToken()); // promote
 					int pp = Integer.parseInt(st.nextToken()); // preP
 					int d = Integer.parseInt(st.nextToken()); // drop
-					updateListBox(shogiData.k[i].type, x, y, shogiData.k[i].sente, p, pp, d);
+					updateListBox(shogiData.k[i].type, x, y, shogiData.k[i].px, shogiData.k[i].py, shogiData.k[i].sente, p, pp, d);
 					Kifu kf = new Kifu(shogiData.k[i], x, y, p, pp, d);
 					kifuData.add(kf);
 					shogiData.k[i].moveKoma(shogiData, x, y, p);
@@ -2600,7 +2600,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			d = drop;
 		}
 	}
-	public String createMoveKomaName(KomaType type, int sente, int x, int y, int promoted, int preP, int drop) {
+	public String createMoveKomaName(KomaType type, int sente, int x, int y, int preX, int preY, int promoted, int preP, int drop) {
 		String s = shogiData.senteGote[sente] + String.valueOf(x)+String.valueOf(y);
 		if(preP == 0 && promoted == 1) {
 			s += shogiData.komaName[type.id] + "成";
@@ -2608,6 +2608,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			s += shogiData.komaName[type.id+8*preP];
 		}
 		if(drop == 1) s += "打";
+		else {
+			s += "(" + preX + preY + ")";
+		}
 		return s;
 	}
 	public KifuDataBase getKDB(int fileIndex, String year) {
@@ -2648,7 +2651,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void countNextMoveOnKDB(List<StringCount> listSC, KifuDataBase kdb, int index) {
 		Kifu kf = kdb.db.get(index);
-		String str = createMoveKomaName(kf.k.type, kf.k.sente, kf.x, kf.y, kf.p, kf.pp, kf.d);
+		String str = createMoveKomaName(kf.k.type, kf.k.sente, kf.x, kf.y, kf.k.px, kf.k.py, kf.p, kf.pp, kf.d);
 		Boolean found = false;
 		// count string data if same string
 		for(StringCount sc: listSC) {
@@ -2755,7 +2758,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					JOptionPane.showMessageDialog(null, "Loading kifu failed");
 					return false;
 				}
-				updateListBox(kf.k.type, kf.x, kf.y, kf.k.sente, kf.p, kf.pp, kf.d);
+				updateListBox(kf.k.type, kf.x, kf.y, kf.k.px, kf.k.py, kf.k.sente, kf.p, kf.pp, kf.d);
 				kifuData.add(kf);
 				shogiData.k[kf.k.index].moveKoma(shogiData, kf.x, kf.y, kf.p);
 				isSente = !isSente;
@@ -3169,7 +3172,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 	}
-	public void updateListBox(KomaType type, int x, int y, int sente, int promoted, int preP, int drop) {
+	public void updateListBox(KomaType type, int x, int y, int preX, int preY, int sente, int promoted, int preP, int drop) {
 		// remove items under selected item 
 		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
 		if(selectedIndex != -1 && selectedIndex <= listModel[ListBoxType.Kifu.id].size()-1) {
@@ -3182,7 +3185,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		// add new item
-		String s = createMoveKomaName(type, sente, x, y, promoted, preP, drop);
+		String s = createMoveKomaName(type, sente, x, y, preX, preY, promoted, preP, drop);
 		s = listModel[ListBoxType.Kifu.id].size() + ":"+s;
 		listModel[ListBoxType.Kifu.id].addElement(s);
 		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
@@ -3596,7 +3599,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				k = shogiData.findKomaInHand(cd.type, shogiData.turnIsSente);
 			}
 			if(k != null) {
-				String komaMove = createMoveKomaName(k.type, k.sente, target.x, target.y, cd.promote, k.promoted, cd.drop);
+				String komaMove = createMoveKomaName(k.type, k.sente, target.x, target.y, k.px, k.py, cd.promote, k.promoted, cd.drop);
 				komaMove += " " + score;
 				listModel[ListBoxType.Engine.id].set(index, komaMove);
 				listBox[ListBoxType.Engine.id].setModel(listModel[ListBoxType.Engine.id]);
@@ -3873,7 +3876,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(X != preX || Y != preY) {
 			if(X>0 && X<10 && Y>0 && Y<10) {
 				cv.setLastPoint(X, Y, true);
-				updateListBox(type, X, Y, sente, promoted, preP, drop);
+				updateListBox(type, X, Y, preX, preY, sente, promoted, preP, drop);
 			}
 			Kifu kf = new Kifu(selectedKoma, X, Y, promoted, preP, drop);
 			kifuData.add(kf);
