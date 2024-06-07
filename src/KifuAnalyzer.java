@@ -2602,10 +2602,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(preP == 0 && promoted == 1) {
 			s += shogiData.komaName[type.id] + "成";
 		} else {
-			s += shogiData.komaName[type.id+8*promoted];
+			s += shogiData.komaName[type.id+8*preP];
 		}
 		if(drop == 1) s += "打";
-		
 		return s;
 	}
 	public KifuDataBase getKDB(int fileIndex, String year) {
@@ -2801,9 +2800,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			index++;
 		}
-		if(p == 0) p = k.promoted;
 		kf = new Kifu(k, x, y, p, k.promoted, drop);
-		
 		return kf;
 	}
 	// -------------------------------------------------------------------------
@@ -3552,6 +3549,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 	}
+	public class ConvertedData {
+		int promote;
+		int drop;
+		KomaType type;
+	}
 	public void getPointFromInfo(String info) {
 		Point base = new Point();
 		Point target = new Point();
@@ -3572,29 +3574,35 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		String str = "";
 		int score = 0;
 		int index = 0;
-		Point p = new Point(); // for promote and drop
+		ConvertedData cd = new ConvertedData();
+		//Point p = new Point(); // for promote and drop
 		for(int i=0; i<names.length; i++) {
 			if(names[i].equals("pv")) str = names[i+1];
 			if(names[i].equals("cp")) score = Integer.parseInt(names[i+1]);
 			if(names[i].equals("multipv")) index = Integer.parseInt(names[i+1]) - 1;
 		}
-		convertStringPosToPoints(str, base, target, p);
+		convertStringPosToPoints(str, base, target, cd);
 		// for safe access in multi thread
 		synchronized(cv.drawListForEngine) {
 			PointWithScore ps = new PointWithScore(base, target, score);
 			cv.drawListForEngine.add(ps);
-			Koma k = shogiData.findKoma(base.x, base.y);
+			Koma k = null;
+			if(cd.drop == 0) {
+				k = shogiData.findKoma(base.x, base.y);
+			} else {
+				k = shogiData.findKomaInHand(cd.type, shogiData.turnIsSente);
+			}
 			if(k != null) {
-				if(k.promoted == 1) p.x = 1;
-				String komaMove = createMoveKomaName(k.type, k.sente, target.x, target.y, p.x, k.promoted, p.y);
+				String komaMove = createMoveKomaName(k.type, k.sente, target.x, target.y, cd.promote, k.promoted, cd.drop);
 				komaMove += " " + score;
 				listModel[ListBoxType.Engine.id].set(index, komaMove);
 				listBox[ListBoxType.Engine.id].setModel(listModel[ListBoxType.Engine.id]);
 			}
 		}
 	}
-	public void convertStringPosToPoints(String strPos, Point base, Point target, Point p) {
+	public void convertStringPosToPoints(String strPos, Point base, Point target, ConvertedData cd) {
 		char ch[] = strPos.toCharArray();
+		String str = "PLNSGBRKE";
 		// drop a piece
 		if(ch[1] == '*') {
 			if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S' || ch[0] == 'G' || ch[0] == 'B' || ch[0] == 'R') {
@@ -3603,6 +3611,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				} else {
 					base.x = 10;
 				}
+			}
+			int index = 0;
+			for(KomaType t: KomaType.values()) {
+				if(str.charAt(index) == ch[0]) {
+					cd.type = t;
+					break;
+				}
+				index++;
 			}
 			if(shogiData.turnIsSente) {
 				if(ch[0] == 'P') base.y = 2;
@@ -3621,7 +3637,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				else if(ch[0] == 'B') base.y = 3;
 				else if(ch[0] == 'R') base.y = 2;
 			}
-			p.y = 1; // drop
+			cd.drop = 1;
 		}
 		else {
 			base.x = ch[0] - '0';
@@ -3631,7 +3647,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		target.y = ch[3] - 96;
 		
 		if(ch.length == 5) {
-			if(ch[4] == '+') p.x = 1; // promote
+			if(ch[4] == '+') cd.promote = 1;
 		}
 	}
 	class MyThreadKifuAnalysis extends Thread {
