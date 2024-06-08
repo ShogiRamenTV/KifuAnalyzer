@@ -254,6 +254,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		getContentPane().add(maxPointOfEngine);
 		getContentPane().add(minPointOfEngine);
+		getContentPane().add(topOfBestMoves);
 		getContentPane().add(cve);
 		getContentPane().add(cv);
 	}
@@ -272,6 +273,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cve.setBackground(Color.white);
 		maxPointOfEngine.setBounds(baseXPosForItems+165, 570, 100, 20);
 		minPointOfEngine.setBounds(baseXPosForItems+165, 680, 100, 20);
+		topOfBestMoves.setBounds(baseXPosForItems, 570, 150, 20);
 	}
 	public void initializeButtonSetting() {
 		for(ButtonType b: ButtonType.values()) {
@@ -1567,6 +1569,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	CanvasForEngine cve = new CanvasForEngine();
 	JLabel maxPointOfEngine = new JLabel("4000");
 	JLabel minPointOfEngine = new JLabel("-4000");
+	JLabel topOfBestMoves = new JLabel("Top 5 Best moves");
 	public class BestPointData {
 		int score;
 		String[] moveName = new String[numOfMultiPV];
@@ -2750,6 +2753,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		return strClipBoard;
 	}
+	String endPattern[] = {"中断", "投了", "持将棋", "千日手", "切れ負け", "反則勝ち", "反則負け", "入玉勝ち", "詰み"};
 	public Boolean parseShogiWarsKifu(String strClipBoard) {
 		String content;
 		StringTokenizer stLine = new StringTokenizer(strClipBoard, System.lineSeparator());
@@ -2768,11 +2772,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				startKifu = true;
 				continue;
 			}
-			if(content.contains("投了") || content.contains("中断") || content.contains("詰み")) {
-				continue;
-			}
-			
 			if(!startKifu) continue;
+			else {
+				for(String endStr: endPattern) {
+					if(content.contains(endStr)) return true;
+				}
+			}
 			StringTokenizer st = new StringTokenizer(content," ");
 			while(st.hasMoreTokens()) {
 				String token = st.nextToken();
