@@ -2783,7 +2783,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				String token = st.nextToken();
 				if(!token.matches("[+-]?\\d*(\\.\\d+)?")) continue;					
 				token = st.nextToken();
-				Kifu kf = convertShogiWarsKifu(token, isSente);
+				Kifu kf;
+				try {
+					kf = convertShogiWarsKifu(token, isSente);
+				} catch(Exception e) {
+					System.out.println("format error");
+					return false;
+				}
 				if(kf == null) {
 					JOptionPane.showMessageDialog(null, "Loading kifu failed");
 					return false;
