@@ -1321,9 +1321,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			// for safe access in multi thread
 			synchronized(drawListForEngine) {
 				for(PointWithScore ps: drawListForEngine) {
-					if(count == 0) bestPointFromEngine = ps.score;
+					if(count == 0) {
+						bestPointFromEngine.score = ps.score;
+					}
 					int pBX, pBY, pX, pY;
-					
 					if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 						pBX = 10 - ps.base.x;
 						pBY = 10 - ps.base.y;
@@ -1335,7 +1336,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 						pX = ps.target.x;
 						pY = ps.target.y;
 					}
-					
 					Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 					Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
 					Arrow ar = new Arrow(pBase, pTarget);
@@ -1559,17 +1559,27 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	
+	public static final int maxSizeOfKifu = 200;
+	public static final int maxScoreOfEngine = 4000;
+	public static final int sizeOfOval = 6;
+	BestPointData bestPointFromEngine = new BestPointData();
+	List<BestPointData> bestPointData = new ArrayList<BestPointData>();
 	CanvasForEngine cve = new CanvasForEngine();
 	JLabel maxPointOfEngine = new JLabel("4000");
 	JLabel minPointOfEngine = new JLabel("-4000");
-	int bestPointFromEngine = 0;
-	int maxSizeOfKifu = 200;
-	int maxScoreOfEngine = 4000;
-	int sizeOfOval = 6;
-	int[] bestPointData = new int[maxSizeOfKifu];
+	public class BestPointData {
+		int score;
+		String[] moveName = new String[numOfMultiPV];
+		BestPointData() {
+			for(int index=0; index<numOfMultiPV; index++) moveName[index] = new String("");
+		}
+	}
 	public class CanvasForEngine extends Canvas {
 		public CanvasForEngine() {
-			
+			for(int index=0; index<maxSizeOfKifu; index++) {
+				BestPointData bpt = new BestPointData();
+				bestPointData.add(bpt);
+			}
 		}
 		public void paint(Graphics g) {
 			drawBaseField(g);
@@ -1585,8 +1595,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		private void getPointFromEngine() {
 			if(!isEngineOn) return;
 			int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-			if(bestPointFromEngine == 0) return;
-			bestPointData[index] = bestPointFromEngine;
+			if(bestPointFromEngine.score == 0) return;
+			BestPointData bpd = bestPointData.get(index);
+			bpd.score = bestPointFromEngine.score;
+			for(index=0; index<numOfMultiPV; index++) {
+				bpd.moveName[index] = bestPointFromEngine.moveName[index];
+			}
 		}
 		private void drawPointFromEngine(Graphics g) {
 			Graphics2D g2 = (Graphics2D)g;
@@ -1594,16 +1608,18 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			g2.setStroke(stroke);
 			g2.setColor(Color.blue);
 			for(int index = 0; index<maxSizeOfKifu-1; index++) {
-				if(bestPointData[index] == 0 || bestPointData[index+1] == 0) continue;
-				if(bestPointData[index] > maxScoreOfEngine) bestPointData[index] = maxScoreOfEngine;
-				if(bestPointData[index] < (-1 * maxScoreOfEngine) ) bestPointData[index] = (-1 * maxScoreOfEngine);
+				BestPointData bpd = bestPointData.get(index);
+				BestPointData bpd2 = bestPointData.get(index+1);
+				if(bpd.score == 0 || bpd2.score == 0) continue;
+				if(bpd.score > maxScoreOfEngine) bpd.score = maxScoreOfEngine;
+				if(bpd.score < (-1 * maxScoreOfEngine) ) bpd.score = (-1 * maxScoreOfEngine);
 				
 				int convertedIndex = (int)((double)this.getWidth() * ((double)index/(double)maxSizeOfKifu));
 				int convertedIndex2 = (int)((double)this.getWidth() * ((double)(index+1)/(double)maxSizeOfKifu));
-				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bestPointData[index]/(double)maxScoreOfEngine);
+				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bpd.score/(double)maxScoreOfEngine);
 				if((index%2) == 0) convertedHeight *= -1; 
 				convertedHeight += this.getHeight()/2;
-				int convertedHeight2 = (int)((double)this.getHeight()/2 * (double)bestPointData[index+1]/(double)maxScoreOfEngine);
+				int convertedHeight2 = (int)((double)this.getHeight()/2 * (double)bpd2.score/(double)maxScoreOfEngine);
 				if(((index+1)%2) == 0) convertedHeight2 *= -1; 
 				convertedHeight2 += this.getHeight()/2;
 				g2.drawLine(convertedIndex, convertedHeight, convertedIndex2, convertedHeight2);
@@ -1612,20 +1628,29 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		private void drawPointOfCurrentPosition(Graphics g) {
 			if(!isEngineOn) {
 				int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-				if(bestPointData[selectedIndex] == 0) return;
+				BestPointData bpd = bestPointData.get(selectedIndex);
+				updateListBoxEngine(bpd);
+				if(bpd.score == 0) return;
 				int convertedIndex = (int)((double)this.getWidth() * ((double)selectedIndex/(double)maxSizeOfKifu));
-				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bestPointData[selectedIndex]/(double)maxScoreOfEngine);
+				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bpd.score/(double)maxScoreOfEngine);
 				if((selectedIndex%2) == 0) convertedHeight *= -1; 
 				convertedHeight += this.getHeight()/2;
 				g.setColor(Color.red);
 				g.drawOval(convertedIndex - sizeOfOval/2, convertedHeight-sizeOfOval/2, sizeOfOval, sizeOfOval);
-				String s = Integer.toString(bestPointData[selectedIndex]);
+				String s = Integer.toString(bpd.score);
 				g.drawString(s, 0, 20);
 			}
 		}
 		public void clearBestPointData() {
 			for(int index=0; index<maxSizeOfKifu; index++) {
-				bestPointData[index] = 0;
+				BestPointData bpd = bestPointData.get(index);
+				bpd.score = 0;
+				for(int x=0; x<numOfMultiPV; x++) bpd.moveName[x] = "";
+			}
+		}
+		public void updateListBoxEngine(BestPointData bpd) {
+			for(int index=0; index<numOfMultiPV; index++) {
+				listModel[ListBoxType.Engine.id].set(index, bpd.moveName[index]);
 			}
 		}
 	}
@@ -3353,8 +3378,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	PrintStream out = null;
 	MyThreadReceiver receiver;
 	String propertyFile = "KifuAnalyzer.properties";
-	int numOfMultiPV = 5;
-	int calculatingTimeOfEngine = 2000; // ms
+	public static final int numOfMultiPV = 5;
+	public static final int calculatingTimeOfEngine = 2000; // ms
 	Boolean isEngineOn = false;
 	public Process createEngine() {
 		String enginePath = loadProperty(PropertyType.Engine.name());
@@ -3603,6 +3628,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				komaMove += " " + score;
 				listModel[ListBoxType.Engine.id].set(index, komaMove);
 				listBox[ListBoxType.Engine.id].setModel(listModel[ListBoxType.Engine.id]);
+				bestPointFromEngine.moveName[index] = komaMove;
 			}
 		}
 	}
