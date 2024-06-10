@@ -55,7 +55,6 @@ import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
-import javax.swing.JColorChooser;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -135,7 +134,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JList<String> listBox[] = new JList[ListBoxType.values().length];
 	
 	public enum MenuTypeSetting {
-		SetBoardColor(0), SetColor(1);
+		SetColor(0);
 		private final int id;
 		private MenuTypeSetting(final int id) {
 			this.id = id;
@@ -382,55 +381,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				labelNumberCol[x].setText(String.valueOf(x+1));
 			}
 		}
-	}
-	public void initializeColorSet() {
-		listColorSet[ColorSetType.Default.id] = new ColorSet(
-				new Color(245, 245, 245), // backGround;
-				new Color(235, 235, 235), // button;
-				new Color(215, 215, 215), // buttonFocused;
-				new Color(0, 0, 0)		 // buttonBorder;
-				);
-		listColorSet[ColorSetType.Sakura.id] = new ColorSet(
-				new Color(254, 244, 244), 
-				new Color(230, 205, 227), 
-				new Color(229, 171, 190), 
-				new Color(201, 117, 134)
-				);
-		listColorSet[ColorSetType.GreenTea.id] = new ColorSet(
-				new Color(244, 254, 244), 
-				new Color(205, 230, 227), 
-				new Color(171, 229, 190), 
-				new Color(117, 201, 134)
-				);
-		listColorSet[ColorSetType.BlueSky.id] = new ColorSet(
-				new Color(213, 248, 253), 
-				new Color(160, 216, 239), 
-				new Color(171, 190, 229), 
-				new Color(117, 134, 201)
-				);
-		listColorSet[ColorSetType.Lemon.id] = new ColorSet(
-				new Color(255, 250, 205), 
-				new Color(255, 255, 0), 
-				new Color(255, 215, 0), 
-				new Color(255, 140, 0)
-				);
-		setColor();
-	}
-	public void setColor() {
-		String value = loadProperty(PropertyType.Color.name());
-		int select;
-		if(value == null) select = ColorSetType.Default.id;
-		else select = Integer.parseInt(value);
-		
-		buttonColor = listColorSet[select].button;
-		buttonFocusedColor = listColorSet[select].buttonFocused;
-		LineBorder border = new LineBorder(listColorSet[select].buttonBorder, 1, true);
-		for(ButtonType bt: ButtonType.values()) {
-			button[bt.id].setBackground(buttonColor);
-			button[bt.id].setBorder(border);
-		}
-		this.setBackground(listColorSet[select].backGround);
-		this.getContentPane().setBackground(listColorSet[select].backGround);
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Board >> -------------------------------
@@ -1154,6 +1104,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		Image imgBackground;
 		Image playerIcon[];
 		Image castleIcon;
+		Color clrFont;
 		public CanvasBoard() {
 			lastPointX = -1;
 			lastPointY = -1;
@@ -1170,9 +1121,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			playerIcon = new Image[2];
 			castleIcon = null;
+			clrFont = new Color(0, 0, 0);
 		}
 		public void paint(Graphics g) {
-			//drawBackground(g);
+			drawBackground(g);
 			drawShogiBoardBackground(g);
 			drawShogiBoard(g);
 			drawStrings(g);
@@ -1190,9 +1142,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(imgBackground != null) g.drawImage(imgBackground, 0, 0, this);
 		}
 		public void drawShogiBoard(Graphics g) {
-			//g.setColor(boardColor);
-			//g.fillRect(80, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
-			g.setColor(Color.black);
+			g.setColor(clrFont);
 			for(int x=0; x<9; x++)
 				for(int y=0; y<9; y++) {
 					g.drawRect(x*(shogiData.iconWidth+10)+80, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
@@ -1222,6 +1172,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(castleIcon != null) g.drawImage(castleIcon, baseXPosForItems+300, 110, this);
 		}
 		public void drawStrings(Graphics g) {
+			g.setColor(clrFont);
 			g.drawString("4000", baseXPosForItems+165, 585);
 			g.drawString("-4000", baseXPosForItems+165, 695);
 			g.drawString("Top 5 Best Moves", baseXPosForItems, 585);
@@ -1542,6 +1493,112 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				listModel[ListBoxType.Engine.id].set(index, bpd.moveName[index]);
 			}
 		}
+	}
+	// -------------------------------------------------------------------------
+	// ---------------------------- << Color >> -------------------------------
+	// -------------------------------------------------------------------------
+	public class ColorSet {
+		Color button;
+		Color buttonFocused;
+		Color buttonBorder;
+		Color font;
+		Image board;
+		Image background;
+		ColorSet(Color b, Color bf, Color bb, Color f) {
+			button = b;
+			buttonFocused = bf;
+			buttonBorder = bb;
+			font = f;
+			board = null;
+			background = null;
+		}
+	}
+	public void actionForSetColor() {
+		String[] selectvalues = new String[ColorSetType.values().length];
+		for(ColorSetType cst: ColorSetType.values()) selectvalues[cst.id] = cst.name();
+		int select = JOptionPane.showOptionDialog(
+				this,
+				"Which color style?",
+				"Color Style",
+				JOptionPane.YES_NO_OPTION,
+				JOptionPane.QUESTION_MESSAGE,
+				null,
+				selectvalues,
+				selectvalues[0]
+				);
+		if (select == JOptionPane.CLOSED_OPTION) {
+			System.out.println("cancel");
+		} else {
+			setProperty(PropertyType.Color.name(), Integer.valueOf(select).toString());
+			setColor();
+		}
+	}
+	public void initializeColorSet() {
+		listColorSet[ColorSetType.Default.id] = new ColorSet(
+				new Color(235, 235, 235), // button;
+				new Color(215, 215, 215), // buttonFocused;
+				new Color(0, 0, 0),		 // buttonBorder;
+				new Color(0, 0, 0)		 // font;
+				);
+		listColorSet[ColorSetType.Sakura.id] = new ColorSet(
+				new Color(230, 205, 227), 
+				new Color(229, 171, 190), 
+				new Color(201, 117, 134),
+				new Color(255, 255, 255)
+				);
+		listColorSet[ColorSetType.GreenTea.id] = new ColorSet(
+				new Color(205, 230, 227), 
+				new Color(171, 229, 190), 
+				new Color(117, 201, 134),
+				new Color(0, 0, 0)
+				);
+		listColorSet[ColorSetType.BlueSky.id] = new ColorSet(
+				new Color(160, 216, 239), 
+				new Color(171, 190, 229), 
+				new Color(117, 134, 201),
+				new Color(255, 255, 255)	
+				);
+		listColorSet[ColorSetType.Lemon.id] = new ColorSet(
+				new Color(255, 255, 0), 
+				new Color(255, 215, 0), 
+				new Color(255, 140, 0),
+				new Color(0, 0, 0)
+				);
+		initializeImageSet();
+		setColor();
+	}
+	public void initializeImageSet() {
+		for(ColorSetType cst: ColorSetType.values()) {
+			try {
+				String fileName = imgFilePathBoard + "shogi board" + cst.id + ".png";
+				BufferedImage img = ImageIO.read(new File(fileName));
+				listColorSet[cst.id].board = img.getScaledInstance((50+10)*9, (63+10)*9, java.awt.Image.SCALE_SMOOTH);
+				fileName = imgFilePathBackground + "background" + cst.id + ".png";
+				img = ImageIO.read(new File(fileName));
+				listColorSet[cst.id].background = img.getScaledInstance(50*25, 63*12, java.awt.Image.SCALE_SMOOTH);
+			} catch(IOException e) {
+				listColorSet[cst.id].board = null;
+				listColorSet[cst.id].background = null;
+			}
+		}
+	}
+	public void setColor() {
+		String value = loadProperty(PropertyType.Color.name());
+		int select;
+		if(value == null) select = ColorSetType.Default.id;
+		else select = Integer.parseInt(value);
+		
+		buttonColor = listColorSet[select].button;
+		buttonFocusedColor = listColorSet[select].buttonFocused;
+		LineBorder border = new LineBorder(listColorSet[select].buttonBorder, 1, true);
+		for(ButtonType bt: ButtonType.values()) {
+			button[bt.id].setBackground(buttonColor);
+			button[bt.id].setBorder(border);
+		}
+		cv.imgBoard = listColorSet[select].board;
+		cv.imgBackground = listColorSet[select].background;
+		cv.clrFont =  listColorSet[select].font;
+		cv.repaint();
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Button Action >> -----------------------------
@@ -1900,9 +1957,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
 			actionForKifu();
-		}
-		if(e.getSource() == menuItemSetting[MenuTypeSetting.SetBoardColor.id]) {
-			actionForSetBoardColor();
 		}
 		if(e.getSource() == menuItemSetting[MenuTypeSetting.SetColor.id]) {
 			actionForSetColor();
@@ -3180,46 +3234,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Menu Action >> -----------------------------
 	// -------------------------------------------------------------------------
-	public void actionForSetBoardColor() {
-		Color color = JColorChooser.showDialog(this, "Select color", Color.white);
-		if(color != null) {
-			boardColor = color;
-			cv.repaint();
-			cve.repaint();
-		}
-	}
-	public class ColorSet {
-		Color backGround;
-		Color button;
-		Color buttonFocused;
-		Color buttonBorder;
-		ColorSet(Color bg, Color b, Color bf, Color bb) {
-			backGround = bg;
-			button = b;
-			buttonFocused = bf;
-			buttonBorder = bb;
-		}
-	}
-	public void actionForSetColor() {
-		String[] selectvalues = new String[ColorSetType.values().length];
-		for(ColorSetType cst: ColorSetType.values()) selectvalues[cst.id] = cst.name();
-		int select = JOptionPane.showOptionDialog(
-				this,
-				"Which color style?",
-				"Color Style",
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE,
-				null,
-				selectvalues,
-				selectvalues[0]
-				);
-		if (select == JOptionPane.CLOSED_OPTION) {
-			System.out.println("cancel");
-		} else {
-			setProperty(PropertyType.Color.name(), Integer.valueOf(select).toString());
-			setColor();
-		}
-	}
+	
 	public void actionForCaptureBoard() {
 		try {
 			Rectangle bounds = this.getBounds();
