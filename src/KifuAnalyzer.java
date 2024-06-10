@@ -77,6 +77,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
 	String imgFilePath = "./img/";
+	String imgFilePathPlayerIcon = imgFilePath + "playerIcon/";
+	String imgFilePathCastleIcon = imgFilePath + "castleIcon/";
+	String imgFilePathKoma = imgFilePath + "koma/";
+	String imgFilePathBoard = imgFilePath + "board/";
+	String imgFilePathBackground = imgFilePath + "background/";
 	
 	public enum SenteGote {
 		Sente(0), Gote(1);
@@ -85,8 +90,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			this.id = id;
 		}
 	};
-	//JLabel playerIconLabel[] = new JLabel[2];
-	//JLabel castleIconLabel = new JLabel();
 	
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
@@ -475,34 +478,34 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		public void initializeIcon() {
 			try {
-				img[KomaType.Pawn.id][0] = ImageIO.read(new File("./img/Pawn.png"));
-				img[KomaType.Pawn.id][1] = ImageIO.read(new File("./img/Promoted Pawn.png"));
-				img[KomaType.Pawn.id][2] = ImageIO.read(new File("./img/Pawn Gote.png"));
-				img[KomaType.Pawn.id][3] = ImageIO.read(new File("./img/Promoted Pawn Gote.png"));
-				img[KomaType.Rance.id][0] = ImageIO.read(new File("./img/Rance.png"));
-				img[KomaType.Rance.id][1] = ImageIO.read(new File("./img/Promoted Rance.png"));
-				img[KomaType.Rance.id][2] = ImageIO.read(new File("./img/Rance Gote.png"));
-				img[KomaType.Rance.id][3] = ImageIO.read(new File("./img/Promoted Rance Gote.png"));
-				img[KomaType.Knight.id][0] = ImageIO.read(new File("./img/Knight.png"));
-				img[KomaType.Knight.id][1] = ImageIO.read(new File("./img/Promoted Knight.png"));
-				img[KomaType.Knight.id][2] = ImageIO.read(new File("./img/Knight Gote.png"));
-				img[KomaType.Knight.id][3] = ImageIO.read(new File("./img/Promoted Knight Gote.png"));
-				img[KomaType.Silver.id][0] = ImageIO.read(new File("./img/Silver.png"));
-				img[KomaType.Silver.id][1] = ImageIO.read(new File("./img/Promoted Silver.png"));
-				img[KomaType.Silver.id][2] = ImageIO.read(new File("./img/Silver Gote.png"));
-				img[KomaType.Silver.id][3] = ImageIO.read(new File("./img/Promoted Silver Gote.png"));
-				img[KomaType.Gold.id][0] = ImageIO.read(new File("./img/Gold.png"));
-				img[KomaType.Gold.id][2] = ImageIO.read(new File("./img/Gold Gote.png"));
-				img[KomaType.Rook.id][0] = ImageIO.read(new File("./img/Rook.png"));
-				img[KomaType.Rook.id][1] = ImageIO.read(new File("./img/Promoted Rook.png"));
-				img[KomaType.Rook.id][2] = ImageIO.read(new File("./img/Rook Gote.png"));
-				img[KomaType.Rook.id][3] = ImageIO.read(new File("./img/Promoted Rook Gote.png"));
-				img[KomaType.Bishop.id][0] = ImageIO.read(new File("./img/Bishop.png"));
-				img[KomaType.Bishop.id][1]= ImageIO.read(new File("./img/Promoted Bishop.png"));
-				img[KomaType.Bishop.id][2] = ImageIO.read(new File("./img/Bishop Gote.png"));
-				img[KomaType.Bishop.id][3]= ImageIO.read(new File("./img/Promoted Bishop Gote.png"));
-				img[KomaType.King.id][0] = ImageIO.read(new File("./img/King.png"));
-				img[KomaType.King.id][2] = ImageIO.read(new File("./img/King Gote.png"));
+				img[KomaType.Pawn.id][0] = ImageIO.read(new File(imgFilePathKoma + "Pawn.png"));
+				img[KomaType.Pawn.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Pawn.png"));
+				img[KomaType.Pawn.id][2] = ImageIO.read(new File(imgFilePathKoma + "Pawn Gote.png"));
+				img[KomaType.Pawn.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Pawn Gote.png"));
+				img[KomaType.Rance.id][0] = ImageIO.read(new File(imgFilePathKoma + "Rance.png"));
+				img[KomaType.Rance.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rance.png"));
+				img[KomaType.Rance.id][2] = ImageIO.read(new File(imgFilePathKoma + "Rance Gote.png"));
+				img[KomaType.Rance.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rance Gote.png"));
+				img[KomaType.Knight.id][0] = ImageIO.read(new File(imgFilePathKoma + "Knight.png"));
+				img[KomaType.Knight.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Knight.png"));
+				img[KomaType.Knight.id][2] = ImageIO.read(new File(imgFilePathKoma + "Knight Gote.png"));
+				img[KomaType.Knight.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Knight Gote.png"));
+				img[KomaType.Silver.id][0] = ImageIO.read(new File(imgFilePathKoma + "Silver.png"));
+				img[KomaType.Silver.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Silver.png"));
+				img[KomaType.Silver.id][2] = ImageIO.read(new File(imgFilePathKoma + "Silver Gote.png"));
+				img[KomaType.Silver.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Silver Gote.png"));
+				img[KomaType.Gold.id][0] = ImageIO.read(new File(imgFilePathKoma + "Gold.png"));
+				img[KomaType.Gold.id][2] = ImageIO.read(new File(imgFilePathKoma + "Gold Gote.png"));
+				img[KomaType.Rook.id][0] = ImageIO.read(new File(imgFilePathKoma + "Rook.png"));
+				img[KomaType.Rook.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rook.png"));
+				img[KomaType.Rook.id][2] = ImageIO.read(new File(imgFilePathKoma + "Rook Gote.png"));
+				img[KomaType.Rook.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rook Gote.png"));
+				img[KomaType.Bishop.id][0] = ImageIO.read(new File(imgFilePathKoma + "Bishop.png"));
+				img[KomaType.Bishop.id][1]= ImageIO.read(new File(imgFilePathKoma + "Promoted Bishop.png"));
+				img[KomaType.Bishop.id][2] = ImageIO.read(new File(imgFilePathKoma + "Bishop Gote.png"));
+				img[KomaType.Bishop.id][3]= ImageIO.read(new File(imgFilePathKoma + "Promoted Bishop Gote.png"));
+				img[KomaType.King.id][0] = ImageIO.read(new File(imgFilePathKoma + "King.png"));
+				img[KomaType.King.id][2] = ImageIO.read(new File(imgFilePathKoma + "King Gote.png"));
 				iconWidth = img[KomaType.Pawn.id][0].getWidth();
 				iconHeight = img[KomaType.Pawn.id][0].getHeight();
 			} catch(IOException e) {
@@ -1157,9 +1160,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			mousePressed = false;
 			enableLastPoint = false;
 			try {
-				BufferedImage boardImage = ImageIO.read(new File("./img/shogi board.png"));
+				BufferedImage boardImage = ImageIO.read(new File(imgFilePathBoard + "shogi board.png"));
 				imgBoard = boardImage.getScaledInstance((50+10)*9, (63+10)*9, java.awt.Image.SCALE_SMOOTH);
-				boardImage = ImageIO.read(new File("./img/background.png"));
+				boardImage = ImageIO.read(new File(imgFilePathBackground + "background.png"));
 				imgBackground = boardImage.getScaledInstance(50*25, 63*12, java.awt.Image.SCALE_SMOOTH);
 			} catch(IOException e) {
 				imgBoard = null;
@@ -2329,7 +2332,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		StringCount sc = castleCountData.get(selectedIndex);
 		String castleName = sc.str;
 		try {
-			BufferedImage img = ImageIO.read(new File(imgFilePath + castleName + ".jpg"));
+			BufferedImage img = ImageIO.read(new File(imgFilePathCastleIcon + castleName + ".jpg"));
 			cv.castleIcon = img.getScaledInstance(120, 160, java.awt.Image.SCALE_SMOOTH);
 		} catch(IOException e) {
 			cv.castleIcon = null;
@@ -2997,7 +3000,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		for(SenteGote sg: SenteGote.values()) {
 			try {
-				BufferedImage img = ImageIO.read(new File(imgFilePath + playerName[sg.id] + ".jpg"));
+				BufferedImage img = ImageIO.read(new File(imgFilePathPlayerIcon + playerName[sg.id] + ".jpg"));
 				cv.playerIcon[sg.id] = img.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
 			} catch(IOException e) {
 				cv.playerIcon[sg.id] = null;
@@ -3223,7 +3226,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Robot robot = new Robot();
 			BufferedImage image = robot.createScreenCapture(bounds);
 			image = image.getSubimage(0, 70, (shogiData.iconWidth+10)*11+55, (shogiData.iconHeight+10)*9);
-			String dirName = "./img/";
+			String dirName = imgFilePath;
 			String fileName = "CaptureBoard.jpg";
 			ImageIO.write(image, "jpg", new File(dirName, fileName));
 			
