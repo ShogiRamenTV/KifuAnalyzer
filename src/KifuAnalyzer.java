@@ -205,7 +205,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void initializeGUISetting() {
 		shogiData.initializeKomaSetting();
-		shogiData.initializeLabelSetting();
 		shogiDataForKDB.initializeKomaSetting();
 		initializeButtonSetting();
 		initializeTextBoxSetting();
@@ -226,9 +225,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
 		getContentPane().add(comboBox);
-		for(SenteGote sg: SenteGote.values()) {
-			for(int x=0; x<8; x++) getContentPane().add(shogiData.labelNumOfKoma[sg.id][x]);
-		}
 		getContentPane().add(cve);
 		getContentPane().add(cv);
 	}
@@ -276,10 +272,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(CheckBoxType cb: CheckBoxType.values()) {
 			checkBox[cb.id] = new JCheckBox(cb.name());
 		}
-		checkBox[CheckBoxType.Edit.id].setBounds(baseXPosForItems+140, 35, 60, 10);
-		checkBox[CheckBoxType.Reverse.id].setBounds(baseXPosForItems+190, 35, 80, 10);
+		checkBox[CheckBoxType.Edit.id].setBounds(baseXPosForItems+140, 35, 60, 12);
+		checkBox[CheckBoxType.Reverse.id].setBounds(baseXPosForItems+190, 35, 80, 12);
 		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListener);
-		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+80, 35, 80, 10);
+		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+80, 35, 80, 12);
 		radioButtonSente.setBounds(baseXPosForItems+360, 75, 70, 14);
 		radioButtonGote.setBounds(baseXPosForItems+420, 75, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
@@ -452,8 +448,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<List<Koma>> listKomaOnHand;
 		List<Koma> listKomaOnHandForSente;
 		List<Koma> listKomaOnHandForGote;
-		JLabel[][] labelNumOfKoma = new JLabel[2][8];
-		
+		NumOfKoma nok;
+		public class NumOfKoma {
+			int numOfKoma[][];
+			Point posNumOfKoma[][];
+			NumOfKoma() {
+				numOfKoma = new int[SenteGote.values().length][KomaType.values().length];
+				posNumOfKoma = new Point[SenteGote.values().length][KomaType.values().length];
+				for(SenteGote sg: SenteGote.values())
+					for(KomaType t: KomaType.values()) {
+						Point p = new Point();
+						posNumOfKoma[sg.id][t.id] = p;
+					}
+			}
+		}
 		ShogiData() {
 			k = new Koma[40];
 			turnIsSente = true;
@@ -463,6 +471,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			listKomaOnHand = new ArrayList<>();
 			listKomaOnHand.add(listKomaOnHandForSente);
 			listKomaOnHand.add(listKomaOnHandForGote);
+			nok = new NumOfKoma();
 		}
 		public void initializeIcon() {
 			try {
@@ -516,13 +525,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 		public void viewKomaOnHand() {
-			int numOfKoma[][] = new int[2][8];
-			
 			for(SenteGote sg: SenteGote.values()) {
-				for(int x=0; x<8; x++) {
-					labelNumOfKoma[sg.id][x].setVisible(false);
-					labelNumOfKoma[sg.id][x].setSize(20, 10);
-					numOfKoma[sg.id][x] = 0;
+				for(KomaType t: KomaType.values()) {
+					nok.numOfKoma[sg.id][t.id] = 0;
 				}
 			}
 			
@@ -530,30 +535,30 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(!checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					k.pos.x = (iconWidth+10)*10+50;
 					k.pos.y = (iconHeight+10)*(k.type.id+1)+25;
-					labelNumOfKoma[SenteGote.Sente.id][k.type.id].setLocation((iconWidth+10)*11+35, (iconHeight+10)*(k.type.id+1)+30);
+					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].x = (iconWidth+10)*11+35;
+					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].y = (iconHeight+10)*(k.type.id+1)+30;
 				} else {
 					k.pos.x = 10;
 					k.pos.y = (iconHeight+10)*(7-k.type.id)+25;
-					labelNumOfKoma[SenteGote.Sente.id][k.type.id].setLocation(55, (iconHeight+10)*(7-k.type.id)+70);
+					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].x = 55;
+					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].y = (iconHeight+10)*(7-k.type.id)+70;
 				}
-				numOfKoma[SenteGote.Sente.id][k.type.id]++;
-				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Sente.id][k.type.id]).toString());
-				labelNumOfKoma[SenteGote.Sente.id][k.type.id].setVisible(true);
+				nok.numOfKoma[SenteGote.Sente.id][k.type.id]++;
 			}
 			
 			for(Koma k: listKomaOnHand.get(SenteGote.Gote.id)) {
 				if(!checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					k.pos.x = 10;
 					k.pos.y = (iconHeight+10)*(7-k.type.id)+25;
-					labelNumOfKoma[SenteGote.Gote.id][k.type.id].setLocation(55, (iconHeight+10)*(7-k.type.id)+70);
+					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].x = 55;
+					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].y = (iconHeight+10)*(7-k.type.id)+70;
 				} else {
 					k.pos.x = (iconWidth+10)*10+50;
 					k.pos.y = (iconHeight+10)*(k.type.id+1)+25;
-					labelNumOfKoma[SenteGote.Gote.id][k.type.id].setLocation((iconWidth+10)*11+35, (iconHeight+10)*(k.type.id+1)+30);
+					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].x = (iconWidth+10)*11+35;
+					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].y = (iconHeight+10)*(k.type.id+1)+30;
 				}
-				numOfKoma[SenteGote.Gote.id][k.type.id]++;
-				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setText(Integer.valueOf(numOfKoma[SenteGote.Gote.id][k.type.id]).toString());
-				labelNumOfKoma[SenteGote.Gote.id][k.type.id].setVisible(true);
+				nok.numOfKoma[SenteGote.Gote.id][k.type.id]++;
 			}
 		}
 		public void initializeKomaSetting() {
@@ -663,17 +668,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			
 			return null;
-		}
-		public void initializeLabelSetting() {
-			for(int x=0; x<8; x++) {
-				labelNumOfKoma[SenteGote.Sente.id][x] = new JLabel("0");
-				labelNumOfKoma[SenteGote.Sente.id][x].setBounds((10+(x%4))*(iconWidth+10)+38, (6+(x/4))*(iconHeight+10)+10, 80, 20);
-				labelNumOfKoma[SenteGote.Sente.id][x].setVisible(false);
-				
-				labelNumOfKoma[SenteGote.Gote.id][x] = new JLabel("0");
-				labelNumOfKoma[SenteGote.Gote.id][x].setBounds((10+(x%4))*(iconWidth+10)+38, (3-(x/4))*(iconHeight+10)+15, 80, 20);
-				labelNumOfKoma[SenteGote.Gote.id][x].setVisible(false);
-			}
 		}
 		public void putAllKomaInHand() {
 			resetAllKoma();
@@ -1176,13 +1170,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		public void paint(Graphics g) {
 			//drawBackground(g);
-			//drawShogiBoardBackground(g);
+			drawShogiBoardBackground(g);
 			drawShogiBoard(g);
 			drawStrings(g);
 			drawIcons(g);
 			drawLastPoint(g);
 			drawMovableArea(g);
 			drawShogiKoma(g);
+			drawNumOfKomaInHand(g);
 			drawLeftClickedPoints(g);
 			drawArrowsForKifuAnalysis(g);
 			drawArrowsForRightClick(g);
@@ -1192,8 +1187,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(imgBackground != null) g.drawImage(imgBackground, 0, 0, this);
 		}
 		public void drawShogiBoard(Graphics g) {
-			g.setColor(boardColor);
-			g.fillRect(80, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
+			//g.setColor(boardColor);
+			//g.fillRect(80, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
 			g.setColor(Color.black);
 			for(int x=0; x<9; x++)
 				for(int y=0; y<9; y++) {
@@ -1206,6 +1201,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void drawShogiKoma(Graphics g) {
 			for(Koma k: shogiData.k) {
 				g.drawImage(k.imgKoma, k.pos.x, k.pos.y, this);
+			}
+		}
+		public void drawNumOfKomaInHand(Graphics g) {
+			for(SenteGote sg: SenteGote.values()) {
+				for(KomaType t: KomaType.values()) {
+					if(shogiData.nok.numOfKoma[sg.id][t.id] == 0) continue;
+					g.drawString(Integer.toString(shogiData.nok.numOfKoma[sg.id][t.id]),
+							shogiData.nok.posNumOfKoma[sg.id][t.id].x,
+							shogiData.nok.posNumOfKoma[sg.id][t.id].y);
+				}
 			}
 		}
 		public void drawIcons(Graphics g) {
