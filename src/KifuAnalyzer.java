@@ -191,8 +191,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		ka.setTitle("KifuAnalyzer");
 		ka.setLocationRelativeTo(null);
 		ka.setVisible(true);
-		ka.shogiData.viewKomaOnBoard();
-		ka.cv.repaint();
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << GUI Setting >> -------------------------------
@@ -201,7 +199,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		System.out.print("Initializing KifuAnalyzer ... ");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		shogiData.initializeIcon();
-		System.out.println("icon width=" + shogiData.iconWidth + ", height=" + shogiData.iconHeight);
 		setSize(shogiData.iconWidth*25, shogiData.iconHeight*12);
 		initializeAppIcon();
 		initializeGUISetting();
@@ -752,12 +749,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 			}
 		}
-		public void clearAllKomaDrawList() {
-			for(int x=0; x<40; x++) {
-				if(k[x].drawListBase.size() == 0) continue;
-				k[x].clearDrawList();
-			}
-		}
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Koma Action >> -------------------------------
@@ -1219,7 +1210,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			enableLastPoint = false;
 		}
 		public void paint(Graphics g) {
-			shogiData.clearAllKomaDrawList();
 			drawShogiBoard(g);
 			drawLastPoint(g);
 			drawMovableArea(g);
@@ -1345,7 +1335,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					if(count == 3) break; // only top 3 are shown 
 				}
 			}
-			cve.repaint();
 		}
 		public void clearDrawListForEngine() {
 			// for safe access in multi thread
@@ -1575,6 +1564,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		countTesujiData();
 		createPlayerDataBase();
 		cv.repaint();
+		cve.repaint();
 	}
 	public void actionForSave() {
 		Path path;
@@ -1676,6 +1666,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cve.clearBestPointData();
 		clearTextBox();
 		cv.repaint();
+		cve.repaint();
 	}
 	public void actionForDB() {
 		kifuDB.clear();
@@ -3032,6 +3023,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
         	shogiData.viewKomaOnHand();
         	reverseNumberRowCol();
         	cv.repaint();
+        	cve.repaint();
         }
     };
 	// -------------------------------------------------------------------------
@@ -3126,11 +3118,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(listModel[ListBoxType.Kifu.id].size()-1);
 		
 		cv.clearDrawPointForRightClick();
-		shogiData.clearAllKomaDrawList();
 	}
 	public void commonListAction() {
 		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		//System.out.println("list selected:" + selectedIndex);
 		shogiData.resetAllKoma();
 		shogiData.viewKomaOnBoard();
 		
@@ -3150,7 +3140,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(selectedIndex == 0) cv.setLastPoint(-1, -1, false);
 		cv.clearDrawPointForRightClick();
-		shogiData.clearAllKomaDrawList();
 		
 		checkKDB(selectedIndex);
 		shogiData.viewKomaOnBoard();
@@ -3159,6 +3148,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sendCommandToEngine();
 		emphasizeSenteGote();
 		cv.repaint();
+		cve.repaint();
 	}
 	public void updateListBox2(List<StringCount> listSC) {
 		listModel[ListBoxType.Info.id].clear();
@@ -3192,6 +3182,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(color != null) {
 			boardColor = color;
 			cv.repaint();
+			cve.repaint();
 		}
 	}
 	public class ColorSet {
@@ -3248,6 +3239,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
 		cv.repaint();
+		cve.repaint();
 	}
 	public void actionForStartEngine() {
 		Process process = createEngine();
@@ -3366,6 +3358,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		out.flush();
 		out = null;
 		cv.repaint();
+		cve.repaint();
 	}
 	public void sendCommandToEngine() {
 		if(out == null) return;
@@ -3479,6 +3472,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					if(line.contains("info depth")) {
 						getPointFromInfo(line);
 						cv.repaint();
+						cve.repaint();
 					}
 				}
 			} catch (IOException e) {
@@ -3631,6 +3625,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			cv.drawListTargetRightClick.add(mp);
 			cv.repaint();
+			cve.repaint();
 		}
 		
 		if(shogiData.selectedKoma == null) return;
@@ -3647,6 +3642,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		shogiData.selectedKoma.pos.x = mp.x - shogiData.iconWidth/2;
 		shogiData.selectedKoma.pos.y = mp.y - shogiData.iconHeight/2;
 		cv.repaint();
+		cve.repaint();
 	}
 	@Override
 	public void mouseClicked(MouseEvent e) {
@@ -3678,11 +3674,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(pXY.x == pShogiXY.x && pXY.y == pShogiXY.y) {
 					cv.drawListLeftClick.remove(p);
 					cv.repaint();
+					cve.repaint();
 					return;
 				}
 			}
 			cv.drawListLeftClick.add(mp);
 			cv.repaint();
+			cve.repaint();
 		}
 	}
 	@Override
@@ -3747,6 +3745,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		shogiData.selectedKoma = k;
 		if(isOnBoard) cv.mousePressed = true;
 		cv.repaint();
+		cve.repaint();
 	}
 	@Override
 	public void mouseReleased(MouseEvent e) {
@@ -3762,6 +3761,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		else {
 			cv.drawListTargetRightClick.add(mp);
 			cv.repaint();
+			cve.repaint();
 		}
 	}
 	public void releaseKoma() {
@@ -3791,6 +3791,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		cv.mousePressed = false;
 		cv.repaint();
+		cve.repaint();
 		
 		if(result == false) {
 			shogiData.selectedKoma = null;
