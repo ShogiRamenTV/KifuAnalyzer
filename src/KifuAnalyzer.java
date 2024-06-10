@@ -85,8 +85,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			this.id = id;
 		}
 	};
-	JLabel playerIconLabel[] = new JLabel[2];
-	JLabel castleIconLabel = new JLabel();
+	//JLabel playerIconLabel[] = new JLabel[2];
+	//JLabel castleIconLabel = new JLabel();
 	
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
@@ -96,15 +96,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	};
 	JButton button[] = new JButton[ButtonType.values().length];
-	
-	public enum LabelType {
-		Strategy(0), Castle(1), Tesuji(2), Sente(3), Gote(4);
-		private final int id;
-		private LabelType(final int id) {
-			this.id = id;
-		}
-	};
-	JLabel label[] = new JLabel[LabelType.values().length];
 	
 	public enum TextBoxType {
 		Player1(0), Player2(1), Strategy(2), Tesuji(3), Castle(4);
@@ -219,8 +210,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeButtonSetting();
 		initializeTextBoxSetting();
 		initializeCheckBox();
-		initializePlayerIconLabel();
-		initializeCastleIcon();
 		initializeListBoxSetting();
 		initializeCanvasSetting();
 		initializeSoundSetting();
@@ -231,25 +220,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
 		for(ButtonType b: ButtonType.values()) getContentPane().add(button[b.id]);
-		for(LabelType l: LabelType.values()) getContentPane().add(label[l.id]);
 		for(TextBoxType t: TextBoxType.values()) getContentPane().add(textBox[t.id]);
 		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(scrollPane[lb.id]);
-		for(SenteGote sg: SenteGote.values()) getContentPane().add(playerIconLabel[sg.id]);
 		for(CheckBoxType cb: CheckBoxType.values()) getContentPane().add(checkBox[cb.id]);
-		getContentPane().add(castleIconLabel);
 		getContentPane().add(radioButtonSente);
 		getContentPane().add(radioButtonGote);
 		getContentPane().add(comboBox);
 		for(SenteGote sg: SenteGote.values()) {
 			for(int x=0; x<8; x++) getContentPane().add(shogiData.labelNumOfKoma[sg.id][x]);
 		}
-		for(int x=0; x<9; x++) {
-			getContentPane().add(labelNumberRow[x]);
-			getContentPane().add(labelNumberCol[x]);
-		}
-		getContentPane().add(maxPointOfEngine);
-		getContentPane().add(minPointOfEngine);
-		getContentPane().add(topOfBestMoves);
 		getContentPane().add(cve);
 		getContentPane().add(cv);
 	}
@@ -266,9 +245,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.setBounds(0, 0, this.getSize().width, this.getSize().height);
 		cve.setBounds(baseXPosForItems+165, 590,330, 90);
 		cve.setBackground(Color.white);
-		maxPointOfEngine.setBounds(baseXPosForItems+165, 570, 100, 20);
-		minPointOfEngine.setBounds(baseXPosForItems+165, 680, 100, 20);
-		topOfBestMoves.setBounds(baseXPosForItems, 570, 150, 20);
 	}
 	public void initializeButtonSetting() {
 		for(ButtonType b: ButtonType.values()) {
@@ -288,22 +264,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(TextBoxType t: TextBoxType.values()) {
 			textBox[t.id] = new JTextField();
 		}
-		for(LabelType l: LabelType.values()) {
-			label[l.id] = new JLabel();
-		}
 		textBox[TextBoxType.Strategy.id].setBounds(baseXPosForItems+360, 10, 140, 20);
 		textBox[TextBoxType.Tesuji.id].setBounds(baseXPosForItems+360, 30, 140, 20);
 		textBox[TextBoxType.Castle.id].setBounds(baseXPosForItems+360, 50, 140, 20);
-		label[LabelType.Sente.id].setText("▲Sente");
-		label[LabelType.Sente.id].setOpaque(false);
-		label[LabelType.Sente.id].setBackground(new Color(0, 0, 255, 50));
-		label[LabelType.Sente.id].setBounds(baseXPosForItems, 80, 100, 20);
 		textBox[TextBoxType.Player1.id].setBounds(baseXPosForItems, 100, 120, 20);
 		textBox[TextBoxType.Player1.id].addActionListener(enterActionListener);
-		label[LabelType.Gote.id].setText("△Gote");
-		label[LabelType.Gote.id].setOpaque(false);
-		label[LabelType.Gote.id].setBackground(new Color(0, 0, 255, 50));
-		label[LabelType.Gote.id].setBounds(baseXPosForItems+120, 80, 100, 20);
 		textBox[TextBoxType.Player2.id].setBounds(baseXPosForItems+120, 100, 120, 20);
 		textBox[TextBoxType.Player2.id].addActionListener(enterActionListener);
 	}
@@ -359,12 +324,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			listModel[ListBoxType.Engine.id].addElement("");
 		}
 	}
-	public void initializePlayerIconLabel() {
-		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id] = new JLabel();
-		playerIconLabel[SenteGote.Sente.id].setBounds(baseXPosForItems, 95, 100, 200);
-		playerIconLabel[SenteGote.Gote.id].setBounds(baseXPosForItems+130, 95, 100, 200);
-		castleIconLabel.setBounds(baseXPosForItems+300, 80, 150, 200);
-	}
 	public void clearTextBox() {
 		textBox[TextBoxType.Player1.id].setText("");
 		textBox[TextBoxType.Player2.id].setText("");
@@ -374,6 +333,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		loadFile = "";
 		loadStep = "";
 		loadYear = "";
+	}
+	public void clearIcons() {
+		initializePlayerIcon();
+		initializeCastleIcon();
 	}
 	public void initializeMenuBar() {
 		for(MenuTypeSetting mt: MenuTypeSetting.values()) {
@@ -469,20 +432,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		this.setBackground(listColorSet[select].backGround);
 		this.getContentPane().setBackground(listColorSet[select].backGround);
-	}
-	public void emphasizeSenteGote() {
-		if(listBox[ListBoxType.Kifu.id].getSelectedIndex() == 0) {
-			label[LabelType.Sente.id].setOpaque(true);
-			label[LabelType.Gote.id].setOpaque(false);
-			return;
-		}
-		if(shogiData.turnIsSente) {
-			label[LabelType.Sente.id].setOpaque(true);
-			label[LabelType.Gote.id].setOpaque(false);
-		} else {
-			label[LabelType.Sente.id].setOpaque(false);
-			label[LabelType.Gote.id].setOpaque(true);
-		}
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Board >> -------------------------------
@@ -1204,14 +1153,33 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		List<Point> drawListBaseRightClick = new ArrayList<Point>();
 		List<Point> drawListLeftClick = new ArrayList<Point>();
 		List<PointWithScore> drawListForEngine = new ArrayList<PointWithScore>();
+		Image imgBoard;
+		Image imgBackground;
+		Image playerIcon[];
+		Image castleIcon;
 		public CanvasBoard() {
 			lastPointX = -1;
 			lastPointY = -1;
 			mousePressed = false;
 			enableLastPoint = false;
+			try {
+				BufferedImage boardImage = ImageIO.read(new File("./img/shogi board.png"));
+				imgBoard = boardImage.getScaledInstance((50+10)*9, (63+10)*9, java.awt.Image.SCALE_SMOOTH);
+				boardImage = ImageIO.read(new File("./img/background.png"));
+				imgBackground = boardImage.getScaledInstance(50*25, 63*12, java.awt.Image.SCALE_SMOOTH);
+			} catch(IOException e) {
+				imgBoard = null;
+				imgBackground = null;
+			}
+			playerIcon = new Image[2];
+			castleIcon = null;
 		}
 		public void paint(Graphics g) {
+			//drawBackground(g);
+			//drawShogiBoardBackground(g);
 			drawShogiBoard(g);
+			drawStrings(g);
+			drawIcons(g);
 			drawLastPoint(g);
 			drawMovableArea(g);
 			drawShogiKoma(g);
@@ -1220,19 +1188,46 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			drawArrowsForRightClick(g);
 			drawArrowForEngine(g);
 		}
+		public void drawBackground(Graphics g) {
+			if(imgBackground != null) g.drawImage(imgBackground, 0, 0, this);
+		}
 		public void drawShogiBoard(Graphics g) {
 			g.setColor(boardColor);
 			g.fillRect(80, 20, (shogiData.iconWidth+10)*9, (shogiData.iconHeight+10)*9);
-			
 			g.setColor(Color.black);
 			for(int x=0; x<9; x++)
 				for(int y=0; y<9; y++) {
 					g.drawRect(x*(shogiData.iconWidth+10)+80, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
 				}
 		}
+		public void drawShogiBoardBackground(Graphics g) {
+			if(imgBoard != null) g.drawImage(imgBoard, 80, 20, this);
+		}
 		public void drawShogiKoma(Graphics g) {
 			for(Koma k: shogiData.k) {
 				g.drawImage(k.imgKoma, k.pos.x, k.pos.y, this);
+			}
+		}
+		public void drawIcons(Graphics g) {
+			if(playerIcon[SenteGote.Sente.id] != null) g.drawImage(playerIcon[SenteGote.Sente.id], baseXPosForItems, 130, this);
+			if(playerIcon[SenteGote.Gote.id] != null) g.drawImage(playerIcon[SenteGote.Gote.id], baseXPosForItems+130, 130, this);
+			if(castleIcon != null) g.drawImage(castleIcon, baseXPosForItems+300, 110, this);
+		}
+		public void drawStrings(Graphics g) {
+			g.drawString("4000", baseXPosForItems+165, 585);
+			g.drawString("-4000", baseXPosForItems+165, 695);
+			g.drawString("Top 5 Best Moves", baseXPosForItems, 585);
+			for(int x=0; x<9; x++) {
+				g.drawString(labelNumberRow[x].getText(), labelNumberRow[x].getBounds().x, labelNumberRow[x].getBounds().y+10);
+				g.drawString(labelNumberCol[x].getText(), labelNumberCol[x].getBounds().x, labelNumberCol[x].getBounds().y+10);
+			}
+			g.drawString("▲Sente", baseXPosForItems, 95);
+			g.drawString("△Gote", baseXPosForItems+120, 95);
+			// emphasize sente gote
+			if(shogiData.turnIsSente) {
+				g.drawRect(baseXPosForItems, 80, 100, 18);
+			} else {
+				g.drawRect(baseXPosForItems+120, 80, 100, 18);
 			}
 		}
 		public void drawMovableArea(Graphics g) {
@@ -1256,7 +1251,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					X = lastPointX;
 					Y = lastPointY;
 				}
-				drawPoint(X, Y, new Color(200, 100, 0, 50));
+				drawPoint(X, Y, Color.orange);
 			}
 		}
 		public void drawArrowsForKifuAnalysis(Graphics g) {
@@ -1382,8 +1377,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		public void drawPoint(int x, int y, Color cl) {
 			Graphics g = getGraphics();
-			g.setColor(cl);
-			g.fillRect((9-x)*(shogiData.iconWidth+10)+82, (y-1)*(shogiData.iconHeight+10)+22, shogiData.iconWidth+6, shogiData.iconHeight+6);
+			BasicStroke stroke = new BasicStroke(4.0f);
+			Graphics2D g2 = (Graphics2D)g;
+			g2.setStroke(stroke);
+			g2.setColor(cl);
+			g2.drawRect((9-x)*(shogiData.iconWidth+10)+82, (y-1)*(shogiData.iconHeight+10)+22, shogiData.iconWidth+6, shogiData.iconHeight+6);
 		}
 		public void setLastPoint(int px, int py, Boolean enable) {
 			lastPointX = px;
@@ -1450,9 +1448,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	BestPointData bestPointFromEngine = new BestPointData();
 	List<BestPointData> bestPointData = new ArrayList<BestPointData>();
 	CanvasForEngine cve = new CanvasForEngine();
-	JLabel maxPointOfEngine = new JLabel("4000");
-	JLabel minPointOfEngine = new JLabel("-4000");
-	JLabel topOfBestMoves = new JLabel("Top 5 Best moves");
 	public class BestPointData {
 		int score;
 		String[] moveName = new String[numOfMultiPV];
@@ -1547,12 +1542,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		clearTextBox();
 		clearCheckBox();
 		reverseNumberRowCol();
-		initializePlayerIcon();
-		initializeCastleIcon();
 		shogiData.resetAllKoma();	
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
 		clearListBox();
+		clearIcons();
 		kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
 		cve.clearBestPointData();
@@ -2329,16 +2323,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(selectedIndex < 0) return;
 		StringCount sc = castleCountData.get(selectedIndex);
 		String castleName = sc.str;
-		
-		castleIconLabel.setIcon(null);
-		ImageIcon castleIcon = new ImageIcon(imgFilePath + castleName + ".jpg");
-		Image image = castleIcon.getImage();
-		Image newImage = image.getScaledInstance(120, 160, java.awt.Image.SCALE_SMOOTH);
-		castleIcon = new ImageIcon(newImage);
-		castleIconLabel.setIcon(castleIcon);
+		try {
+			BufferedImage img = ImageIO.read(new File(imgFilePath + castleName + ".jpg"));
+			cv.castleIcon = img.getScaledInstance(120, 160, java.awt.Image.SCALE_SMOOTH);
+		} catch(IOException e) {
+			cv.castleIcon = null;
+		}
+		cv.repaint();
 	}
 	public void initializeCastleIcon() {
-		castleIconLabel.setIcon(null);
+		cv.castleIcon = null;
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Tesuji Data >> -----------------------------
@@ -2997,16 +2991,17 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		playerName[SenteGote.Gote.id] = new String(textBox[TextBoxType.Player2.id].getText());
 		
 		for(SenteGote sg: SenteGote.values()) {
-			playerIconLabel[sg.id].setIcon(null);
-			ImageIcon playerIcon = new ImageIcon(imgFilePath + playerName[sg.id] + ".jpg");
-			Image image = playerIcon.getImage();
-			Image newImage = image.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
-			playerIcon = new ImageIcon(newImage);
-			playerIconLabel[sg.id].setIcon(playerIcon);
+			try {
+				BufferedImage img = ImageIO.read(new File(imgFilePath + playerName[sg.id] + ".jpg"));
+				cv.playerIcon[sg.id] = img.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
+			} catch(IOException e) {
+				cv.playerIcon[sg.id] = null;
+			}
 		}
+		cv.repaint();
 	}
 	public void initializePlayerIcon() {
-		for(SenteGote sg: SenteGote.values()) playerIconLabel[sg.id].setIcon(null);
+		for(SenteGote sg: SenteGote.values()) cv.playerIcon[sg.id] = null;
 	}
 	private ActionListener enterActionListener = new ActionListener() {
         @Override
@@ -3147,7 +3142,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		shogiData.viewKomaOnHand();
 
 		sendCommandToEngine();
-		emphasizeSenteGote();
 		cv.repaint();
 		cve.repaint();
 	}
@@ -3815,7 +3809,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
 			if(!checkBox[CheckBoxType.Edit.id].isSelected()) shogiData.turnIsSente = !shogiData.turnIsSente;
 			sendCommandToEngine();
-			emphasizeSenteGote();
 		}
 		
 		// check strategy
