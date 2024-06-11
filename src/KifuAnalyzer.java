@@ -163,7 +163,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JMenuItem menuItemUtility[] = new JMenuItem[MenuTypeEngine.values().length];
 	
 	public enum ColorSetType {
-		Default(0), Sakura(1), GreenTea(2), BlueSky(3), Lemon(4);
+		Default(0), Sakura(1), GreenTea(2), BlueSky(3), Evening(4), Universe(5);
 		private final int id;		
 		private ColorSetType(final int id) {
 			this.id = id;
@@ -1544,25 +1544,31 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				new Color(230, 205, 227), 
 				new Color(229, 171, 190), 
 				new Color(201, 117, 134),
-				new Color(255, 255, 255)
+				new Color(201, 67, 84)
 				);
 		listColorSet[ColorSetType.GreenTea.id] = new ColorSet(
 				new Color(205, 230, 227), 
 				new Color(171, 229, 190), 
 				new Color(117, 201, 134),
-				new Color(0, 0, 0)
+				new Color(255, 255, 255)
 				);
 		listColorSet[ColorSetType.BlueSky.id] = new ColorSet(
 				new Color(160, 216, 239), 
 				new Color(171, 190, 229), 
 				new Color(117, 134, 201),
-				new Color(255, 255, 255)	
+				new Color(0, 0, 0)	
 				);
-		listColorSet[ColorSetType.Lemon.id] = new ColorSet(
+		listColorSet[ColorSetType.Evening.id] = new ColorSet(
 				new Color(255, 255, 0), 
 				new Color(255, 215, 0), 
 				new Color(255, 140, 0),
-				new Color(0, 0, 0)
+				new Color(255, 255, 255)
+				);
+		listColorSet[ColorSetType.Universe.id] = new ColorSet(
+				new Color(255, 255, 0), 
+				new Color(255, 215, 0), 
+				new Color(255, 140, 0),
+				new Color(255, 255, 255)
 				);
 		initializeImageSet();
 		setColor();
