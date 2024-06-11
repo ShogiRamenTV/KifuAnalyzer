@@ -1638,7 +1638,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int index = 1;
 		
 		while(true) {
-			fileName = kifuFilePath + "/" + String.format("kifu%03d.txt", index);
+			fileName = kifuFilePath + String.format("kifu%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1672,7 +1672,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			fd.setDirectory(path.toString() + "/kifu/");
 			fd.setVisible(true);
 			if(fd.getFile() == null) return;
-			fileName = kifuFilePath + "/" + fd.getFile();
+			fileName = kifuFilePath + fd.getFile();
 		} else {
 			fileName = kifuFilePath + numStrYear + "/" + "kifu" + numStrFile + ".txt";
 		}
@@ -1885,7 +1885,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		while(true) {
-			fileName = kifuFilePath + "/" + String.format("tesuji%03d.txt", index);
+			fileName = kifuFilePath + String.format("tesuji%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1897,7 +1897,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
 			if(loadFile.equals("")) {
-				fw.write(String.format("%03d", kifuDB.size()+1) + "\n");
+				fw.write(String.format("%03d", kifuDB.size()) + "\n");
 			}
 			else {
 				fw.write(loadFile + "\n");
@@ -2525,7 +2525,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Kifu Data >> -----------------------------
 	// -------------------------------------------------------------------------
-	String kifuFilePath = "./kifu";
+	String kifuFilePath = "./kifu/";
 	List<Kifu> kifuData = new ArrayList<Kifu>();
 	List<KifuDataBase> kifuDB = new ArrayList<KifuDataBase>();
 	public class StringCount {
