@@ -1730,7 +1730,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.clearDrawPoint();
 		actionForStopEngine();
 		cve.clearBestPointData();
-		clearTextBox();
+		//clearTextBox();
 		cv.repaint();
 		cve.repaint();
 	}
@@ -1883,6 +1883,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			JOptionPane.showMessageDialog(null, "Tesuji name is empty");
 			return;
 		}
+		if(loadFile.equals("")) return;
 		
 		while(true) {
 			fileName = kifuFilePath + String.format("tesuji%03d.txt", index);
@@ -1896,12 +1897,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			FileWriter fw = new FileWriter(file);
 		
 			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
-			if(loadFile.equals("")) {
-				fw.write(String.format("%03d", kifuDB.size()) + "\n");
-			}
-			else {
-				fw.write(loadFile + "\n");
-			}
+			fw.write(loadFile + "\n");
 			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
 			
