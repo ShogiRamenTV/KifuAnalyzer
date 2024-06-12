@@ -1816,7 +1816,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		while(true) {
-			fileName = strategyFilePath + String.format("strategy%03d.txt", index);
+			fileName = strategyFilePathBase + strategyFilePath + String.format("strategy%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1848,7 +1848,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		while(true) {
-			fileName = strategyFilePath + String.format("castle%03d.txt", index);
+			fileName = strategyFilePathBase + castleFilePath + String.format("castle%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -1985,7 +1985,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Strategy Data >> -----------------------------
 	// -------------------------------------------------------------------------
-	String strategyFilePath = "./strategy/";
+	String strategyFilePathBase = "./strategy/";
+	String strategyFilePath = "strategy/";
+	String castleFilePath = "castle/";
 	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
 	List<StringCount> strategyCountData = new ArrayList<StringCount>();
 	public class StrategyData {
@@ -2002,7 +2004,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		try {
 			int fileIndex = 1;
 			while(true) {
-				String fileName = strategyFilePath + "strategy" + String.format("%03d", fileIndex) + ".txt";
+				String fileName = strategyFilePathBase + strategyFilePath + "strategy" + String.format("%03d", fileIndex) + ".txt";
 				File file = new File(fileName);
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
@@ -2177,7 +2179,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		try {
 			int fileIndex = 1;
 			while(true) {
-				String fileName = strategyFilePath + "castle" + String.format("%03d", fileIndex) + ".txt";
+				String fileName = strategyFilePathBase + castleFilePath + "castle" + String.format("%03d", fileIndex) + ".txt";
 				File file = new File(fileName);
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
