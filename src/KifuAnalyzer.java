@@ -3309,7 +3309,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			enginePath = loadProperty(PropertyType.Engine.name());
 		}
 		if(enginePath == null) return null;
+		String engineFolder = enginePath.substring(0, enginePath.lastIndexOf("/"));
 		ProcessBuilder p = new ProcessBuilder(enginePath);
+		p.directory(new File(engineFolder));
 		Process process = null;
 		try {
 			process = p.start();
