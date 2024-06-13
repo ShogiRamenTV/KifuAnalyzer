@@ -47,9 +47,6 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
 import javax.swing.ButtonGroup;
 import javax.swing.DefaultListModel;
 import javax.swing.ImageIcon;
@@ -70,6 +67,8 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import lib.KomaSound;
+
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener {
 	// -------------------------------------------------------------------------
@@ -81,6 +80,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String imgFilePathKoma = imgFilePath + "koma/";
 	String imgFilePathBoard = imgFilePath + "board/";
 	String imgFilePathBackground = imgFilePath + "background/";
+	KomaSound ks = new KomaSound();
 	
 	public enum SenteGote {
 		Sente(0), Gote(1);
@@ -213,7 +213,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeCheckBox();
 		initializeListBoxSetting();
 		initializeCanvasSetting();
-		initializeSoundSetting();
+		ks.initializeSoundSetting();
 		initializeMenuBar();
 		initializeNumberRowCol();
 		initializeColorSet();
@@ -1056,25 +1056,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		public void moveFromGtoG(ShogiData sd) {
 			// do nothing
 		}
-	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Sound >> -------------------------------------
-	// -------------------------------------------------------------------------
-	String soundFilePath = "./sound/Koma Oto.wav";
-	Clip soundKoma;
-	public void initializeSoundSetting() {
-		try {
-			AudioInputStream ais = AudioSystem.getAudioInputStream(new File(soundFilePath));
-			soundKoma = AudioSystem.getClip();
-			soundKoma.open(ais);
-		} catch(Exception e) {
-			System.out.println(e);
-		}
-	}
-	public void soundKoma() {
-		soundKoma.stop();
-		soundKoma.setFramePosition(0);
-		soundKoma.start();
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Canvas >> ------------------------------------
@@ -3125,7 +3106,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_DOWN)) {
 			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
 				commonListAction();
-				soundKoma();
+				ks.soundKoma();
 			}
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				getLoadNumberOnListBox2();
@@ -3800,7 +3781,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Y = y;
 		}
 		Boolean result = selectedKoma.moveKoma(shogiData, X, Y, -1);
-		soundKoma();
+		ks.soundKoma();
 		shogiData.viewKomaOnBoard();
 		shogiData.viewKomaOnHand();
 		
