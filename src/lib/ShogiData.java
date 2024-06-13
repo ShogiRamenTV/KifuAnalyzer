@@ -288,7 +288,19 @@ public class ShogiData {
 			}
 		}
 	}
-
+	public String createMoveKomaName(KomaType type, int sente, int x, int y, int preX, int preY, int promoted, int preP, int drop) {
+		String s = senteGote[sente] + String.valueOf(x)+String.valueOf(y);
+		if(preP == 0 && promoted == 1) {
+			s += komaName[type.id] + "成";
+		} else {
+			s += komaName[type.id+8*preP];
+		}
+		if(drop == 1) s += "打";
+		else {
+			s += "(" + preX + preY + ")";
+		}
+		return s;
+	}
 	public class Koma {
 		public Point pos;
 		public BufferedImage imgKoma;

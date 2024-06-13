@@ -1,11 +1,6 @@
 import java.awt.AWTException;
-import java.awt.BasicStroke;
-import java.awt.Canvas;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.FileDialog;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -22,20 +17,13 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintStream;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -43,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Properties;
 import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
@@ -54,7 +41,6 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
@@ -67,11 +53,17 @@ import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import lib.CanvasBoard;
+import lib.CanvasBoardForEngine;
+import lib.EditProperty;
+import lib.EditProperty.PropertyType;
 import lib.KomaSound;
 import lib.ShogiData;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
+import lib.ShogiEngine;
+import lib.StringCount;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener {
@@ -82,11 +74,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String imgFilePathPlayerIcon = imgFilePath + "playerIcon/";
 	String imgFilePathCastleIcon = imgFilePath + "castleIcon/";
 	String imgFilePathKoma = imgFilePath + "koma/";
-	String imgFilePathBoard = imgFilePath + "board/";
-	String imgFilePathBackground = imgFilePath + "background/";
+	
+	
 	KomaSound ks = new KomaSound();
 	ShogiData sd = new ShogiData();
 	ShogiData sdForKDB = new ShogiData();
+	ShogiEngine se = new ShogiEngine();
+	CanvasBoard cv;
+	CanvasBoardForEngine cve;
+	EditProperty ep = new EditProperty();
 	
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
@@ -171,9 +167,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	Color buttonFocusedColor;
 	ColorSet listColorSet[] = new ColorSet[ColorSetType.values().length];
 	
-	public enum PropertyType {
-		Engine, Color;
-	};
+	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
 	// -------------------------------------------------------------------------
@@ -210,10 +204,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeTextBoxSetting();
 		initializeCheckBox();
 		initializeListBoxSetting();
+		cve = new CanvasBoardForEngine(se, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Kifu.id]);
+		cv = new CanvasBoard(sd, checkBox[CheckBoxType.Reverse.id], se, cve);
 		initializeCanvasSetting();
 		ks.initializeSoundSetting();
 		initializeMenuBar();
-		initializeNumberRowCol();
+		cv.initializeNumberRowCol();
 		initializeColorSet();
 	}
 	public void contentPaneSetting() {
@@ -316,7 +312,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		scrollPane[ListBoxType.Tesuji.id].setBounds(baseXPosForItems+330, 420, 165, 140);
 		scrollPane[ListBoxType.Engine.id].setBounds(baseXPosForItems, 590, 165, 90);
 		
-		for(int index=0; index<numOfMultiPV; index++) {
+		for(int index=0; index<se.getNumOfMultiPV(); index++) {
 			listModel[ListBoxType.Engine.id].addElement("");
 		}
 	}
@@ -356,440 +352,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		this.setJMenuBar(menuBar);
 	}
-	JLabel labelNumberRow[] = new JLabel[9];
-	JLabel labelNumberCol[] = new JLabel[9];
-	public void initializeNumberRowCol() {
-		for(int x=0; x<9; x++) {
-			labelNumberRow[x] = new JLabel();
-			labelNumberCol[x] = new JLabel();
-			labelNumberRow[x].setText(String.valueOf(9-x));
-			labelNumberRow[x].setBounds(105 + x * (sd.iconWidth+10), 5, 10, 10);
-			labelNumberCol[x].setText(String.valueOf(x+1));
-			labelNumberCol[x].setBounds(625, 50 + x * (sd.iconHeight+10), 10, 10);
-		}
-	}
-	public void reverseNumberRowCol() {
-		for(int x=0; x<9; x++) {
-			if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
-				labelNumberRow[x].setText(String.valueOf(x+1));
-				labelNumberCol[x].setText(String.valueOf(9-x));
-			}
-			else {
-				labelNumberRow[x].setText(String.valueOf(9-x));
-				labelNumberCol[x].setText(String.valueOf(x+1));
-			}
-		}
-	}
-
-	// -------------------------------------------------------------------------
-	// ----------------------- << Canvas >> ------------------------------------
-	// -------------------------------------------------------------------------
-	CanvasBoard cv = new CanvasBoard();
-	public class CanvasBoard extends Canvas {
-		int lastPointX;
-		int lastPointY;
-		Boolean mousePressed;
-		Boolean enableLastPoint;
-		List<Point> drawList = new ArrayList<Point>();
-		List<Point> drawListBase = new ArrayList<Point>();
-		List<Point> drawListTargetRightClick = new ArrayList<Point>();
-		List<Point> drawListBaseRightClick = new ArrayList<Point>();
-		List<Point> drawListLeftClick = new ArrayList<Point>();
-		List<PointWithScore> drawListForEngine = new ArrayList<PointWithScore>();
-		Image imgBoard;
-		Image imgBackground;
-		Image playerIcon[];
-		Image castleIcon;
-		Color clrFont;
-		public CanvasBoard() {
-			lastPointX = -1;
-			lastPointY = -1;
-			mousePressed = false;
-			enableLastPoint = false;
-			try {
-				BufferedImage boardImage = ImageIO.read(new File(imgFilePathBoard + "shogi board.png"));
-				imgBoard = boardImage.getScaledInstance((50+10)*9, (63+10)*9, java.awt.Image.SCALE_SMOOTH);
-				boardImage = ImageIO.read(new File(imgFilePathBackground + "background.png"));
-				imgBackground = boardImage.getScaledInstance(50*25, 63*12, java.awt.Image.SCALE_SMOOTH);
-			} catch(IOException e) {
-				imgBoard = null;
-				imgBackground = null;
-			}
-			playerIcon = new Image[2];
-			castleIcon = null;
-			clrFont = new Color(0, 0, 0);
-		}
-		public void paint(Graphics g) {
-			drawBackground(g);
-			drawShogiBoardBackground(g);
-			drawShogiBoard(g);
-			drawStrings(g);
-			drawIcons(g);
-			drawLastPoint(g);
-			drawMovableArea(g);
-			drawShogiKoma(g);
-			drawNumOfKomaInHand(g);
-			drawLeftClickedPoints(g);
-			drawArrowsForKifuAnalysis(g);
-			drawArrowsForRightClick(g);
-			drawArrowForEngine(g);
-		}
-		public void drawBackground(Graphics g) {
-			if(imgBackground != null) g.drawImage(imgBackground, 0, 0, this);
-		}
-		public void drawShogiBoard(Graphics g) {
-			g.setColor(clrFont);
-			for(int x=0; x<9; x++)
-				for(int y=0; y<9; y++) {
-					g.drawRect(x*(sd.iconWidth+10)+80, y*(sd.iconHeight+10)+20, sd.iconWidth+10, sd.iconHeight+10);
-				}
-		}
-		public void drawShogiBoardBackground(Graphics g) {
-			if(imgBoard != null) g.drawImage(imgBoard, 80, 20, this);
-		}
-		public void drawShogiKoma(Graphics g) {
-			for(Koma k: sd.k) {
-				g.drawImage(k.imgKoma, k.pos.x, k.pos.y, this);
-			}
-		}
-		public void drawNumOfKomaInHand(Graphics g) {
-			for(SenteGote sg: SenteGote.values()) {
-				for(KomaType t: KomaType.values()) {
-					if(sd.nok.numOfKoma[sg.id][t.id] == 0) continue;
-					g.drawString(Integer.toString(sd.nok.numOfKoma[sg.id][t.id]),
-							sd.nok.posNumOfKoma[sg.id][t.id].x,
-							sd.nok.posNumOfKoma[sg.id][t.id].y);
-				}
-			}
-		}
-		public void drawIcons(Graphics g) {
-			if(playerIcon[SenteGote.Sente.id] != null) g.drawImage(playerIcon[SenteGote.Sente.id], baseXPosForItems, 130, this);
-			if(playerIcon[SenteGote.Gote.id] != null) g.drawImage(playerIcon[SenteGote.Gote.id], baseXPosForItems+130, 130, this);
-			if(castleIcon != null) g.drawImage(castleIcon, baseXPosForItems+300, 110, this);
-		}
-		public void drawStrings(Graphics g) {
-			g.setColor(clrFont);
-			g.drawString("4000", baseXPosForItems+165, 585);
-			g.drawString("-4000", baseXPosForItems+165, 695);
-			g.drawString("Top 5 Best Moves", baseXPosForItems, 585);
-			for(int x=0; x<9; x++) {
-				g.drawString(labelNumberRow[x].getText(), labelNumberRow[x].getBounds().x, labelNumberRow[x].getBounds().y+10);
-				g.drawString(labelNumberCol[x].getText(), labelNumberCol[x].getBounds().x, labelNumberCol[x].getBounds().y+10);
-			}
-			g.drawString("▲Sente", baseXPosForItems, 95);
-			g.drawString("△Gote", baseXPosForItems+120, 95);
-			// emphasize sente gote
-			if(sd.turnIsSente) {
-				g.drawRect(baseXPosForItems, 80, 100, 18);
-			} else {
-				g.drawRect(baseXPosForItems+120, 80, 100, 18);
-			}
-		}
-		public void drawMovableArea(Graphics g) {
-			if(mousePressed) {
-				for(int x=1; x<10; x++) for(int y=1; y<10; y++) {
-					if(!checkBox[CheckBoxType.Reverse.id].isSelected()) {
-						if(sd.selectedKoma.isMovable(x, y)) cv.drawPoint(x, y, Color.pink);
-					} else {
-						if(sd.selectedKoma.isMovable(10-x, 10-y)) cv.drawPoint(x, y, Color.pink);
-					}
-				}
-			}
-		}
-		public void drawLastPoint(Graphics g) {
-			if(enableLastPoint) {
-				int X, Y;
-				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
-					X = 10 - lastPointX;
-					Y = 10 - lastPointY;
-				} else {
-					X = lastPointX;
-					Y = lastPointY;
-				}
-				drawPoint(X, Y, Color.orange);
-			}
-		}
-		public void drawArrowsForKifuAnalysis(Graphics g) {
-			int index = 0;
-			float bs = 10.0f;
-			int red = 0;
-			int green = 255;
-			int blue = 255;
-			if(isEngineOn) return;
-			for(Point p: drawList) {
-				Point pB = drawListBase.get(index);
-				int pBX, pBY, pX, pY;
-				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
-					pBX = 10 - pB.x;
-					pBY = 10 - pB.y;
-					pX = 10 - p.x;
-					pY = 10 - p.y;
-				} else {
-					pBX = pB.x;
-					pBY = pB.y;
-					pX = p.x;
-					pY = p.y;
-				}
-				
-				Point pBase = new Point((9-pBX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pBY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
-				Point pTarget = new Point((9-pX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
-				Arrow ar = new Arrow(pBase, pTarget);
-				BasicStroke stroke = new BasicStroke(bs);
-				g.setColor(new Color(red, green, blue));
-				ar.draw((Graphics2D)g, stroke);
-				index++;
-				bs -= 2.0f;
-				if(bs < 1.0f) bs = 1.0f;
-				blue -= 40;
-				green -= 40;
-				if(blue < 40) blue = 40;
-				if(green < 40) green = 40;
-			}
-		}
-		public void drawArrowForEngine(Graphics g) {
-			if(out == null) return;
-			float bs = 10.0f;
-			Color c;
-			int red = 0;
-			int green = 250;
-			int blue = 0;
-			int count = 0;
-			// for safe access in multi thread
-			synchronized(drawListForEngine) {
-				for(PointWithScore ps: drawListForEngine) {
-					if(count == 0) {
-						bestPointFromEngine.score = ps.score;
-					}
-					int pBX, pBY, pX, pY;
-					if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
-						pBX = 10 - ps.base.x;
-						pBY = 10 - ps.base.y;
-						pX = 10 - ps.target.x;
-						pY = 10 - ps.target.y;
-					} else {
-						pBX = ps.base.x;
-						pBY = ps.base.y;
-						pX = ps.target.x;
-						pY = ps.target.y;
-					}
-					Point pBase = new Point((9-pBX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pBY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
-					Point pTarget = new Point((9-pX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
-					Arrow ar = new Arrow(pBase, pTarget);
-					BasicStroke stroke = new BasicStroke(bs);
-					c = new Color(red, green, blue);
-					g.setColor(c);
-					ar.draw((Graphics2D)g, stroke);
-					bs -= 2.0f;
-					green -= 80;
-					count++;
-					
-					if(count == 3) break; // only top 3 are shown 
-				}
-			}
-		}
-		public void clearDrawListForEngine() {
-			// for safe access in multi thread
-			synchronized(drawListForEngine) {
-				drawListForEngine.clear();
-			}
-		}
-		public void drawArrowsForRightClick(Graphics g) {
-			for(Point pTarget: drawListTargetRightClick) {
-				Point pBase = drawListBaseRightClick.get(drawListTargetRightClick.indexOf(pTarget));
-				Point pBaseConverted = convertMousePointToCentralSquare(pBase);
-				Point pTargetConverted = convertMousePointToCentralSquare(pTarget);
-				if(pBaseConverted.x == pTargetConverted.x && pBaseConverted.y == pTargetConverted.y) continue;
-				Arrow ar = new Arrow(pBaseConverted, pTargetConverted);
-				BasicStroke stroke = new BasicStroke(8.0f);
-				g.setColor(Color.magenta);
-				ar.draw((Graphics2D)g, stroke);
-			}
-		}
-		public void drawLeftClickedPoints(Graphics g) {
-			for(Point p: drawListLeftClick) {
-				Point pShogiXY = convertMousePointToShogiXY(p);
-				BasicStroke stroke = new BasicStroke(4.0f);
-				Graphics2D g2 = (Graphics2D)g;
-				g2.setStroke(stroke);
-				g2.setColor(new Color(250,150,162));
-				g2.drawOval((9-pShogiXY.x)*(sd.iconWidth+10)+25, (pShogiXY.y-1)*(sd.iconHeight+10)+32, 50, 50);
-			}
-		}
-		public Point convertMousePointToCentralSquare(Point p) {
-			Point pCalculated = new Point();
-			int x = (p.x-25) / (sd.iconWidth+10);
-			int y = (p.y-25) / (sd.iconHeight+10);
-			pCalculated.x = 25+x*(sd.iconWidth+10) + sd.iconWidth/2;
-			pCalculated.y = 25+y*(sd.iconHeight+10) + sd.iconHeight/2;
-			
-			return pCalculated;
-		}
-		public Point convertMousePointToShogiXY(Point p) {
-			Point pCalculated = new Point();
-			pCalculated.x = 9 - (p.x-25) / (sd.iconWidth+10);
-			pCalculated.y = 1 + (p.y-25) / (sd.iconHeight+10);
-			return pCalculated;
-		}
-		public void drawPoint(int x, int y, Color cl) {
-			Graphics g = getGraphics();
-			BasicStroke stroke = new BasicStroke(4.0f);
-			Graphics2D g2 = (Graphics2D)g;
-			g2.setStroke(stroke);
-			g2.setColor(cl);
-			g2.drawRect((9-x)*(sd.iconWidth+10)+82, (y-1)*(sd.iconHeight+10)+22, sd.iconWidth+6, sd.iconHeight+6);
-		}
-		public void setLastPoint(int px, int py, Boolean enable) {
-			lastPointX = px;
-			lastPointY = py;
-			enableLastPoint = enable;
-		}
-		public void addDrawPoint(Point p1, Point p2) {
-			drawList.add(p1);
-			drawListBase.add(p2);
-		}
-		public void clearDrawPoint() {
-			drawList.clear();
-			drawListBase.clear();
-		}
-		public void clearDrawPointForRightClick() {
-			drawListTargetRightClick.clear();
-			drawListBaseRightClick.clear();
-			drawListLeftClick.clear();
-		}
-		public class Arrow {
-			private final Point start = new Point();
-			private final Point end = new Point();
-			private final Path2D arrowHead;
-			
-			protected Arrow(Point start, Point end) {
-				this.start.setLocation(start);
-				this.end.setLocation(end);
-				arrowHead = makeArrowHead(new Dimension(8, 8));
-			}
-			protected Path2D makeArrowHead(Dimension size) {
-				Path2D path = new Path2D.Double();
-				double t = size.height;
-				double w = size.width * .8;
-				path.moveTo(0d, -w);
-				path.lineTo(t, 0d);
-				path.lineTo(0d, w);
-				path.closePath();
-				return path;
-			}
-			public void draw(Graphics2D g2, BasicStroke stroke) {
-				g2.setStroke(stroke);
-				g2.drawLine(start.x, start.y, end.x, end.y);
-				arrowHead.transform(AffineTransform.getRotateInstance(end.getX() - start.getX(), end.getY() - start.getY()));
-				arrowHead.transform(AffineTransform.getTranslateInstance(end.getX(), end.getY()));
-				g2.fill(arrowHead);
-				g2.draw(arrowHead);
-			}
-		}
-	}
-	public class PointWithScore {
-		Point base;
-		Point target;
-		int score;
-		public PointWithScore(Point b, Point t, int s) {
-			base = b;
-			target = t;
-			score = s;
-		}
-	}
 	
-	public static final int maxSizeOfKifu = 200;
-	public static final int maxScoreOfEngine = 4000;
-	public static final int sizeOfOval = 6;
-	BestPointData bestPointFromEngine = new BestPointData();
-	List<BestPointData> bestPointData = new ArrayList<BestPointData>();
-	CanvasForEngine cve = new CanvasForEngine();
-	public class BestPointData {
-		int score;
-		String[] moveName = new String[numOfMultiPV];
-		BestPointData() {
-			for(int index=0; index<numOfMultiPV; index++) moveName[index] = new String("");
-		}
-	}
-	public class CanvasForEngine extends Canvas {
-		public CanvasForEngine() {
-			for(int index=0; index<maxSizeOfKifu; index++) {
-				BestPointData bpt = new BestPointData();
-				bestPointData.add(bpt);
-			}
-		}
-		public void paint(Graphics g) {
-			drawBaseField(g);
-			getPointFromEngine();
-			drawPointFromEngine(g);
-			drawPointOfCurrentPosition(g);
-		}
-		private void drawBaseField(Graphics g) {
-			g.setColor(Color.black);
-			g.drawLine(0, this.getHeight()/2, this.getWidth(), this.getHeight()/2);
-			g.drawRect(0, 0, this.getWidth(), this.getHeight());
-		}
-		private void getPointFromEngine() {
-			if(!isEngineOn) return;
-			int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-			if(bestPointFromEngine.score == 0) return;
-			BestPointData bpd = bestPointData.get(index);
-			bpd.score = bestPointFromEngine.score;
-			for(index=0; index<numOfMultiPV; index++) {
-				bpd.moveName[index] = bestPointFromEngine.moveName[index];
-			}
-		}
-		private void drawPointFromEngine(Graphics g) {
-			Graphics2D g2 = (Graphics2D)g;
-			BasicStroke stroke = new BasicStroke(2.0f);
-			g2.setStroke(stroke);
-			g2.setColor(Color.blue);
-			for(int index = 0; index<maxSizeOfKifu-1; index++) {
-				BestPointData bpd = bestPointData.get(index);
-				BestPointData bpd2 = bestPointData.get(index+1);
-				if(bpd.score == 0 || bpd2.score == 0) continue;
-				if(bpd.score > maxScoreOfEngine) bpd.score = maxScoreOfEngine;
-				if(bpd.score < (-1 * maxScoreOfEngine) ) bpd.score = (-1 * maxScoreOfEngine);
-				
-				int convertedIndex = (int)((double)this.getWidth() * ((double)index/(double)maxSizeOfKifu));
-				int convertedIndex2 = (int)((double)this.getWidth() * ((double)(index+1)/(double)maxSizeOfKifu));
-				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bpd.score/(double)maxScoreOfEngine);
-				if((index%2) == 0) convertedHeight *= -1; 
-				convertedHeight += this.getHeight()/2;
-				int convertedHeight2 = (int)((double)this.getHeight()/2 * (double)bpd2.score/(double)maxScoreOfEngine);
-				if(((index+1)%2) == 0) convertedHeight2 *= -1; 
-				convertedHeight2 += this.getHeight()/2;
-				g2.drawLine(convertedIndex, convertedHeight, convertedIndex2, convertedHeight2);
-			}
-		}
-		private void drawPointOfCurrentPosition(Graphics g) {
-			if(!isEngineOn) {
-				int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-				BestPointData bpd = bestPointData.get(selectedIndex);
-				updateListBoxEngine(bpd);
-				if(bpd.score == 0) return;
-				int convertedIndex = (int)((double)this.getWidth() * ((double)selectedIndex/(double)maxSizeOfKifu));
-				int convertedHeight = (int)((double)this.getHeight()/2 * (double)bpd.score/(double)maxScoreOfEngine);
-				if((selectedIndex%2) == 0) convertedHeight *= -1; 
-				convertedHeight += this.getHeight()/2;
-				g.setColor(Color.red);
-				g.drawOval(convertedIndex - sizeOfOval/2, convertedHeight-sizeOfOval/2, sizeOfOval, sizeOfOval);
-				String s = Integer.toString(bpd.score);
-				g.drawString(s, 0, 20);
-			}
-		}
-		public void clearBestPointData() {
-			for(int index=0; index<maxSizeOfKifu; index++) {
-				BestPointData bpd = bestPointData.get(index);
-				bpd.score = 0;
-				for(int x=0; x<numOfMultiPV; x++) bpd.moveName[x] = "";
-			}
-		}
-		public void updateListBoxEngine(BestPointData bpd) {
-			for(int index=0; index<numOfMultiPV; index++) {
-				listModel[ListBoxType.Engine.id].set(index, bpd.moveName[index]);
-			}
-		}
-	}
 	// -------------------------------------------------------------------------
 	// ---------------------------- << Color >> -------------------------------
 	// -------------------------------------------------------------------------
@@ -825,7 +388,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if (select == JOptionPane.CLOSED_OPTION) {
 			System.out.println("cancel");
 		} else {
-			setProperty(PropertyType.Color.name(), Integer.valueOf(select).toString());
+			ep.setProperty(PropertyType.Color.name(), Integer.valueOf(select).toString());
 			setColor();
 		}
 	}
@@ -872,10 +435,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void initializeImageSet() {
 		for(ColorSetType cst: ColorSetType.values()) {
 			try {
-				String fileName = imgFilePathBoard + "shogi board" + cst.id + ".png";
+				String fileName = cv.imgFilePathBoard + "shogi board" + cst.id + ".png";
 				BufferedImage img = ImageIO.read(new File(fileName));
 				listColorSet[cst.id].board = img.getScaledInstance((50+10)*9, (63+10)*9, java.awt.Image.SCALE_SMOOTH);
-				fileName = imgFilePathBackground + "background" + cst.id + ".png";
+				fileName = cv.imgFilePathBackground + "background" + cst.id + ".png";
 				img = ImageIO.read(new File(fileName));
 				listColorSet[cst.id].background = img.getScaledInstance(50*25, 63*12, java.awt.Image.SCALE_SMOOTH);
 			} catch(IOException e) {
@@ -885,7 +448,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public void setColor() {
-		String value = loadProperty(PropertyType.Color.name());
+		String value = ep.loadProperty(PropertyType.Color.name());
 		int select;
 		if(value == null) select = ColorSetType.Default.id;
 		else select = Integer.parseInt(value);
@@ -908,7 +471,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void actionForInitialize() {
 		clearTextBox();
 		clearCheckBox();
-		reverseNumberRowCol();
+		cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
 		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
@@ -1822,24 +1385,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String kifuFilePath = "./kifu/";
 	List<Kifu> kifuData = new ArrayList<Kifu>();
 	List<KifuDataBase> kifuDB = new ArrayList<KifuDataBase>();
-	public class StringCount {
-		String str;
-		int cnt;
-		Point target;
-		Point base;
-		int index;
-		int senteWinCnt;
-		StringCount(String s, int isSenteWin) {
-			str = s;
-			cnt = 1;
-			if(isSenteWin == 1) {
-				senteWinCnt = 1;
-			}
-			else if(isSenteWin == 0) {
-				senteWinCnt = 0;
-			}
-		}
-	}
+	
 	public class KifuDataBase {
 		List<Kifu> db = new ArrayList<Kifu>();
 		String playerName[] = new String[2];
@@ -1871,19 +1417,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			pp = preP;
 			d = drop;
 		}
-	}
-	public String createMoveKomaName(KomaType type, int sente, int x, int y, int preX, int preY, int promoted, int preP, int drop) {
-		String s = sd.senteGote[sente] + String.valueOf(x)+String.valueOf(y);
-		if(preP == 0 && promoted == 1) {
-			s += sd.komaName[type.id] + "成";
-		} else {
-			s += sd.komaName[type.id+8*preP];
-		}
-		if(drop == 1) s += "打";
-		else {
-			s += "(" + preX + preY + ")";
-		}
-		return s;
 	}
 	public KifuDataBase getKDB(int fileIndex, String year) {
 		for(KifuDataBase kdb: kifuDB) {
@@ -1923,7 +1456,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void countNextMoveOnKDB(List<StringCount> listSC, KifuDataBase kdb, int index) {
 		Kifu kf = kdb.db.get(index);
-		String str = createMoveKomaName(kf.k.type, kf.k.sente, kf.x, kf.y, kf.k.px, kf.k.py, kf.p, kf.pp, kf.d);
+		String str = sd.createMoveKomaName(kf.k.type, kf.k.sente, kf.x, kf.y, kf.k.px, kf.k.py, kf.p, kf.pp, kf.d);
 		Boolean found = false;
 		// count string data if same string
 		for(StringCount sc: listSC) {
@@ -2379,11 +1912,36 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
         	}
         	sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
         	sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-        	reverseNumberRowCol();
+        	cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
         	cv.repaint();
         	cve.repaint();
         }
     };
+    class MyThreadKifuAnalysis extends Thread {
+		MyThreadKifuAnalysis() {
+		}
+		@Override
+		public void run() {
+			System.out.print("Kifu Analysis start ...");
+			Boolean isUnderAnalysis = true;
+			int calcTimeMs = se.getCalculatingTimeOfEngine();
+			while(isUnderAnalysis && se.isEngineOn) {
+				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+				int size = listModel[ListBoxType.Kifu.id].getSize();
+				if(size-1 == index) isUnderAnalysis = false;
+				try {
+					Thread.sleep(calcTimeMs);
+				} catch(InterruptedException e) {
+					System.out.println(e);
+				}
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
+				commonListAction();
+			}
+			System.out.println("completed.");
+			actionForStopEngine();
+		}
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << ListBox Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -2468,7 +2026,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		// add new item
-		String s = createMoveKomaName(type, sente, x, y, preX, preY, promoted, preP, drop);
+		String s = sd.createMoveKomaName(type, sente, x, y, preX, preY, promoted, preP, drop);
 		s = listModel[ListBoxType.Kifu.id].size() + ":"+s;
 		listModel[ListBoxType.Kifu.id].addElement(s);
 		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
@@ -2503,7 +2061,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 
-		sendCommandToEngine();
+		se.sendCommandToEngine();
 		cv.repaint();
 		cve.repaint();
 	}
@@ -2560,22 +2118,27 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cve.repaint();
 	}
 	public void actionForStartEngine() {
-		Process process = createEngine();
+		//(JFrame fr, ShogiData s, CanvasBoard c, CanvasBoardForEngine ce, 
+		//		DefaultListModel<String> lmE, JList<String> lbE, 
+		//		DefaultListModel<String> lmK, JList<String> lbK) 
+		Process process = se.createEngine(this, sd, cv, cve, 
+				listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id],
+				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
         if(process == null) {
         	System.out.println("create engine failed");
         	return;
         }
-        createReceiverThread(process);
-        sendInitialCommandToEngine(process);
-        sendCommandToEngine();
-        isEngineOn = true;
+        se.createReceiverThread(process);
+        se.sendInitialCommandToEngine(process);
+        se.sendCommandToEngine();
+        se.isEngineOn = true;
 	}
 	public void actionForStopEngine() {
-		sendFinalCommandToEngine();
-		isEngineOn = false;
+		se.sendFinalCommandToEngine();
+		se.isEngineOn = false;
 	}
 	public void actionForSetEngine() {
-		setPropertyForEngine();
+		ep.setPropertyForEngine(this);
 	}
 	public void actionForKifuAnalysis() {
 		cve.clearBestPointData();
@@ -2585,350 +2148,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		commonListAction();
 		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
 		actionForStartEngine();
-		if(!isEngineOn) {
+		if(!se.isEngineOn) {
 			System.out.println("Failed to start shogi engine");
 			return;
 		}
 		thread.start();
 	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Interface for Engine >> ----------------------
-	// -------------------------------------------------------------------------
-	PrintStream out = null;
-	MyThreadReceiver receiver;
-	String propertyFile = "KifuAnalyzer.properties";
-	public static final int numOfMultiPV = 5;
-	public static final int calculatingTimeOfEngine = 2000; // ms
-	Boolean isEngineOn = false;
-	public Process createEngine() {
-		String enginePath = loadProperty(PropertyType.Engine.name());
-		if(enginePath == null) {
-			setPropertyForEngine();
-			enginePath = loadProperty(PropertyType.Engine.name());
-		}
-		if(enginePath == null) return null;
-		String engineFolder = enginePath.substring(0, enginePath.lastIndexOf("/"));
-		ProcessBuilder p = new ProcessBuilder(enginePath);
-		p.directory(new File(engineFolder));
-		Process process = null;
-		try {
-			process = p.start();
-		} catch (IOException e) {
-			System.out.println("engine is not installed");
-			setPropertyForEngine();
-		}
-		return process;
-	}
-	public String loadProperty(String key) {
-		Properties settings = new Properties();
-		FileInputStream in = null;
-		try {
-			in = new FileInputStream(propertyFile);
-			settings.load(in);
-		} catch (IOException e) {
-			System.out.println(e);
-			return null;
-		}
-		return settings.getProperty(key);
-	}
-	public void setPropertyForEngine() {
-		Path path = Paths.get("").toAbsolutePath();
-		FileDialog fd = new FileDialog(this, "Load", FileDialog.LOAD);
-		fd.setDirectory(path.toString());
-		fd.setVisible(true);
-		if(fd.getFile() == null) return;
-		String fileName = fd.getDirectory() + fd.getFile();
-		setProperty(PropertyType.Engine.name(), fileName);
-	}
-	public void setProperty(String key, String value) {
-		Properties properties = new Properties();
-		try {
-			for(PropertyType pt: PropertyType.values()) {
-				String str = loadProperty(pt.name());
-				if(pt.name().equals(key)) {
-					properties.setProperty(key, value);
-				} else {
-					if(str == null) continue;
-					properties.setProperty(pt.name(), str);
-				}
-			}
-			properties.store(new FileOutputStream(propertyFile), "Comments");
-		} catch (IOException e) {
-			System.out.println(e);
-		}
-	}
-	public void createReceiverThread(Process process) {
-		receiver = new MyThreadReceiver(process);
-        receiver.start();
-	}
-	public void sendInitialCommandToEngine(Process process) {
-		out = new PrintStream(process.getOutputStream());
-		out.println("usi");
-		out.flush();
-		out.println("setoption name MultiPV value" + " " + numOfMultiPV);
-		out.flush();
-		out.println("isready");
-		out.flush();
-		out.println("usinewgame");
-		out.flush();
-	}
-	public void sendFinalCommandToEngine() {
-		if(out == null) return;
-		out.println("quit");
-		out.flush();
-		out = null;
-		cv.repaint();
-		cve.repaint();
-	}
-	public void sendCommandToEngine() {
-		if(out == null) return;
-		out.println("stop");
-		out.flush();
-		out.println(createCommandForEngine());
-		out.flush();
-		out.println("go infinite");
-		out.flush();
-	}
-	public String createCommandForEngine() {
-		String cmd = "position sfen ";
-		String str[] = new String[9];
-		int empty;
-		for(int y=0; y<9; y++) {
-			empty = 0;
-			str[y] = "";
-			for(int x=8; x>=0; x--) {
-				Koma k = sd.findKoma(x+1, y+1);
-				if(k == null) {
-					empty++;
-					if(x == 0) str[y] += empty;
-					continue;
-				}
-				if(empty != 0) {
-					str[y] += empty;
-					empty = 0;
-				}
-				String s = k.type.name().substring(0, 1);
-				if(k.type.name().equals("Knight")) s = "N";
-				if(k.type.name().equals("Rance")) s = "L";
-				if(k.sente == 1) s = s.toLowerCase();
-				if(k.promoted == 1) str[y] += '+';
-				str[y] += s;
-			}
-			if(y != 8) str[y] += '/';
-		}
-		for(int i=0; i<9; i++) {
-			cmd += str[i];
-		}
-		if(sd.turnIsSente) cmd += " b ";
-		else cmd += " w ";
-		cmd += getStringOfKomaInHand();
-		cmd += " 1";
-		//System.out.println(cmd);
-		return cmd;
-	}
-	public String getStringOfKomaInHand() {
-		String str = "";
-		str += createStringOfKomaInHand(sd.listKomaOnHandForSente, true);
-		str += createStringOfKomaInHand(sd.listKomaOnHandForGote, false);
-		if(str.equals("")) str = "-";
-		return str;
-	}
-	public String createStringOfKomaInHand(List<Koma> listKomaOnHand, Boolean isSente) {
-		String str = "";
-		List<StringCount> listSC = new ArrayList<StringCount>();
-		Boolean found;
-		for(Koma k: listKomaOnHand) {
-			found = false;
-			for(StringCount sc: listSC) {
-				if(sc.str.equals(k.type.name())) {
-					sc.cnt++;
-					found = true;
-				}
-			}
-			if(!found) {
-				StringCount sc = new StringCount(k.type.name(), 0);
-				listSC.add(sc);
-			}
-		}
-		// order is defined as follows
-		str += addStrByKomaName(listSC, "Rook", isSente);
-		str += addStrByKomaName(listSC, "Bishop", isSente);
-		str += addStrByKomaName(listSC, "Gold", isSente);
-		str += addStrByKomaName(listSC, "Silver", isSente);
-		str += addStrByKomaName(listSC, "Knight", isSente);
-		str += addStrByKomaName(listSC, "Rance", isSente);
-		str += addStrByKomaName(listSC, "Pawn", isSente);
-		return str;
-	}
-	public String addStrByKomaName(List<StringCount> listSC, String name, Boolean isTurnSente) {
-		String str = "";
-		for(StringCount sc: listSC) {
-			if(!sc.str.equals(name)) continue;
-			String s = sc.str.substring(0, 1);
-			if(sc.str.equals("Knight")) s = "N";
-			if(sc.str.equals("Rance")) s = "L";
-			if(!isTurnSente) s = s.toLowerCase();
-			if(sc.cnt == 1) {
-				str += s;
-			} else {
-				str += sc.cnt + s;
-			}
-		}
-		return str;
-	}
-	class MyThreadReceiver extends Thread {
-		Process process;
-		MyThreadReceiver(Process p) {
-			process = p;
-		}
-		@Override
-		public void run() {
-			super.run();
-			try {
-				BufferedReader r = new BufferedReader(new InputStreamReader(process.getInputStream(), Charset.defaultCharset()));
-				String line;
-				while ((line = r.readLine()) != null) {
-					//System.out.println(line);
-					if(line.contains("info depth")) {
-						getPointFromInfo(line);
-						cv.repaint();
-						cve.repaint();
-					}
-				}
-			} catch (IOException e) {
-				System.out.println(e);
-			}
-			for(int index=0; index<numOfMultiPV; index++) {
-				listModel[ListBoxType.Engine.id].set(index, "");
-			}
-		}
-	}
-	public class ConvertedData {
-		int promote;
-		int drop;
-		KomaType type;
-	}
-	public void getPointFromInfo(String info) {
-		Point base = new Point();
-		Point target = new Point();
-		if(info.contains("multipv 1")) {
-			cv.clearDrawListForEngine();
-			for(int index=0; index<numOfMultiPV; index++) {
-				listModel[ListBoxType.Engine.id].set(index, "");
-			}
-		}
-		if(!info.contains("multipv")) { // case of there are only 1 way to move
-			cv.clearDrawListForEngine();
-			for(int index=0; index<numOfMultiPV; index++) {
-				listModel[ListBoxType.Engine.id].set(index, "");
-			}
-		}
-		
-		String[] names = info.split(" ");
-		String str = "";
-		int score = 0;
-		int index = 0;
-		ConvertedData cd = new ConvertedData();
-		//Point p = new Point(); // for promote and drop
-		for(int i=0; i<names.length; i++) {
-			if(names[i].equals("pv")) str = names[i+1];
-			if(names[i].equals("cp")) score = Integer.parseInt(names[i+1]);
-			if(names[i].equals("multipv")) index = Integer.parseInt(names[i+1]) - 1;
-		}
-		convertStringPosToPoints(str, base, target, cd);
-		// for safe access in multi thread
-		synchronized(cv.drawListForEngine) {
-			PointWithScore ps = new PointWithScore(base, target, score);
-			cv.drawListForEngine.add(ps);
-			Koma k = null;
-			if(cd.drop == 0) {
-				k = sd.findKoma(base.x, base.y);
-			} else {
-				k = sd.findKomaInHand(cd.type, sd.turnIsSente);
-			}
-			if(k != null) {
-				String komaMove = createMoveKomaName(k.type, k.sente, target.x, target.y, k.px, k.py, cd.promote, k.promoted, cd.drop);
-				komaMove += " " + score;
-				listModel[ListBoxType.Engine.id].set(index, komaMove);
-				listBox[ListBoxType.Engine.id].setModel(listModel[ListBoxType.Engine.id]);
-				bestPointFromEngine.moveName[index] = komaMove;
-			}
-		}
-	}
-	public void convertStringPosToPoints(String strPos, Point base, Point target, ConvertedData cd) {
-		char ch[] = strPos.toCharArray();
-		String str = "PLNSGBRKE";
-		// drop a piece
-		if(ch[1] == '*') {
-			if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S' || ch[0] == 'G' || ch[0] == 'B' || ch[0] == 'R') {
-				if(sd.turnIsSente) {
-					base.x = 0;
-				} else {
-					base.x = 10;
-				}
-			}
-			int index = 0;
-			for(KomaType t: KomaType.values()) {
-				if(str.charAt(index) == ch[0]) {
-					cd.type = t;
-					break;
-				}
-				index++;
-			}
-			if(sd.turnIsSente) {
-				if(ch[0] == 'P') base.y = 2;
-				else if(ch[0] == 'L') base.y = 3;
-				else if(ch[0] == 'N') base.y = 4;
-				else if(ch[0] == 'S') base.y = 5;
-				else if(ch[0] == 'G') base.y = 6;
-				else if(ch[0] == 'B') base.y = 7;
-				else if(ch[0] == 'R') base.y = 8;
-			} else {
-				if(ch[0] == 'P') base.y = 8;
-				else if(ch[0] == 'L') base.y = 7;
-				else if(ch[0] == 'N') base.y = 6;
-				else if(ch[0] == 'S') base.y = 5;
-				else if(ch[0] == 'G') base.y = 4;
-				else if(ch[0] == 'B') base.y = 3;
-				else if(ch[0] == 'R') base.y = 2;
-			}
-			cd.drop = 1;
-		}
-		else {
-			base.x = ch[0] - '0';
-			base.y = ch[1] - 96;
-		}
-		target.x = ch[2] - '0';
-		target.y = ch[3] - 96;
-		
-		if(ch.length == 5) {
-			if(ch[4] == '+') cd.promote = 1;
-		}
-	}
-	class MyThreadKifuAnalysis extends Thread {
-		MyThreadKifuAnalysis() {
-		}
-		@Override
-		public void run() {
-			System.out.print("Kifu Analysis start ...");
-			Boolean isUnderAnalysis = true;
-			while(isUnderAnalysis && isEngineOn) {
-				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-				int size = listModel[ListBoxType.Kifu.id].getSize();
-				if(size-1 == index) isUnderAnalysis = false;
-				try {
-					Thread.sleep(calculatingTimeOfEngine);
-				} catch(InterruptedException e) {
-					System.out.println(e);
-				}
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
-				commonListAction();
-			}
-			System.out.println("completed.");
-			actionForStopEngine();
-		}
-	}
+	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -3133,7 +2359,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			kifuData.add(kf);
 			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
 			if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
-			sendCommandToEngine();
+			se.sendCommandToEngine();
 		}
 		
 		// check strategy
