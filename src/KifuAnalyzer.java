@@ -68,6 +68,10 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import lib.KomaSound;
+import lib.ShogiData;
+import lib.ShogiData.Koma;
+import lib.ShogiData.KomaType;
+import lib.ShogiData.SenteGote;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener {
@@ -81,14 +85,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String imgFilePathBoard = imgFilePath + "board/";
 	String imgFilePathBackground = imgFilePath + "background/";
 	KomaSound ks = new KomaSound();
-	
-	public enum SenteGote {
-		Sente(0), Gote(1);
-		private final int id;
-		private SenteGote(final int id) {
-			this.id = id;
-		}
-	};
+	ShogiData sd = new ShogiData();
+	ShogiData sdForKDB = new ShogiData();
 	
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
@@ -192,8 +190,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	KifuAnalyzer() {
 		System.out.print("Initializing KifuAnalyzer ... ");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		shogiData.initializeIcon();
-		setSize(shogiData.iconWidth*25, shogiData.iconHeight*12);
+		sd.initializeIcon();
+		setSize(sd.iconWidth*25, sd.iconHeight*12);
 		initializeAppIcon();
 		initializeGUISetting();
 		contentPaneSetting();
@@ -206,8 +204,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		setIconImage(icon.getImage());
 	}
 	public void initializeGUISetting() {
-		shogiData.initializeKomaSetting();
-		shogiDataForKDB.initializeKomaSetting();
+		sd.initializeKomaSetting();
+		sdForKDB.initializeKomaSetting();
 		initializeButtonSetting();
 		initializeTextBoxSetting();
 		initializeCheckBox();
@@ -365,9 +363,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			labelNumberRow[x] = new JLabel();
 			labelNumberCol[x] = new JLabel();
 			labelNumberRow[x].setText(String.valueOf(9-x));
-			labelNumberRow[x].setBounds(105 + x * (shogiData.iconWidth+10), 5, 10, 10);
+			labelNumberRow[x].setBounds(105 + x * (sd.iconWidth+10), 5, 10, 10);
 			labelNumberCol[x].setText(String.valueOf(x+1));
-			labelNumberCol[x].setBounds(625, 50 + x * (shogiData.iconHeight+10), 10, 10);
+			labelNumberCol[x].setBounds(625, 50 + x * (sd.iconHeight+10), 10, 10);
 		}
 	}
 	public void reverseNumberRowCol() {
@@ -382,681 +380,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 		}
 	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Shogi Board >> -------------------------------
-	// -------------------------------------------------------------------------
-	ShogiData shogiData = new ShogiData();
-	ShogiData shogiDataForKDB = new ShogiData();
-	public class ShogiData {
-		String[] komaName = {"歩", "香", "桂", "銀", "金", "角", "飛", "王", "と", "成香", "成桂", "成銀", "金", "馬", "龍", "王"};
-		String[] senteGote = {"▲", "△"};
-		BufferedImage img[][] = new BufferedImage[10][4];
-		int iconWidth;
-		int iconHeight;
-		Koma k[];
-		Koma selectedKoma = null;
-		Boolean turnIsSente;
-		List<Koma> listKomaOnBoard;
-		List<List<Koma>> listKomaOnHand;
-		List<Koma> listKomaOnHandForSente;
-		List<Koma> listKomaOnHandForGote;
-		NumOfKoma nok;
-		public class NumOfKoma {
-			int numOfKoma[][];
-			Point posNumOfKoma[][];
-			NumOfKoma() {
-				numOfKoma = new int[SenteGote.values().length][KomaType.values().length];
-				posNumOfKoma = new Point[SenteGote.values().length][KomaType.values().length];
-				for(SenteGote sg: SenteGote.values())
-					for(KomaType t: KomaType.values()) {
-						Point p = new Point();
-						posNumOfKoma[sg.id][t.id] = p;
-					}
-			}
-		}
-		ShogiData() {
-			k = new Koma[40];
-			turnIsSente = true;
-			listKomaOnBoard = new ArrayList<Koma>();
-			listKomaOnHandForSente = new ArrayList<Koma>();
-			listKomaOnHandForGote = new ArrayList<Koma>();
-			listKomaOnHand = new ArrayList<>();
-			listKomaOnHand.add(listKomaOnHandForSente);
-			listKomaOnHand.add(listKomaOnHandForGote);
-			nok = new NumOfKoma();
-		}
-		public void initializeIcon() {
-			try {
-				img[KomaType.Pawn.id][0] = ImageIO.read(new File(imgFilePathKoma + "Pawn.png"));
-				img[KomaType.Pawn.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Pawn.png"));
-				img[KomaType.Pawn.id][2] = ImageIO.read(new File(imgFilePathKoma + "Pawn Gote.png"));
-				img[KomaType.Pawn.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Pawn Gote.png"));
-				img[KomaType.Rance.id][0] = ImageIO.read(new File(imgFilePathKoma + "Rance.png"));
-				img[KomaType.Rance.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rance.png"));
-				img[KomaType.Rance.id][2] = ImageIO.read(new File(imgFilePathKoma + "Rance Gote.png"));
-				img[KomaType.Rance.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rance Gote.png"));
-				img[KomaType.Knight.id][0] = ImageIO.read(new File(imgFilePathKoma + "Knight.png"));
-				img[KomaType.Knight.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Knight.png"));
-				img[KomaType.Knight.id][2] = ImageIO.read(new File(imgFilePathKoma + "Knight Gote.png"));
-				img[KomaType.Knight.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Knight Gote.png"));
-				img[KomaType.Silver.id][0] = ImageIO.read(new File(imgFilePathKoma + "Silver.png"));
-				img[KomaType.Silver.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Silver.png"));
-				img[KomaType.Silver.id][2] = ImageIO.read(new File(imgFilePathKoma + "Silver Gote.png"));
-				img[KomaType.Silver.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Silver Gote.png"));
-				img[KomaType.Gold.id][0] = ImageIO.read(new File(imgFilePathKoma + "Gold.png"));
-				img[KomaType.Gold.id][2] = ImageIO.read(new File(imgFilePathKoma + "Gold Gote.png"));
-				img[KomaType.Rook.id][0] = ImageIO.read(new File(imgFilePathKoma + "Rook.png"));
-				img[KomaType.Rook.id][1] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rook.png"));
-				img[KomaType.Rook.id][2] = ImageIO.read(new File(imgFilePathKoma + "Rook Gote.png"));
-				img[KomaType.Rook.id][3] = ImageIO.read(new File(imgFilePathKoma + "Promoted Rook Gote.png"));
-				img[KomaType.Bishop.id][0] = ImageIO.read(new File(imgFilePathKoma + "Bishop.png"));
-				img[KomaType.Bishop.id][1]= ImageIO.read(new File(imgFilePathKoma + "Promoted Bishop.png"));
-				img[KomaType.Bishop.id][2] = ImageIO.read(new File(imgFilePathKoma + "Bishop Gote.png"));
-				img[KomaType.Bishop.id][3]= ImageIO.read(new File(imgFilePathKoma + "Promoted Bishop Gote.png"));
-				img[KomaType.King.id][0] = ImageIO.read(new File(imgFilePathKoma + "King.png"));
-				img[KomaType.King.id][2] = ImageIO.read(new File(imgFilePathKoma + "King Gote.png"));
-				iconWidth = img[KomaType.Pawn.id][0].getWidth();
-				iconHeight = img[KomaType.Pawn.id][0].getHeight();
-			} catch(IOException e) {
-				System.out.println(e);
-				return;
-			}
-		}
-		public void viewKomaOnBoard() {
-			for(Koma k: listKomaOnBoard) {
-				int X, Y;
-				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
-					X = 10 - k.px;
-					Y = 10 - k.py;
-				} else {
-					X = k.px;
-					Y = k.py;
-				}
-				k.pos.x = (9-X)*(iconWidth+10)+85;
-				k.pos.y = (Y-1)*(iconHeight+10)+25;
-			}
-		}
-		public void viewKomaOnHand() {
-			for(SenteGote sg: SenteGote.values()) {
-				for(KomaType t: KomaType.values()) {
-					nok.numOfKoma[sg.id][t.id] = 0;
-				}
-			}
-			
-			for(Koma k: listKomaOnHand.get(SenteGote.Sente.id)) {
-				if(!checkBox[CheckBoxType.Reverse.id].isSelected()) {
-					k.pos.x = (iconWidth+10)*10+50;
-					k.pos.y = (iconHeight+10)*(k.type.id+1)+25;
-					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].x = (iconWidth+10)*11+35;
-					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].y = (iconHeight+10)*(k.type.id+1)+30;
-				} else {
-					k.pos.x = 10;
-					k.pos.y = (iconHeight+10)*(7-k.type.id)+25;
-					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].x = 55;
-					nok.posNumOfKoma[SenteGote.Sente.id][k.type.id].y = (iconHeight+10)*(7-k.type.id)+70;
-				}
-				nok.numOfKoma[SenteGote.Sente.id][k.type.id]++;
-			}
-			
-			for(Koma k: listKomaOnHand.get(SenteGote.Gote.id)) {
-				if(!checkBox[CheckBoxType.Reverse.id].isSelected()) {
-					k.pos.x = 10;
-					k.pos.y = (iconHeight+10)*(7-k.type.id)+25;
-					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].x = 55;
-					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].y = (iconHeight+10)*(7-k.type.id)+70;
-				} else {
-					k.pos.x = (iconWidth+10)*10+50;
-					k.pos.y = (iconHeight+10)*(k.type.id+1)+25;
-					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].x = (iconWidth+10)*11+35;
-					nok.posNumOfKoma[SenteGote.Gote.id][k.type.id].y = (iconHeight+10)*(k.type.id+1)+30;
-				}
-				nok.numOfKoma[SenteGote.Gote.id][k.type.id]++;
-			}
-		}
-		public void initializeKomaSetting() {
-			// Sente
-			for(int x=0; x<9; x++) {
-				k[x] = new Koma(KomaType.Pawn, x+1, 7, 0, x);
-			}
-			k[9] = new Koma(KomaType.Rance, 9, 9, 0, 9);
-			k[10] = new Koma(KomaType.Rance, 1, 9, 0, 10);
-			k[11] = new Koma(KomaType.Knight, 8, 9, 0, 11);
-			k[12] = new Koma(KomaType.Knight, 2, 9, 0, 12);
-			k[13] = new Koma(KomaType.Silver, 7, 9, 0, 13);
-			k[14] = new Koma(KomaType.Silver, 3, 9, 0, 14);
-			k[15] = new Koma(KomaType.Gold, 6, 9, 0, 15);
-			k[16] = new Koma(KomaType.Gold, 4, 9, 0, 16);
-			k[17] = new Koma(KomaType.Rook, 2, 8, 0, 17);
-			k[18] = new Koma(KomaType.Bishop, 8, 8, 0, 18);
-			k[19] = new Koma(KomaType.King, 5, 9, 0, 19);
-					
-			// Gote
-			for(int x=20; x<29; x++) {
-				k[x] = new Koma(KomaType.Pawn, x-20+1, 3, 1, x);
-			}
-			k[29] = new Koma(KomaType.Rance, 9, 1, 1, 29);
-			k[30] = new Koma(KomaType.Rance, 1, 1, 1, 30);
-			k[31] = new Koma(KomaType.Knight, 8, 1, 1, 31);
-			k[32] = new Koma(KomaType.Knight, 2, 1, 1, 32);
-			k[33] = new Koma(KomaType.Silver, 7, 1, 1, 33);
-			k[34] = new Koma(KomaType.Silver, 3, 1, 1, 34);
-			k[35] = new Koma(KomaType.Gold, 6, 1, 1, 35);
-			k[36] = new Koma(KomaType.Gold, 4, 1, 1, 36);
-			k[37] = new Koma(KomaType.Rook, 8, 2, 1, 37);
-			k[38] = new Koma(KomaType.Bishop, 2, 2, 1, 38);
-			k[39] = new Koma(KomaType.King, 5, 1, 1, 39);
-			
-			for(int x=0; x<40; x++) {
-				listKomaOnBoard.add(k[x]);
-			}
-		}
-		public void resetAllKoma() {
-			turnIsSente = true;
-			listKomaOnBoard.clear();
-			for(SenteGote sg: SenteGote.values()) listKomaOnHand.get(sg.id).clear();
-			for(int x=0; x<9; x++) {
-				k[x].reset(KomaType.Pawn, x+1, 7, 0);
-			}
-			k[9].reset(KomaType.Rance, 9, 9, 0);
-			k[10].reset(KomaType.Rance, 1, 9, 0);
-			k[11].reset(KomaType.Knight, 8, 9, 0);
-			k[12].reset(KomaType.Knight, 2, 9, 0);
-			k[13].reset(KomaType.Silver, 7, 9, 0);
-			k[14].reset(KomaType.Silver, 3, 9, 0);
-			k[15].reset(KomaType.Gold, 6, 9, 0);
-			k[16].reset(KomaType.Gold, 4, 9, 0);
-			k[17].reset(KomaType.Rook, 2, 8, 0);
-			k[18].reset(KomaType.Bishop, 8, 8, 0);
-			k[19].reset(KomaType.King, 5, 9, 0);
-			for(int x=20; x<29; x++) {
-				k[x].reset(KomaType.Pawn, x-20+1, 3, 1);
-			}
-			k[29].reset(KomaType.Rance, 9, 1, 1);
-			k[30].reset(KomaType.Rance, 1, 1, 1);
-			k[31].reset(KomaType.Knight, 8, 1, 1);
-			k[32].reset(KomaType.Knight, 2, 1, 1);
-			k[33].reset(KomaType.Silver, 7, 1, 1);
-			k[34].reset(KomaType.Silver, 3, 1, 1);
-			k[35].reset(KomaType.Gold, 6, 1, 1);
-			k[36].reset(KomaType.Gold, 4, 1, 1);
-			k[37].reset(KomaType.Rook, 8, 2, 1);
-			k[38].reset(KomaType.Bishop, 2, 2, 1);
-			k[39].reset(KomaType.King, 5, 1, 1);
-			
-			for(int x=0; x<40; x++) {
-				listKomaOnBoard.add(k[x]);
-			}
-			
-			if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
-				for(int x=0; x<40; x++) {
-					k[x].reverseForReverseMode();
-				}
-			}
-		}
-		public Koma findTouchedKoma(Koma movedKoma) {
-			for(Koma k: listKomaOnBoard) {
-				if(k != movedKoma && k.px == movedKoma.px && k.py == movedKoma.py) {
-					return k;
-				}
-			}
-			
-			return null;
-		}
-		public Koma findKoma(int x, int y) {
-			for(Koma k: listKomaOnBoard) {
-				if(k.px == x && k.py == y) return k;
-			}
-			return null;
-		}
-		public Koma findKomaInHand(KomaType type, Boolean isSente) {
-			List<Koma> listKomaOnHand;
-			if(isSente) {
-				listKomaOnHand = listKomaOnHandForSente;
-			} else {
-				listKomaOnHand = listKomaOnHandForGote;
-			}
-			for(Koma k: listKomaOnHand) {
-				if(k.type == type) return k;
-			}
-			
-			return null;
-		}
-		public void putAllKomaInHand() {
-			resetAllKoma();
-			listKomaOnBoard.clear();
-			for(int x=0; x<20; x++) {
-				k[x].px = 0;
-				k[x].py = k[x].type.id+2;
-				if(radioButtonSente.isSelected()) {
-					listKomaOnHandForSente.add(k[x]);
-				} else {
-					k[x].reverse();
-					listKomaOnHandForGote.add(k[x]);
-				}
-			}
-			for(int x=20; x<40; x++) {
-				k[x].px = 10;
-				k[x].py = 8-k[x].type.id;
-				if(radioButtonSente.isSelected()) {
-					k[x].reverse();
-					listKomaOnHandForSente.add(k[x]);
-				} else {
-					listKomaOnHandForGote.add(k[x]);
-				}
-			}
-		}
-	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Koma Action >> -------------------------------
-	// -------------------------------------------------------------------------
-	public enum KomaType {
-		Pawn(0), Rance(1), Knight(2), Silver(3), Gold(4), Bishop(5), Rook(6), King(7), Empty(8);
-		private final int id;
-		private KomaType(final int id) {
-			this.id = id;
-		}
-	};
-	public class Koma {
-		Point pos;
-		BufferedImage imgKoma;
-		int px;
-		int py;
-		int promoted;
-		int sente;
-		int index;
-		int drop;
-		Boolean forward;
-		KomaType type;
-		Koma(KomaType t, int x, int y, int s, int i) {
-			pos = new Point();
-			pos.x = (shogiData.iconWidth+10)*(9-x)+25;
-			pos.y = (shogiData.iconHeight+10)*(y-1)+25;
-			imgKoma = shogiData.img[t.id][0+s*2];
-			type = t;
-			px = x;
-			py = y;
-			sente = s;
-			promoted = 0;
-			index = i;
-			drop = 0;
-		}
-		public void reset(KomaType t, int x, int y, int s) {
-			type = t;
-			px = x;
-			py = y;
-			if(s == 0) forward = true;
-			else forward = false;
-			sente = s;
-			promoted = 0;
-			imgKoma = shogiData.img[type.id][sente*2 + promoted];
-		}
-		public void promote() {
-			if(type == KomaType.Gold || type == KomaType.King) return;
-			if(promoted == 0) {
-				if(forward && sente == 0) {
-					imgKoma = shogiData.img[type.id][0+1];
-				} else if(forward && sente == 1) {
-					imgKoma = shogiData.img[type.id][0+1];
-				} else if(!forward && sente == 0) {
-					imgKoma = shogiData.img[type.id][2+1];
-				} else {
-					imgKoma = shogiData.img[type.id][2+1];
-				}
-				promoted = 1;
-			} else {
-				imgKoma = shogiData.img[type.id][sente*2];
-				promoted = 0;
-			}
-		}
-		public void reverse() {
-			if(sente == 0) {
-				sente = 1;
-			} else {
-				sente = 0;
-			}
-			if(forward && sente == 0) {
-				imgKoma = shogiData.img[type.id][2 + promoted];
-			} else if(forward && sente == 1) {
-				imgKoma = shogiData.img[type.id][2 + promoted];
-			} else if(!forward && sente == 0) {
-				imgKoma = shogiData.img[type.id][0 + promoted];
-			} else {
-				imgKoma = shogiData.img[type.id][0 + promoted];
-			}
-			forward = !forward;
-		}
-		public void reverseForReverseMode() {
-			if(forward) {
-				imgKoma = shogiData.img[type.id][2 + promoted];
-				forward = false;
-			} else {
-				imgKoma = shogiData.img[type.id][0 + promoted];
-				forward = true;
-			}
-		}
-		public Boolean isMovable(int x, int y) {
-			switch(type) {
-			case Pawn:
-				return isPawnMove(x, y);
-			case Rance:
-				return isRanceMove(x, y);
-			case Knight:
-				return isKnightMove(x, y);
-			case Silver:
-				return isSilverMove(x, y);
-			case Gold:
-				return isGoldMove(x, y);
-			case Bishop:
-				return isBishopMove(x, y);
-			case Rook:
-				return isRookMove(x, y);
-			case King:
-				return isKingMove(x, y);
-			default:
-				break;
-			}
-			
-			return false;
-		}
-		public Boolean checkKomaExistence(int x, int y, ShogiData sd) {
-			for(Koma k: sd.listKomaOnBoard) if(k.px == x && k.py == y) return true;
-			
-			return false;
-		}
-		public Boolean isPawnMove(int x, int y) {
-			if(promoted == 1) return isGoldMove(x, y);
-			if(sente == 0) {
-				if(x == px && y == (py-1)) return true;
-			} else {
-				if(x == px && y == (py+1)) return true;
-			}
-			return false;
-		}
-		public Boolean isRanceMove(int x, int y) {
-			int ty;
-			Boolean b;
-			if(promoted == 1) return isGoldMove(x, y);
-			if(x != px) return false;
-			if(sente == 0) {
-				if(y >= py) return false;
-				ty = y;
-				b = false;
-				while(ty < py) {
-					if(checkKomaExistence(x, ty, shogiData)) b = true;
-					ty++;
-				}
-				if(b == false) return true;
-			} else {
-				if(y <= py) return false;
-				ty = y;
-				b = false;
-				while(ty > py) {
-					if(checkKomaExistence(x, ty, shogiData)) b = true;
-					ty--;
-				}
-				if(b == false) return true;
-			}
-			return false;
-		}
-		public Boolean isKnightMove(int x, int y) {
-			if(promoted == 1) return isGoldMove(x, y);
-			if(sente == 0) {
-				if( (x == (px+1) && y == (py-2)) || (x == (px-1)) && y == (py-2) ) return true;  
-			} else {
-				if( (x == (px+1) && y == (py+2)) || (x == (px-1)) && y == (py+2) ) return true;
-			}
-			return false;
-		}
-		public Boolean isSilverMove(int x, int y) {
-			if(promoted == 1) return isGoldMove(x, y);
-			if(sente == 0) {
-				if( (x == px && y == (py-1)) || (x == (px+1) && y == (py-1)) || (x == (px-1) && y == (py-1)) || 
-						(x == (px+1) && y == (py+1)) || (x == (px-1) && y == (py+1)) ) return true;
-			} else {
-				if( (x == px && y == (py+1)) || (x == (px+1) && y == (py-1)) || (x == (px-1) && y == (py-1)) || 
-						(x == (px+1) && y == (py+1)) || (x == (px-1) && y == (py+1)) ) return true;
-			}
-			return false;
-		}
-		public Boolean isGoldMove(int x, int y) {
-			if(sente == 0) {
-				if( (x == px && y == (py-1)) || (x == px && y == (py+1)) || 
-						(x == (px-1) && y == py) || (x == (px+1) && y == py) ||
-						(x == (px+1) && y == (py-1)) || (x == (px-1) && y == (py-1)) ) return true;
-			} else {
-				if( (x == px && y == (py-1)) || (x == px && y == (py+1)) || 
-						(x == (px-1) && y == py) || (x == (px+1) && y == py) ||
-						(x == (px+1) && y == (py+1)) || (x == (px-1) && y == (py+1)) ) return true;
-			}
-			
-			return false;
-		}
-		public Boolean isBishopMove(int x, int y) {
-			int dx, dy;
-			int tx, ty;
-			Boolean b;
-			if(promoted == 1) {
-				if( (x == px && y == (py+1)) || (x == px && y == (py-1)) || 
-						(x == (px+1) && y == py) || (x == (px-1) && y == py) ) return true;
-			}
-			
-			dx = x - px;
-			dy = y - py;
-			if( dx != dy && dx != (-dy) ) return false;
-			
-			b = false;
-			tx = x;
-			ty = y;
-			if(tx > px && ty > py) {
-				while(tx > px) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					tx--;
-					ty--;
-				}
-			} else if(tx > px && ty < py) {
-				while(tx > px) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					tx--;
-					ty++;
-				}
-			} else if(tx < px && ty > py) {
-				while(tx < px) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					tx++;
-					ty--;
-				}
-			} else if(tx < px && ty < py) {
-				while(tx < px) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					tx++;
-					ty++;
-				}
-			}
-			if(b == true) return false;
-			
-			return true;
-		}
-		public Boolean isRookMove(int x, int y) {
-			int tx, ty;
-			Boolean b;
-			if(promoted == 1) {
-				if( (x == (px+1) && y == (py+1)) || (x == (px+1) && y == (py-1)) ||
-						(x == (px-1) && y == (py+1)) || (x == (px-1) && y == (py-1)) ) return true;
-			}
-			
-			if(x != px && y != py) return false;
-			
-			tx = x;
-			ty = y;
-			b = false;
-			if(tx > px && ty == py) {
-				while(tx > px) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					tx--;
-				}
-			} else if(tx < px && ty == py) {
-				while(tx < px) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					tx++;
-				}
-			} else if(tx == px && ty > py) {
-				while(ty > py) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					ty--;
-				}
-			} else if(tx == px && ty < py) {
-				while(ty < py) {
-					if(checkKomaExistence(tx, ty, shogiData)) b = true;
-					ty++;
-				}
-			}
-			
-			if(b == true) return false;
-			
-			return true;
-		}
-		public Boolean isKingMove(int x, int y) {
-			if( (x == (px-1) && y == (py-1)) || (x == (px-1) && y == py) || (x == (px-1) && y == (py+1)) ||
-					(x == px && y == (py-1)) || (x == px && y == (py+1)) ||
-					(x == (px+1) && y == (py-1)) || (x == (px+1) && y == py) || (x == (px+1) && y == (py+1)) ) return true;
-			return false;
-		}
-		public Boolean confirmPromotion(int x, int y, int preX, int preY, ShogiData sd) {
-			if(this.promoted == 1) return true;
-			if(this.type == KomaType.Gold || this.type == KomaType.King ) return true;
-			
-			if(x <= 0 || x >= 10 || y <= 0 || y >= 10) return true;
-			if(sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1 || sd.listKomaOnHand.get(SenteGote.Gote.id).indexOf(this) != -1) return true;
-			
-			if( (this.sente == 0 && y <= 3) || (this.sente == 1 && y >= 7) ||
-					(this.sente == 0 && preY <= 3) || (this.sente == 1 && preY >= 7) ) {
-				JFrame jf = new JFrame();
-				int result = JOptionPane.showConfirmDialog(jf, "Promote?");
-				if(result == 0) { // yes
-					this.promote();
-					return true;
-				} else if(result == 1) { // no
-					return true;
-				} else { // cancel
-					return false;
-				}
-			}
-			
-			return true;
-		}
-		public Boolean moveKoma(ShogiData sd, int x, int y, int promoted) {
-			int preX = this.px;
-			int preY = this.py;
-			
-			if(x == preX && y == preY) {
-				//this.setLocation((9-preX)*(shogiData.iconWidth+10)+85, (preY-1)*(shogiData.iconHeight+10)+25);
-				pos.x = (9-preX)*(shogiData.iconWidth+10)+85;
-				pos.y = (preY-1)*(shogiData.iconHeight+10)+25;
-				return false;
-			}
-			
-			if(promoted == -1) {
-				if(!this.confirmPromotion(x, y, preX, preY, sd)) {
-					// case of cancel
-					pos.x = (9-preX)*(shogiData.iconWidth+10)+85;
-					pos.y = (preY-1)*(shogiData.iconHeight+10)+25;
-					return false;
-				}
-			}
-			else if(promoted == 1 && this.promoted == 0) this.promote(); // no confirm when kifuData
-			
-			this.px = x;
-			this.py = y;
-			this.drop = 0;
-			pos.x = (9-x)*(shogiData.iconWidth+10)+85;
-			pos.y = (y-1)*(shogiData.iconHeight+10)+25;
-			
-			if(x>0 && x<10 && y>0 && y<10) {
-				if( sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1 ) moveFromStoB(sd);
-				else if( sd.listKomaOnHand.get(SenteGote.Gote.id).indexOf(this) != -1) moveFromGtoB(sd);
-				else moveFromBtoB(sd);
-			} else if(x<=0) {
-				if(sd.listKomaOnBoard.indexOf(this) != -1) moveFromBtoS(sd);
-				else if(sd.listKomaOnHand.get(SenteGote.Sente.id).indexOf(this) != -1) moveFromStoS(sd);
-				else moveFromGtoS(sd);
-				return false;
-			} else {
-				if(sd.listKomaOnBoard.indexOf(this) != -1) moveFromBtoG(sd);
-				else if(sd.listKomaOnHand.get(SenteGote.Gote.id).indexOf(this) != -1) moveFromGtoG(sd);
-				else moveFromStoG(sd);
-				return false;
-			}
-			
-			return true;
-		}
-		// OnBoard -> OnBoard
-		public void moveFromBtoB(ShogiData sd) {
-			Koma k = sd.findTouchedKoma(this);
-			if(k != null) {
-				sd.listKomaOnBoard.remove(k);
-				if(k.promoted == 1) k.promote();
-				if(this.sente == 0) {
-					if(k.sente == 1) k.reverse();
-					k.px = 0;
-					k.py = k.type.id+2;
-					sd.listKomaOnHand.get(SenteGote.Sente.id).add(k);
-				} else {
-					if(k.sente == 0) k.reverse();
-					k.px = 10;
-					k.py = 8-k.type.id;
-					sd.listKomaOnHand.get(SenteGote.Gote.id).add(k);
-				}
-			}
-		}
-		// OnHandForSente -> OnBoard
-		public void moveFromStoB(ShogiData sd) {
-			this.drop = 1;
-			sd.listKomaOnHand.get(SenteGote.Sente.id).remove(this);
-			sd.listKomaOnBoard.add(this);
-		}
-		// OnHandForGote -> OnBoard
-		public void moveFromGtoB(ShogiData sd) {
-			this.drop = 1;
-			sd.listKomaOnHand.get(SenteGote.Gote.id).remove(this);
-			sd.listKomaOnBoard.add(this);
-		}
-		// OnBoard -> OnHandForSente
-		public void moveFromBtoS(ShogiData sd) {
-			sd.listKomaOnBoard.remove(this);
-			
-			if(this.sente == 1) this.reverse();
-			if(this.promoted == 1) this.promote();
-			sd.listKomaOnHand.get(SenteGote.Sente.id).add(this);
-		}
-		// OnBoard -> OnHandForGote
-		public void moveFromBtoG(ShogiData sd) {
-			sd.listKomaOnBoard.remove(this);
-			
-			if(this.sente == 0) this.reverse();
-			if(this.promoted == 1) this.promote();	
-			sd.listKomaOnHand.get(SenteGote.Gote.id).add(this);
-		}
-		// OnHandForSente -> OnHandForGote
-		public void moveFromStoG(ShogiData sd) {
-			sd.listKomaOnHand.get(SenteGote.Sente.id).remove(this);
-			this.reverse();
-			sd.listKomaOnHand.get(SenteGote.Gote.id).add(this);
-		}
-		// OnHandForGote -> OnHandForSente
-		public void moveFromGtoS(ShogiData sd) {
-			sd.listKomaOnHand.get(SenteGote.Gote.id).remove(this);
-			this.reverse();
-			sd.listKomaOnHand.get(SenteGote.Sente.id).add(this);
-		}
-		// OnHandForSente -> OnHandForSente
-		public void moveFromStoS(ShogiData sd) {
-			// do nothing
-		}
-		// OnHandForGote -> OnHandForGote
-		public void moveFromGtoG(ShogiData sd) {
-			// do nothing
-		}
-	}
+
 	// -------------------------------------------------------------------------
 	// ----------------------- << Canvas >> ------------------------------------
 	// -------------------------------------------------------------------------
@@ -1117,24 +441,24 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			g.setColor(clrFont);
 			for(int x=0; x<9; x++)
 				for(int y=0; y<9; y++) {
-					g.drawRect(x*(shogiData.iconWidth+10)+80, y*(shogiData.iconHeight+10)+20, shogiData.iconWidth+10, shogiData.iconHeight+10);
+					g.drawRect(x*(sd.iconWidth+10)+80, y*(sd.iconHeight+10)+20, sd.iconWidth+10, sd.iconHeight+10);
 				}
 		}
 		public void drawShogiBoardBackground(Graphics g) {
 			if(imgBoard != null) g.drawImage(imgBoard, 80, 20, this);
 		}
 		public void drawShogiKoma(Graphics g) {
-			for(Koma k: shogiData.k) {
+			for(Koma k: sd.k) {
 				g.drawImage(k.imgKoma, k.pos.x, k.pos.y, this);
 			}
 		}
 		public void drawNumOfKomaInHand(Graphics g) {
 			for(SenteGote sg: SenteGote.values()) {
 				for(KomaType t: KomaType.values()) {
-					if(shogiData.nok.numOfKoma[sg.id][t.id] == 0) continue;
-					g.drawString(Integer.toString(shogiData.nok.numOfKoma[sg.id][t.id]),
-							shogiData.nok.posNumOfKoma[sg.id][t.id].x,
-							shogiData.nok.posNumOfKoma[sg.id][t.id].y);
+					if(sd.nok.numOfKoma[sg.id][t.id] == 0) continue;
+					g.drawString(Integer.toString(sd.nok.numOfKoma[sg.id][t.id]),
+							sd.nok.posNumOfKoma[sg.id][t.id].x,
+							sd.nok.posNumOfKoma[sg.id][t.id].y);
 				}
 			}
 		}
@@ -1155,7 +479,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			g.drawString("▲Sente", baseXPosForItems, 95);
 			g.drawString("△Gote", baseXPosForItems+120, 95);
 			// emphasize sente gote
-			if(shogiData.turnIsSente) {
+			if(sd.turnIsSente) {
 				g.drawRect(baseXPosForItems, 80, 100, 18);
 			} else {
 				g.drawRect(baseXPosForItems+120, 80, 100, 18);
@@ -1165,9 +489,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			if(mousePressed) {
 				for(int x=1; x<10; x++) for(int y=1; y<10; y++) {
 					if(!checkBox[CheckBoxType.Reverse.id].isSelected()) {
-						if(shogiData.selectedKoma.isMovable(x, y)) cv.drawPoint(x, y, Color.pink);
+						if(sd.selectedKoma.isMovable(x, y)) cv.drawPoint(x, y, Color.pink);
 					} else {
-						if(shogiData.selectedKoma.isMovable(10-x, 10-y)) cv.drawPoint(x, y, Color.pink);
+						if(sd.selectedKoma.isMovable(10-x, 10-y)) cv.drawPoint(x, y, Color.pink);
 					}
 				}
 			}
@@ -1207,8 +531,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					pY = p.y;
 				}
 				
-				Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
-				Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+				Point pBase = new Point((9-pBX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pBY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
+				Point pTarget = new Point((9-pX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
 				Arrow ar = new Arrow(pBase, pTarget);
 				BasicStroke stroke = new BasicStroke(bs);
 				g.setColor(new Color(red, green, blue));
@@ -1248,8 +572,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 						pX = ps.target.x;
 						pY = ps.target.y;
 					}
-					Point pBase = new Point((9-pBX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pBY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
-					Point pTarget = new Point((9-pX)*(shogiData.iconWidth+10)+85+shogiData.iconWidth/2, (pY-1)*(shogiData.iconHeight+10)+25+shogiData.iconHeight/2);
+					Point pBase = new Point((9-pBX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pBY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
+					Point pTarget = new Point((9-pX)*(sd.iconWidth+10)+85+sd.iconWidth/2, (pY-1)*(sd.iconHeight+10)+25+sd.iconHeight/2);
 					Arrow ar = new Arrow(pBase, pTarget);
 					BasicStroke stroke = new BasicStroke(bs);
 					c = new Color(red, green, blue);
@@ -1288,22 +612,22 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				Graphics2D g2 = (Graphics2D)g;
 				g2.setStroke(stroke);
 				g2.setColor(new Color(250,150,162));
-				g2.drawOval((9-pShogiXY.x)*(shogiData.iconWidth+10)+25, (pShogiXY.y-1)*(shogiData.iconHeight+10)+32, 50, 50);
+				g2.drawOval((9-pShogiXY.x)*(sd.iconWidth+10)+25, (pShogiXY.y-1)*(sd.iconHeight+10)+32, 50, 50);
 			}
 		}
 		public Point convertMousePointToCentralSquare(Point p) {
 			Point pCalculated = new Point();
-			int x = (p.x-25) / (shogiData.iconWidth+10);
-			int y = (p.y-25) / (shogiData.iconHeight+10);
-			pCalculated.x = 25+x*(shogiData.iconWidth+10) + shogiData.iconWidth/2;
-			pCalculated.y = 25+y*(shogiData.iconHeight+10) + shogiData.iconHeight/2;
+			int x = (p.x-25) / (sd.iconWidth+10);
+			int y = (p.y-25) / (sd.iconHeight+10);
+			pCalculated.x = 25+x*(sd.iconWidth+10) + sd.iconWidth/2;
+			pCalculated.y = 25+y*(sd.iconHeight+10) + sd.iconHeight/2;
 			
 			return pCalculated;
 		}
 		public Point convertMousePointToShogiXY(Point p) {
 			Point pCalculated = new Point();
-			pCalculated.x = 9 - (p.x-25) / (shogiData.iconWidth+10);
-			pCalculated.y = 1 + (p.y-25) / (shogiData.iconHeight+10);
+			pCalculated.x = 9 - (p.x-25) / (sd.iconWidth+10);
+			pCalculated.y = 1 + (p.y-25) / (sd.iconHeight+10);
 			return pCalculated;
 		}
 		public void drawPoint(int x, int y, Color cl) {
@@ -1312,7 +636,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Graphics2D g2 = (Graphics2D)g;
 			g2.setStroke(stroke);
 			g2.setColor(cl);
-			g2.drawRect((9-x)*(shogiData.iconWidth+10)+82, (y-1)*(shogiData.iconHeight+10)+22, shogiData.iconWidth+6, shogiData.iconHeight+6);
+			g2.drawRect((9-x)*(sd.iconWidth+10)+82, (y-1)*(sd.iconHeight+10)+22, sd.iconWidth+6, sd.iconHeight+6);
 		}
 		public void setLastPoint(int px, int py, Boolean enable) {
 			lastPointX = px;
@@ -1585,9 +909,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		clearTextBox();
 		clearCheckBox();
 		reverseNumberRowCol();
-		shogiData.resetAllKoma();	
-		shogiData.viewKomaOnBoard();
-		shogiData.viewKomaOnHand();
+		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
+		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 		clearListBox();
 		clearIcons();
 		kifuData.clear();
@@ -1666,15 +990,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					int p = Integer.parseInt(st.nextToken()); // promote
 					int pp = Integer.parseInt(st.nextToken()); // preP
 					int d = Integer.parseInt(st.nextToken()); // drop
-					updateListBox(shogiData.k[i].type, x, y, shogiData.k[i].px, shogiData.k[i].py, shogiData.k[i].sente, p, pp, d);
-					Kifu kf = new Kifu(shogiData.k[i], x, y, p, pp, d);
+					updateListBox(sd.k[i].type, x, y, sd.k[i].px, sd.k[i].py, sd.k[i].sente, p, pp, d);
+					Kifu kf = new Kifu(sd.k[i], x, y, p, pp, d);
 					kifuData.add(kf);
-					shogiData.k[i].moveKoma(shogiData, x, y, p);
+					sd.k[i].moveKoma(x, y, p);
 				}
 			}
 			br.close();
 			
-			shogiData.resetAllKoma();
+			sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
 			if(numStrStep.equals("")) {
 				listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
@@ -1685,8 +1009,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				commonListAction();
 			}
 			
-			shogiData.viewKomaOnBoard();
-			shogiData.viewKomaOnHand();
+			sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+			sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 			updatePlayerIcon();
 			cv.repaint();
 		} catch(IOException er) {
@@ -1694,8 +1018,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public void initializeShogiBoard() {
-		shogiData.resetAllKoma();	
-		shogiData.viewKomaOnBoard();
+		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
+		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		clearListBox();
 		kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
@@ -1718,7 +1042,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			System.out.print("Loading Kifu Data(" + strY + ") ... ");
 			int fileIndex = 1;
 			while(true) {
-				shogiDataForKDB.resetAllKoma();
+				sdForKDB.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
 				String fileName = kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
 				//System.out.println(fileName);
 				File file = new File(fileName);
@@ -1744,20 +1068,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 						int p = Integer.parseInt(st.nextToken()); // promote
 						int pp = Integer.parseInt(st.nextToken()); // preP
 						int d = Integer.parseInt(st.nextToken()); // drop
-						Kifu kf = new Kifu(shogiData.k[i], x, y, p, pp, d);
+						Kifu kf = new Kifu(sd.k[i], x, y, p, pp, d);
 						kdb.db.add(kf);
-						shogiDataForKDB.k[kf.k.index].moveKoma(shogiDataForKDB, kf.x, kf.y, kf.p);
+						sdForKDB.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
 						if(kdb.strategyName.equals("")) {
-							kdb.strategyName = checkStrategy(shogiDataForKDB);
+							kdb.strategyName = checkStrategy(sdForKDB);
 						}
 						if(kdb.castleName[SenteGote.Sente.id].equals("")) {
-							kdb.castleName[SenteGote.Sente.id] = checkCastle(shogiDataForKDB, true);
+							kdb.castleName[SenteGote.Sente.id] = checkCastle(sdForKDB, true);
 							//if(kdb.castleName[SenteGote.Sente.id].equals("Yagura")) {
 							//	System.out.println("Yagura:" + kdb.index);
 							//}
 						}
 						if(kdb.castleName[SenteGote.Gote.id].equals("")) {
-							kdb.castleName[SenteGote.Gote.id] = checkCastle(shogiDataForKDB, false);
+							kdb.castleName[SenteGote.Gote.id] = checkCastle(sdForKDB, false);
 						}
 					}
 				}
@@ -1800,7 +1124,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 			fw.write(textBox[TextBoxType.Strategy.id].getText() + "\n");
 			for(int i=0; i<40; i++) {
-				fw.write(shogiData.k[i].px + "," + shogiData.k[i].py + "\n");
+				fw.write(sd.k[i].px + "," + sd.k[i].py + "\n");
 			}
 			fw.close();
 			
@@ -1831,12 +1155,12 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			FileWriter fw = new FileWriter(file);
 		
 			fw.write(textBox[TextBoxType.Castle.id].getText() + "\n");
-			for(Koma k: shogiData.k) {
+			for(Koma k: sd.k) {
 				if((k.type == KomaType.King) && radioButtonSente.isSelected() && k.sente == 0) {
-					saveListKomaAroundKing(shogiData, k, fw);
+					saveListKomaAroundKing(sd, k, fw);
 				}
 				if((k.type == KomaType.King) && radioButtonGote.isSelected() && k.sente == 1) {
-					saveListKomaAroundKing(shogiData, k, fw);
+					saveListKomaAroundKing(sd, k, fw);
 				}
 			}
 			fw.close();
@@ -2549,11 +1873,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public String createMoveKomaName(KomaType type, int sente, int x, int y, int preX, int preY, int promoted, int preP, int drop) {
-		String s = shogiData.senteGote[sente] + String.valueOf(x)+String.valueOf(y);
+		String s = sd.senteGote[sente] + String.valueOf(x)+String.valueOf(y);
 		if(preP == 0 && promoted == 1) {
-			s += shogiData.komaName[type.id] + "成";
+			s += sd.komaName[type.id] + "成";
 		} else {
-			s += shogiData.komaName[type.id+8*preP];
+			s += sd.komaName[type.id+8*preP];
 		}
 		if(drop == 1) s += "打";
 		else {
@@ -2613,7 +1937,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(!found) {
 			StringCount sc = new StringCount(str, isSenteWin(kdb));
 			sc.target = new Point(kf.x, kf.y);
-			sc.base = new Point(shogiData.k[kf.k.index].px, shogiData.k[kf.k.index].py);
+			sc.base = new Point(sd.k[kf.k.index].px, sd.k[kf.k.index].py);
 			listSC.add(sc);
 		}
 	}
@@ -2623,20 +1947,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		return 0;
 	}
 	public Boolean checkSamePositionKDB(int index, KifuDataBase kdb) {
-		shogiDataForKDB.resetAllKoma();
+		sdForKDB.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
 		
 		int i = 0;
 		while(i<index && index<kdb.db.size()) {
 			Kifu kf = kdb.db.get(i);
-			shogiDataForKDB.k[kf.k.index].moveKoma(shogiDataForKDB, kf.x, kf.y, kf.p);
+			sdForKDB.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
 			i++;
 		}
 		Boolean isSame = true;
 		for(int x=0; x<40; x++) {
-			if(shogiData.k[x].type != shogiDataForKDB.k[x].type || 
-					shogiData.k[x].px != shogiDataForKDB.k[x].px || 
-					shogiData.k[x].py != shogiDataForKDB.k[x].py ||
-					shogiData.k[x].promoted != shogiDataForKDB.k[x].promoted) {
+			if(sd.k[x].type != sdForKDB.k[x].type || 
+					sd.k[x].px != sdForKDB.k[x].px || 
+					sd.k[x].py != sdForKDB.k[x].py ||
+					sd.k[x].promoted != sdForKDB.k[x].promoted) {
 				isSame = false;
 				break;
 			}
@@ -2716,7 +2040,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 				updateListBox(kf.k.type, kf.x, kf.y, kf.k.px, kf.k.py, kf.k.sente, kf.p, kf.pp, kf.d);
 				kifuData.add(kf);
-				shogiData.k[kf.k.index].moveKoma(shogiData, kf.x, kf.y, kf.p);
+				sd.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
 				isSente = !isSente;
 			}
 		}
@@ -2740,7 +2064,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			if(index == 2) {
 				for(KomaType t: KomaType.values()) {
-					if(shogiData.komaName[t.id].equals(s)) {
+					if(sd.komaName[t.id].equals(s)) {
 						type = t;
 						break;
 					}
@@ -2750,14 +2074,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				if(s.equals("成")) p = 1;
 				if(s.equals("打")) {
 					drop = 1;
-					k = shogiData.findKomaInHand(type, isSente);
+					k = sd.findKomaInHand(type, isSente);
 					if(k == null) return null;
 				}
 			}
 			if(s.equals("(")) {
 				int preX = Integer.parseInt(token.substring(index+1, index+2));
 				int preY = Integer.parseInt(token.substring(index+2, index+3));
-				k = shogiData.findKoma(preX, preY);
+				k = sd.findKoma(preX, preY);
 				if(k == null) return null;
 			}
 			index++;
@@ -3050,11 +2374,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
     private ActionListener checkActionListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-        	for(Koma k: shogiData.k) {
+        	for(Koma k: sd.k) {
         		k.reverseForReverseMode();
         	}
-        	shogiData.viewKomaOnBoard();
-        	shogiData.viewKomaOnHand();
+        	sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+        	sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
         	reverseNumberRowCol();
         	cv.repaint();
         	cve.repaint();
@@ -3155,20 +2479,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public void commonListAction() {
 		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		shogiData.resetAllKoma();
-		shogiData.viewKomaOnBoard();
+		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		
 		for(Kifu kf: kifuData) {
 			if(kifuData.indexOf(kf) < selectedIndex) {
-				kf.k.moveKoma(shogiData, kf.x, kf.y, kf.p);
-				if(!checkBox[CheckBoxType.Edit.id].isSelected()) shogiData.turnIsSente = !shogiData.turnIsSente;
+				kf.k.moveKoma(kf.x, kf.y, kf.p);
+				if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
 				cv.setLastPoint(kf.x, kf.y, true);
-				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(checkStrategy(shogiData));
+				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(checkStrategy(sd));
 				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, true));
+					textBox[TextBoxType.Castle.id].setText(checkCastle(sd, true));
 				}
 				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, false));
+					textBox[TextBoxType.Castle.id].setText(checkCastle(sd, false));
 				}
 			}
 		}
@@ -3176,8 +2500,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.clearDrawPointForRightClick();
 		
 		checkKDB(selectedIndex);
-		shogiData.viewKomaOnBoard();
-		shogiData.viewKomaOnHand();
+		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 
 		sendCommandToEngine();
 		cv.repaint();
@@ -3216,7 +2540,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Rectangle bounds = this.getBounds();
 			Robot robot = new Robot();
 			BufferedImage image = robot.createScreenCapture(bounds);
-			image = image.getSubimage(0, 70, (shogiData.iconWidth+10)*11+55, (shogiData.iconHeight+10)*9);
+			image = image.getSubimage(0, 70, (sd.iconWidth+10)*11+55, (sd.iconHeight+10)*9);
 			String dirName = imgFilePath;
 			String fileName = "CaptureBoard.jpg";
 			ImageIO.write(image, "jpg", new File(dirName, fileName));
@@ -3229,9 +2553,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public void actionForKomaInHand() {
-		shogiData.putAllKomaInHand();
-		shogiData.viewKomaOnBoard();
-		shogiData.viewKomaOnHand();
+		sd.putAllKomaInHand(checkBox[CheckBoxType.Reverse.id].isSelected(),radioButtonSente.isSelected());
+		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 		cv.repaint();
 		cve.repaint();
 	}
@@ -3373,7 +2697,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			empty = 0;
 			str[y] = "";
 			for(int x=8; x>=0; x--) {
-				Koma k = shogiData.findKoma(x+1, y+1);
+				Koma k = sd.findKoma(x+1, y+1);
 				if(k == null) {
 					empty++;
 					if(x == 0) str[y] += empty;
@@ -3395,7 +2719,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		for(int i=0; i<9; i++) {
 			cmd += str[i];
 		}
-		if(shogiData.turnIsSente) cmd += " b ";
+		if(sd.turnIsSente) cmd += " b ";
 		else cmd += " w ";
 		cmd += getStringOfKomaInHand();
 		cmd += " 1";
@@ -3404,8 +2728,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	public String getStringOfKomaInHand() {
 		String str = "";
-		str += createStringOfKomaInHand(shogiData.listKomaOnHandForSente, true);
-		str += createStringOfKomaInHand(shogiData.listKomaOnHandForGote, false);
+		str += createStringOfKomaInHand(sd.listKomaOnHandForSente, true);
+		str += createStringOfKomaInHand(sd.listKomaOnHandForGote, false);
 		if(str.equals("")) str = "-";
 		return str;
 	}
@@ -3518,9 +2842,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			cv.drawListForEngine.add(ps);
 			Koma k = null;
 			if(cd.drop == 0) {
-				k = shogiData.findKoma(base.x, base.y);
+				k = sd.findKoma(base.x, base.y);
 			} else {
-				k = shogiData.findKomaInHand(cd.type, shogiData.turnIsSente);
+				k = sd.findKomaInHand(cd.type, sd.turnIsSente);
 			}
 			if(k != null) {
 				String komaMove = createMoveKomaName(k.type, k.sente, target.x, target.y, k.px, k.py, cd.promote, k.promoted, cd.drop);
@@ -3537,7 +2861,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		// drop a piece
 		if(ch[1] == '*') {
 			if(ch[0] == 'P' || ch[0] == 'L' || ch[0] == 'N' || ch[0] == 'S' || ch[0] == 'G' || ch[0] == 'B' || ch[0] == 'R') {
-				if(shogiData.turnIsSente) {
+				if(sd.turnIsSente) {
 					base.x = 0;
 				} else {
 					base.x = 10;
@@ -3551,7 +2875,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 				index++;
 			}
-			if(shogiData.turnIsSente) {
+			if(sd.turnIsSente) {
 				if(ch[0] == 'P') base.y = 2;
 				else if(ch[0] == 'L') base.y = 3;
 				else if(ch[0] == 'N') base.y = 4;
@@ -3624,19 +2948,19 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			cve.repaint();
 		}
 		
-		if(shogiData.selectedKoma == null) return;
+		if(sd.selectedKoma == null) return;
 		
 		Point mp = e.getPoint();
 		for(ListBoxType lb: ListBoxType.values()) {
 			if(e.getSource() == listBox[lb.id]) {
 				mp.x += scrollPane[lb.id].getBounds().x;
-				mp.y += scrollPane[lb.id].getBounds().y + shogiData.iconHeight/2 + 20;
+				mp.y += scrollPane[lb.id].getBounds().y + sd.iconHeight/2 + 20;
 				break;
 			}
 		}
 		if(e.getSource() != cv) mp.y -= 50;
-		shogiData.selectedKoma.pos.x = mp.x - shogiData.iconWidth/2;
-		shogiData.selectedKoma.pos.y = mp.y - shogiData.iconHeight/2;
+		sd.selectedKoma.pos.x = mp.x - sd.iconWidth/2;
+		sd.selectedKoma.pos.y = mp.y - sd.iconHeight/2;
 		cv.repaint();
 		cve.repaint();
 	}
@@ -3653,7 +2977,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				//System.out.println("Left Double Clicked");
 				Koma k = searchKoma(e);
 				if(k != null) {
-					if(shogiData.listKomaOnBoard.indexOf(k) != -1) k.reverse();
+					if(sd.listKomaOnBoard.indexOf(k) != -1) k.reverse();
 				}
 			}
 		}
@@ -3661,7 +2985,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//System.out.println("Left Clicked");
 			if(e.getSource() != cv) return;
 			Point mp = e.getPoint();
-			if(mp.x < 80 || mp.y < 20 || mp.x > (shogiData.iconWidth+10)*9+80 || mp.y > (shogiData.iconHeight+10)*9+20) {
+			if(mp.x < 80 || mp.y < 20 || mp.x > (sd.iconWidth+10)*9+80 || mp.y > (sd.iconHeight+10)*9+20) {
 				return;
 			}
 			Point pShogiXY = cv.convertMousePointToShogiXY(mp);
@@ -3691,16 +3015,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getSource() != this && e.getSource() != cv) {
 			return;
 		}
-		if(shogiData.selectedKoma == null) {
+		if(sd.selectedKoma == null) {
 			selectKoma(e);
 		} 
 	}
 	public void selectKoma(MouseEvent e) {
-		shogiData.selectedKoma = null;
+		sd.selectedKoma = null;
 		Koma selectedKoma = searchKoma(e);
 		if(selectedKoma == null) return;
 		Boolean isOnBoard = false;
-		if(shogiData.listKomaOnBoard.indexOf(selectedKoma) != -1) isOnBoard = true;
+		if(sd.listKomaOnBoard.indexOf(selectedKoma) != -1) isOnBoard = true;
 		commonMousePressed(selectedKoma, isOnBoard);
 	}
 	public Koma searchKoma(MouseEvent e) {
@@ -3709,43 +3033,43 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getSource() != cv) {
 			tp.y -= 50;
 		}
-		for(Koma k: shogiData.listKomaOnBoard) {
+		for(Koma k: sd.listKomaOnBoard) {
 			Point lp = k.pos;
-			if(tp.x > lp.x-5 && tp.x < lp.x+shogiData.iconWidth+5 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
+			if(tp.x > lp.x-5 && tp.x < lp.x+sd.iconWidth+5 && tp.y > lp.y && tp.y < lp.y+sd.iconHeight+5) {
 				return k;
 			}
 		}
-		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Sente.id)) {
+		for(Koma k: sd.listKomaOnHand.get(SenteGote.Sente.id)) {
 			Point lp = k.pos;
-			if(tp.x > lp.x && tp.x < lp.x+shogiData.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
+			if(tp.x > lp.x && tp.x < lp.x+sd.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+sd.iconHeight+5) {
 				return k;
 			}
 		}
-		for(Koma k: shogiData.listKomaOnHand.get(SenteGote.Gote.id)) {
+		for(Koma k: sd.listKomaOnHand.get(SenteGote.Gote.id)) {
 			Point lp = k.pos;
-			if(tp.x > lp.x && tp.x < lp.x+shogiData.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+shogiData.iconHeight+5) {
+			if(tp.x > lp.x && tp.x < lp.x+sd.iconWidth+10 && tp.y > lp.y && tp.y < lp.y+sd.iconHeight+5) {
 				return k;
 			}
 		}
 		return null;
 	}
 	public void commonMousePressed(Koma k, Boolean isOnBoard) {
-		if(shogiData.turnIsSente && k.sente == 1 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
-			shogiData.selectedKoma = null;
+		if(sd.turnIsSente && k.sente == 1 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
+			sd.selectedKoma = null;
 			return;
 		}
-		if(!shogiData.turnIsSente && k.sente == 0 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
-			shogiData.selectedKoma = null;
+		if(!sd.turnIsSente && k.sente == 0 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
+			sd.selectedKoma = null;
 			return;
 		}
-		shogiData.selectedKoma = k;
+		sd.selectedKoma = k;
 		if(isOnBoard) cv.mousePressed = true;
 		cv.repaint();
 		cve.repaint();
 	}
 	@Override
 	public void mouseReleased(MouseEvent e) {
-		if(shogiData.selectedKoma != null) {
+		if(sd.selectedKoma != null) {
 			releaseKoma();
 		} 
 		//System.out.println("mouse released");
@@ -3761,13 +3085,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 	}
 	public void releaseKoma() {
-		Koma selectedKoma = shogiData.selectedKoma;
+		Koma selectedKoma = sd.selectedKoma;
 		if(selectedKoma == null) return;
-		double d = (double)(selectedKoma.pos.x - 70 + shogiData.iconWidth/2) / (double)(shogiData.iconWidth+10);
+		double d = (double)(selectedKoma.pos.x - 70 + sd.iconWidth/2) / (double)(sd.iconWidth+10);
 		int x;
 		if(d>0) x = (int)d;
 		else x = -1;
-		int y = (selectedKoma.pos.y - 20 + shogiData.iconHeight/2) / (shogiData.iconHeight+10) + 1;
+		int y = (selectedKoma.pos.y - 20 + sd.iconHeight/2) / (sd.iconHeight+10) + 1;
 		int preX = selectedKoma.px;
 		int preY = selectedKoma.py;
 		int preP = selectedKoma.promoted;
@@ -3780,17 +3104,17 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			X = (9-x);
 			Y = y;
 		}
-		Boolean result = selectedKoma.moveKoma(shogiData, X, Y, -1);
+		Boolean result = selectedKoma.moveKoma(X, Y, -1);
 		ks.soundKoma();
-		shogiData.viewKomaOnBoard();
-		shogiData.viewKomaOnHand();
+		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 		
 		cv.mousePressed = false;
 		cv.repaint();
 		cve.repaint();
 		
 		if(result == false) {
-			shogiData.selectedKoma = null;
+			sd.selectedKoma = null;
 			return;
 		}
 		
@@ -3808,22 +3132,22 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Kifu kf = new Kifu(selectedKoma, X, Y, promoted, preP, drop);
 			kifuData.add(kf);
 			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
-			if(!checkBox[CheckBoxType.Edit.id].isSelected()) shogiData.turnIsSente = !shogiData.turnIsSente;
+			if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
 			sendCommandToEngine();
 		}
 		
 		// check strategy
 		if(textBox[TextBoxType.Strategy.id].getText().equals("")) {
-			textBox[TextBoxType.Strategy.id].setText(checkStrategy(shogiData));
+			textBox[TextBoxType.Strategy.id].setText(checkStrategy(sd));
 		}
 		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-			textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, true));
+			textBox[TextBoxType.Castle.id].setText(checkCastle(sd, true));
 		}
 		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-			textBox[TextBoxType.Castle.id].setText(checkCastle(shogiData, false));
+			textBox[TextBoxType.Castle.id].setText(checkCastle(sd, false));
 		}
 		
-		shogiData.selectedKoma = null;
+		sd.selectedKoma = null;
 	}
 	@Override
 	public void mouseEntered(MouseEvent e) {
