@@ -323,4 +323,22 @@ public class ShogiEngine {
 			if(ch[4] == '+') cd.promote = 1;
 		}
 	}
+	public void actionForStartEngine(JFrame fr, ShogiData s, CanvasBoard c, CanvasBoardForEngine ce, 
+			DefaultListModel<String> lmE, JList<String> lbE, 
+			DefaultListModel<String> lmK, JList<String> lbK) {
+		Process process = createEngine(fr, s, c, ce, 
+				lmE, lbE, lmK, lbK);
+        if(process == null) {
+        	System.out.println("create engine failed");
+        	return;
+        }
+        createReceiverThread(process);
+        sendInitialCommandToEngine(process);
+        sendCommandToEngine();
+        isEngineOn = true;
+	}
+	public void actionForStopEngine() {
+		sendFinalCommandToEngine();
+		isEngineOn = false;
+	}
 }

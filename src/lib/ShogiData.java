@@ -251,6 +251,12 @@ public class ShogiData {
 		}
 		return null;
 	}
+	public Koma findKoma(int x, int y, int sente) {
+		for(Koma k: listKomaOnBoard) {
+			if(k.px == x && k.py == y && k.sente == sente) return k;
+		}
+		return null;
+	}
 	public Koma findKomaInHand(KomaType type, Boolean isSente) {
 		List<Koma> listKomaOnHand;
 		if(isSente) {

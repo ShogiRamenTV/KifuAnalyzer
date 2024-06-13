@@ -27,7 +27,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -55,15 +54,22 @@ import javax.swing.event.ListSelectionListener;
 
 import lib.CanvasBoard;
 import lib.CanvasBoardForEngine;
+import lib.CastleDataBase;
 import lib.EditProperty;
 import lib.EditProperty.PropertyType;
+import lib.KifuDataBase;
+import lib.KifuDataBase.Kifu;
+import lib.KifuDataBase.KifuData;
 import lib.KomaSound;
+import lib.PlayerDataBase;
 import lib.ShogiData;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
 import lib.ShogiEngine;
+import lib.StrategyDataBase;
 import lib.StringCount;
+import lib.TesujiDataBase;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
 	ActionListener, ListSelectionListener, KeyListener {
@@ -71,10 +77,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
 	String imgFilePath = "./img/";
-	String imgFilePathPlayerIcon = imgFilePath + "playerIcon/";
-	String imgFilePathCastleIcon = imgFilePath + "castleIcon/";
 	String imgFilePathKoma = imgFilePath + "koma/";
-	
 	
 	KomaSound ks = new KomaSound();
 	ShogiData sd = new ShogiData();
@@ -83,6 +86,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	CanvasBoard cv;
 	CanvasBoardForEngine cve;
 	EditProperty ep = new EditProperty();
+	KifuDataBase kdb;
+	StrategyDataBase sdb;
+	CastleDataBase cdb;
+	TesujiDataBase tdb;
+	PlayerDataBase pdb;
 	
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
@@ -206,6 +214,26 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeListBoxSetting();
 		cve = new CanvasBoardForEngine(se, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Kifu.id]);
 		cv = new CanvasBoard(sd, checkBox[CheckBoxType.Reverse.id], se, cve);
+		kdb = new KifuDataBase(sd, sdForKDB, cv, 
+				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
+				listBox[ListBoxType.Kifu.id], checkBox[CheckBoxType.Reverse.id]);
+		sdb = new StrategyDataBase(listModel[ListBoxType.Strategy.id], listBox[ListBoxType.Strategy.id],
+				listModel[ListBoxType.Player.id], listBox[ListBoxType.Player.id],
+				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
+				listBox[ListBoxType.Castle.id], textBox[TextBoxType.Castle.id],
+				kdb, cdb);
+		cdb = new CastleDataBase(listModel[ListBoxType.Castle.id], listBox[ListBoxType.Castle.id],
+				listModel[ListBoxType.Player.id], listBox[ListBoxType.Player.id],
+				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
+				listBox[ListBoxType.Strategy.id], textBox[TextBoxType.Castle.id], 
+				cv, kdb, sdb);
+		tdb = new TesujiDataBase(listModel[ListBoxType.Tesuji.id], listBox[ListBoxType.Tesuji.id],
+				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
+				textBox[TextBoxType.Tesuji.id], comboBox, kdb
+				);
+		pdb = new PlayerDataBase(listModel[ListBoxType.Player.id], listBox[ListBoxType.Player.id],
+				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
+				textBox[TextBoxType.Player1.id], textBox[TextBoxType.Player2.id], kdb, cv);
 		initializeCanvasSetting();
 		ks.initializeSoundSetting();
 		initializeMenuBar();
@@ -327,8 +355,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		loadYear = "";
 	}
 	public void clearIcons() {
-		initializePlayerIcon();
-		initializeCastleIcon();
+		pdb.initializePlayerIcon();
+		cdb.initializeCastleIcon();
 	}
 	public void initializeMenuBar() {
 		for(MenuTypeSetting mt: MenuTypeSetting.values()) {
@@ -477,17 +505,17 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 		clearListBox();
 		clearIcons();
-		kifuData.clear();
+		kdb.kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
 		cve.clearBestPointData();
-		loadStrategyData();
-		loadCastleData();
-		loadTesujiData();
+		sdb.loadStrategyData();
+		cdb.loadCastleData();
+		tdb.loadTesujiData();
 		actionForDB();
-		countStrategy();
-		countCastle();
-		countTesujiData();
-		createPlayerDataBase();
+		sdb.countStrategy();
+		cdb.countCastle();
+		tdb.countTesujiData();
+		pdb.createPlayerDataBase();
 		cv.repaint();
 		cve.repaint();
 	}
@@ -497,7 +525,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int index = 1;
 		
 		while(true) {
-			fileName = kifuFilePath + String.format("kifu%03d.txt", index);
+			fileName = kdb.kifuFilePath + String.format("kifu%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -508,7 +536,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			FileWriter fw = new FileWriter(file);
 			fw.write(textBox[TextBoxType.Player1.id].getText() + "\n");
 			fw.write(textBox[TextBoxType.Player2.id].getText() + "\n");
-			for(Kifu kf: kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
+			for(Kifu kf: kdb.kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
 			if(checkBox[CheckBoxType.Draw.id].isSelected()) fw.write("-1");
 			fw.close();
 			
@@ -531,9 +559,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			fd.setDirectory(path.toString() + "/kifu/");
 			fd.setVisible(true);
 			if(fd.getFile() == null) return;
-			fileName = kifuFilePath + fd.getFile();
+			fileName = kdb.kifuFilePath + fd.getFile();
 		} else {
-			fileName = kifuFilePath + numStrYear + "/" + "kifu" + numStrFile + ".txt";
+			fileName = kdb.kifuFilePath + numStrYear + "/" + "kifu" + numStrFile + ".txt";
 		}
 		initializeShogiBoard();
 		try {
@@ -554,8 +582,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					int pp = Integer.parseInt(st.nextToken()); // preP
 					int d = Integer.parseInt(st.nextToken()); // drop
 					updateListBox(sd.k[i].type, x, y, sd.k[i].px, sd.k[i].py, sd.k[i].sente, p, pp, d);
-					Kifu kf = new Kifu(sd.k[i], x, y, p, pp, d);
-					kifuData.add(kf);
+					Kifu kf = kdb.createKifu(sd.k[i], x, y, p, pp, d);
+					kdb.kifuData.add(kf);
 					sd.k[i].moveKoma(x, y, p);
 				}
 			}
@@ -574,7 +602,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			
 			sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 			sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-			updatePlayerIcon();
+			pdb.updatePlayerIcon();
 			cv.repaint();
 		} catch(IOException er) {
 			System.out.println(er);
@@ -584,7 +612,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
 		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		clearListBox();
-		kifuData.clear();
+		kdb.kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
 		cv.clearDrawPoint();
 		actionForStopEngine();
@@ -594,7 +622,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cve.repaint();
 	}
 	public void actionForDB() {
-		kifuDB.clear();
+		kdb.kifuDB.clear();
 		String selectedYear = (String)comboBox.getSelectedItem();
 		if(selectedYear.equals("") || selectedYear.equals("all")) loadKifuDBByYear("");
 		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadKifuDBByYear("2022");
@@ -606,24 +634,24 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			int fileIndex = 1;
 			while(true) {
 				sdForKDB.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
-				String fileName = kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
+				String fileName = kdb.kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
 				//System.out.println(fileName);
 				File file = new File(fileName);
-				KifuDataBase kdb = new KifuDataBase();
+				KifuData kd = kdb.createKifuData();
 				FileReader fr = new FileReader(file);
 				BufferedReader br = new BufferedReader(fr);
 				String content;
 				for(SenteGote sg: SenteGote.values()) {
-					kdb.playerName[sg.id] = br.readLine();
+					kd.playerName[sg.id] = br.readLine();
 				}
-				kdb.year = strY;
-				kdb.index = fileIndex;
+				kd.year = strY;
+				kd.index = fileIndex;
 				while((content = br.readLine()) != null) {
 					StringTokenizer st = new StringTokenizer(content,",");
 					while(st.hasMoreTokens()) {
 						int i = Integer.parseInt(st.nextToken()); // index
 						if(i == -1) { // Draw game
-							kdb.isSenteWin = -1;
+							kd.isSenteWin = -1;
 							continue;
 						}
 						int x = Integer.parseInt(st.nextToken()); // x
@@ -631,26 +659,23 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 						int p = Integer.parseInt(st.nextToken()); // promote
 						int pp = Integer.parseInt(st.nextToken()); // preP
 						int d = Integer.parseInt(st.nextToken()); // drop
-						Kifu kf = new Kifu(sd.k[i], x, y, p, pp, d);
-						kdb.db.add(kf);
+						Kifu kf = kdb.createKifu(sd.k[i], x, y, p, pp, d);
+						kd.db.add(kf);
 						sdForKDB.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
-						if(kdb.strategyName.equals("")) {
-							kdb.strategyName = checkStrategy(sdForKDB);
+						if(kd.strategyName.equals("")) {
+							kd.strategyName = sdb.checkStrategy(sdForKDB);
 						}
-						if(kdb.castleName[SenteGote.Sente.id].equals("")) {
-							kdb.castleName[SenteGote.Sente.id] = checkCastle(sdForKDB, true);
-							//if(kdb.castleName[SenteGote.Sente.id].equals("Yagura")) {
-							//	System.out.println("Yagura:" + kdb.index);
-							//}
+						if(kd.castleName[SenteGote.Sente.id].equals("")) {
+							kd.castleName[SenteGote.Sente.id] = cdb.checkCastle(sdForKDB, true);
 						}
-						if(kdb.castleName[SenteGote.Gote.id].equals("")) {
-							kdb.castleName[SenteGote.Gote.id] = checkCastle(sdForKDB, false);
+						if(kd.castleName[SenteGote.Gote.id].equals("")) {
+							kd.castleName[SenteGote.Gote.id] = cdb.checkCastle(sdForKDB, false);
 						}
 					}
 				}
 				br.close();
-				if(kdb.isSenteWin != -1) kdb.isSenteWin = isSenteWin(kdb);
-				kifuDB.add(kdb);
+				if(kd.isSenteWin != -1) kd.isSenteWin = kdb.isSenteWin(kd);
+				kdb.kifuDB.add(kd);
 				fileIndex++;
 			}
 		} catch(FileNotFoundException en) {
@@ -675,7 +700,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		while(true) {
-			fileName = strategyFilePathBase + strategyFilePath + String.format("strategy%03d.txt", index);
+			fileName = sdb.strategyFilePathBase + sdb.strategyFilePath + String.format("strategy%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -707,7 +732,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		while(true) {
-			fileName = strategyFilePathBase + castleFilePath + String.format("castle%03d.txt", index);
+			fileName = sdb.strategyFilePathBase + cdb.castleFilePath + String.format("castle%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -720,10 +745,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			fw.write(textBox[TextBoxType.Castle.id].getText() + "\n");
 			for(Koma k: sd.k) {
 				if((k.type == KomaType.King) && radioButtonSente.isSelected() && k.sente == 0) {
-					saveListKomaAroundKing(sd, k, fw);
+					cdb.saveListKomaAroundKing(sd, k, fw);
 				}
 				if((k.type == KomaType.King) && radioButtonGote.isSelected() && k.sente == 1) {
-					saveListKomaAroundKing(sd, k, fw);
+					cdb.saveListKomaAroundKing(sd, k, fw);
 				}
 			}
 			fw.close();
@@ -745,7 +770,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(loadFile.equals("")) return;
 		
 		while(true) {
-			fileName = kifuFilePath + String.format("tesuji%03d.txt", index);
+			fileName = kdb.kifuFilePath + String.format("tesuji%03d.txt", index);
 			path = Paths.get(fileName);
 			if(!Files.exists(path)) break;
 			index++;
@@ -772,26 +797,26 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listModel[ListBoxType.Info.id].addElement("<Kifus of Same Position>");
 		listModel[ListBoxType.Info.id].addElement("-------------");
 		
-		for(KifuDataBase kdb: kifuDB) {
+		for(KifuData kd: kdb.kifuDB) {
 			int i=0;
 			Boolean isSame = true;
 			// check same moves
-			while(i<index && i<kdb.db.size()) {
-				if( kifuData.get(i).k.type != kdb.db.get(i).k.type ||
-						kifuData.get(i).x != kdb.db.get(i).x || 
-						kifuData.get(i).y != kdb.db.get(i).y || 
-						kifuData.get(i).p != kdb.db.get(i).p ) {
+			while(i<index && i<kd.db.size()) {
+				if( kdb.kifuData.get(i).k.type != kd.db.get(i).k.type ||
+					kdb.kifuData.get(i).x != kd.db.get(i).x || 
+					kdb.kifuData.get(i).y != kd.db.get(i).y || 
+					kdb.kifuData.get(i).p != kd.db.get(i).p ) {
 					// check same position if moves were different
-					isSame = checkSamePositionKDB(index, kdb);
+					isSame = kdb.checkSamePositionKDB(index, kd);
 					break;
 				}
 				i++;
 			}
-			if(isSame && index < kdb.db.size()) {
-				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
-				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
-				if(kdb.isSenteWin == 1) str+="(Sente Win)";
-				else if(kdb.isSenteWin == 0) str+="(Gote Win)";
+			if(isSame && index < kd.db.size()) {
+				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
+				str += kd.playerName[SenteGote.Sente.id] + "(" + kd.castleName[SenteGote.Sente.id] + ")" + " vs " + kd.playerName[SenteGote.Gote.id] + "(" + kd.castleName[SenteGote.Gote.id] + ")";
+				if(kd.isSenteWin == 1) str+="(Sente Win)";
+				else if(kd.isSenteWin == 0) str+="(Gote Win)";
 				else str+="(Draw)";
 				listModel[ListBoxType.Info.id].addElement(str);
 			}
@@ -841,172 +866,30 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			actionForKomaInHand();
 		}
 	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Strategy Data >> -----------------------------
-	// -------------------------------------------------------------------------
-	String strategyFilePathBase = "./strategy/";
-	String strategyFilePath = "strategy/";
-	String castleFilePath = "castle/";
-	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
-	List<StringCount> strategyCountData = new ArrayList<StringCount>();
-	public class StrategyData {
-		Point p[];
-		String name;
-		StrategyData(String strName) {
-			name = strName;
-			p = new Point[40];
-		}
-	}
-	public void loadStrategyData() {
-		System.out.print("Loading Strategy Data ... ");
-		strategyDataBase.clear();
-		try {
-			int fileIndex = 1;
-			while(true) {
-				String fileName = strategyFilePathBase + strategyFilePath + "strategy" + String.format("%03d", fileIndex) + ".txt";
-				File file = new File(fileName);
-				FileReader fr = new FileReader(file);
-				BufferedReader br = new BufferedReader(fr);
-				String content;
-				content = br.readLine(); // name
-				StrategyData strData = new StrategyData(content);
-				int i = 0;
-				while((content = br.readLine()) != null) {
-					StringTokenizer st = new StringTokenizer(content,",");
-					while(st.hasMoreTokens()) {
-						int x = Integer.parseInt(st.nextToken()); // x
-						int y = Integer.parseInt(st.nextToken()); // y
-						strData.p[i] = new Point(x, y);
-					}
-					i++;
-				}
-				br.close();
-				strategyDataBase.add(strData);
-				fileIndex++;
-			}
-		} catch(FileNotFoundException en) {
-			//System.out.println(en);
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-		System.out.println("Completed.");
-	}
-	public String checkStrategy(ShogiData sd) {
-		for(StrategyData strData: strategyDataBase) {
-			Boolean isSame = true;
-			for(int i=0; i<40; i++) {
-				if(sd.k[i].px != strData.p[i].x || sd.k[i].py != strData.p[i].y) {
-					isSame = false;
-					break;
-				}
-			}
-			if(isSame) {
-				//System.out.println("strategy" + String.format("%03d", strategyDataBase.indexOf(strData)+1) + ".txt matched");
-				return strData.name;
-			}
-		}
-		
-		return "";
-	}
-	public void countStrategy() {
-		listModel[ListBoxType.Strategy.id].clear();
-		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
-		strategyCountData.clear();
-		
-		for(KifuDataBase kdb: kifuDB) {
-			Boolean found = false;
-			for(StringCount sc: strategyCountData) {
-				if(sc.str.equals(kdb.strategyName)) {
-					sc.cnt++;
-					if(kdb.isSenteWin == 1) sc.senteWinCnt++;
-					found = true;
-				}
-			}
-			if(!found) {
-				StringCount sc = new StringCount(kdb.strategyName, kdb.isSenteWin);
-				strategyCountData.add(sc);
-			}
-		}
-		
-		Collections.sort(
-				strategyCountData,
-				new Comparator<StringCount>() {
-					@Override
-					public int compare(StringCount obj1, StringCount obj2) {
-						return obj2.cnt - obj1.cnt;
-					}
-				}
-				);
-		
-		int totalCnt = 0;
-		int totalSenteWinCnt = 0;
-		for(StringCount sc: strategyCountData) {	
-			totalCnt += sc.cnt;
-			totalSenteWinCnt += sc.senteWinCnt;
-		}
-		Double d = (double)totalSenteWinCnt/(double)totalCnt*100;
-		String str = "<Total:" + String.format("%2d", totalCnt)+" Games" + "(Sente Winning Rate" + String.format("%.0f", d) + "%)>";
-		listModel[ListBoxType.Strategy.id].addElement(str);
-		listModel[ListBoxType.Strategy.id].addElement("----------");
-		for(StringCount sc: strategyCountData) {
-			str = sc.str;
-			d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
-			str += ":" + String.format("%2d", sc.cnt)+" games";
-			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
-			listModel[ListBoxType.Strategy.id].addElement(str);
-		}
-		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
-	}
-	public void updateListBox2ByStrategy() {
-		int selectedIndex = listBox[ListBoxType.Strategy.id].getSelectedIndex()-2;
-		if(selectedIndex < 0) return;
-		int selectedIndex4 = listBox[ListBoxType.Player.id].getSelectedIndex();
-		String playerName = "";
-		if(selectedIndex4 >= 2) {
-			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndex4);
-			//System.out.println(playerName);
-		}
-		int selectedIndexCastle = listBox[ListBoxType.Castle.id].getSelectedIndex();
-		String castleName = "";
-		if(selectedIndexCastle >= 2) {
-			StringCount sc = castleCountData.get(selectedIndexCastle-2);
-			castleName = sc.str;
-		}
-		
-		StringCount sc = strategyCountData.get(selectedIndex);
-		//System.out.println(sc.str);
-		String strategy = sc.str;
-		textBox[TextBoxType.Strategy.id].setText(strategy);
-		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 
-		if(playerName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ strategy + "'s Kifu>");
-		else listModel[ListBoxType.Info.id].addElement("<"+ strategy + "(" + playerName + ")"+"'s Kifu>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
-		for(KifuDataBase kdb: kifuDB) {
-			if(kdb.strategyName.equals(strategy)) {
-				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
-				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
-				if(kdb.isSenteWin == 1) str+="(Sente Win)";
-				else if(kdb.isSenteWin == 0) str+="(Gote Win)";
-				else str+="(Draw)";
-				if(playerName.equals("") && castleName.equals("")) {
-					listModel[ListBoxType.Info.id].addElement(str);
-				} else if(!playerName.equals("") && !castleName.equals("")) {
-					if(str.contains(playerName) && (kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName))) {
-						listModel[ListBoxType.Info.id].addElement(str);
-					}
-				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
-				} else if(!castleName.equals("")) {
-					if(kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName)) listModel[ListBoxType.Info.id].addElement(str);
-				}
-			}
-		}
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-	}
-	public void getLoadNumberOnListBox2() {
+	
+
+
+	private ActionListener enterActionListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            pdb.updatePlayerIcon();
+        }
+    };
+    private ActionListener checkActionListener = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        	for(Koma k: sd.k) {
+        		k.reverseForReverseMode();
+        	}
+        	sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+        	sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
+        	cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
+        	cv.repaint();
+        	cve.repaint();
+        }
+    };
+    public void getLoadNumberOnListBox2() {
 		int index = listBox[ListBoxType.Info.id].getSelectedIndex();
 		if(index < 2) return;
 		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
@@ -1020,488 +903,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(subStrStep.matches("[+-]?\\d*(\\.\\d+)?")) loadStep = subStrStep;
 		if(subStrYear.matches("[+-]?\\d*(\\.\\d+)?")) loadYear = subStrYear;
 	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Castle Data >> -----------------------------
-	// -------------------------------------------------------------------------
-	List<CastleData> castleDataBase = new ArrayList<CastleData>();
-	List<StringCount> castleCountData = new ArrayList<StringCount>();
-	public class CastleData {
-		String name;
-		int data[][] = new int[25][4];
-		CastleData(String castleName) {
-			name = castleName;
-		}
-	}
-	public void loadCastleData() {
-		System.out.print("Loading Castle Data ... ");
-		castleDataBase.clear();
-		try {
-			int fileIndex = 1;
-			while(true) {
-				String fileName = strategyFilePathBase + castleFilePath + "castle" + String.format("%03d", fileIndex) + ".txt";
-				File file = new File(fileName);
-				FileReader fr = new FileReader(file);
-				BufferedReader br = new BufferedReader(fr);
-				String content;
-				content = br.readLine(); // name
-				CastleData castleData = new CastleData(content);
-				int i = 0;
-				while((content = br.readLine()) != null) {
-					StringTokenizer st = new StringTokenizer(content,",");
-					while(st.hasMoreTokens()) {
-						castleData.data[i][0] =  Integer.parseInt(st.nextToken()); // sente
-						castleData.data[i][1] = Integer.parseInt(st.nextToken()); // x
-						castleData.data[i][2] = Integer.parseInt(st.nextToken()); // y
-						castleData.data[i][3] = Integer.parseInt(st.nextToken()); // type
-						i++;
-					}
-				}
-				br.close();
-				castleDataBase.add(castleData);
-				fileIndex++;
-				//System.out.println(castleData.name);
-			}
-		} catch(FileNotFoundException en) {
-			//System.out.println(en);
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-		
-		System.out.println("Completed.");
-	}
-	public void countCastle() {
-		listModel[ListBoxType.Castle.id].clear();
-		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
-		castleCountData.clear();
-		
-		for(KifuDataBase kdb: kifuDB) {
-			Boolean found = false;
-			for(StringCount sc: castleCountData) {
-				if(sc.str.equals(kdb.castleName[SenteGote.Sente.id])) {
-					sc.cnt++;
-					found = true;
-				}
-			}
-			if(!found) {
-				StringCount sc = new StringCount(kdb.castleName[SenteGote.Sente.id], kdb.isSenteWin);
-				castleCountData.add(sc);
-			}
-		}
-		for(KifuDataBase kdb: kifuDB) {
-			Boolean found = false;
-			for(StringCount sc: castleCountData) {
-				if(sc.str.equals(kdb.castleName[SenteGote.Gote.id])) {
-					sc.cnt++;
-					found = true;
-				}
-			}
-			if(!found) {
-				StringCount sc = new StringCount(kdb.castleName[SenteGote.Gote.id], kdb.isSenteWin);
-				castleCountData.add(sc);
-			}
-		}
-		
-		Collections.sort(
-				castleCountData,
-				new Comparator<StringCount>() {
-					@Override
-					public int compare(StringCount obj1, StringCount obj2) {
-						return obj2.cnt - obj1.cnt;
-					}
-				}
-				);
-		
-		int totalCnt = 0;
-		for(StringCount sc: castleCountData) {	
-			totalCnt += sc.cnt;
-		}
-		String str = "<Total:" + String.format("%2d", totalCnt)+" Castles>";
-		listModel[ListBoxType.Castle.id].addElement(str);
-		listModel[ListBoxType.Castle.id].addElement("----------");
-		for(StringCount sc: castleCountData) {
-			str = sc.str;
-			str += ":" + String.format("%2d", sc.cnt)+" games";
-			listModel[ListBoxType.Castle.id].addElement(str);
-		}
-		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
-	}
-	public void updateListBoxInfoByCastle() {
-		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
-		if(selectedIndex < 0) {
-			initializeCastleIcon();
-			return;
-		}
-		int selectedIndexStrategy = listBox[ListBoxType.Strategy.id].getSelectedIndex();
-		String strategyName = "";
-		if(selectedIndexStrategy >= 2) {
-			StringCount sc = strategyCountData.get(selectedIndexStrategy-2);
-			strategyName = sc.str;
-		}
-		int selectedIndexPlayer = listBox[ListBoxType.Player.id].getSelectedIndex();
-		String playerName = "";
-		if(selectedIndexPlayer >= 2) {
-			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndexPlayer);
-			//System.out.println(playerName);
-		}
-		
-		StringCount sc = castleCountData.get(selectedIndex);
-		//System.out.println(sc.str);
-		String castleName = sc.str;
-		updateCastleIcon();
-		textBox[TextBoxType.Castle.id].setText(castleName);
-		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-
-		if(strategyName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ castleName + "'s Kifu>");
-		else listModel[ListBoxType.Info.id].addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
-		for(KifuDataBase kdb: kifuDB) {
-			if(kdb.castleName[SenteGote.Sente.id].equals(castleName) || kdb.castleName[SenteGote.Gote.id].equals(castleName)) {
-				String str = String.format("kf%03d:000:%s:", kdb.index, kdb.year);
-				str += kdb.playerName[SenteGote.Sente.id] + "(" + kdb.castleName[SenteGote.Sente.id] + ")" + " vs " + kdb.playerName[SenteGote.Gote.id] + "(" + kdb.castleName[SenteGote.Gote.id] + ")";
-				if(kdb.isSenteWin == 1) str+="(Sente Win)";
-				else if(kdb.isSenteWin == 0) str+="(Gote Win)";
-				else str+="(Draw)";
-				
-				if(strategyName.equals("") && playerName.equals("")) {
-					listModel[ListBoxType.Info.id].addElement(str);
-				} else if(!strategyName.equals("") && !playerName.equals("")) {
-					if(kdb.strategyName.equals(strategyName) && str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
-				} else if(!strategyName.equals("")) {
-					if(kdb.strategyName.equals(strategyName)) listModel[ListBoxType.Info.id].addElement(str);
-				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
-				}
-			}
-		}
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-	}
-	public String checkCastle(ShogiData sd, Boolean isSente) {
-		for(Koma k: sd.k) {
-			for(CastleData cd: castleDataBase) {
-				if((k.type == KomaType.King) && isSente && k.sente == 0) {
-					if(isSameCastle(sd, cd, k.sente)) {
-						//System.out.println("castle" + String.format("%03d", castleDataBase.indexOf(cd)+1) + ".txt matched");
-						return cd.name;
-					}
-				}
-				if((k.type == KomaType.King) && !isSente && k.sente == 1) {
-					if(isSameCastle(sd, cd, k.sente)) {
-						//System.out.println("castle" + String.format("%03d", castleDataBase.indexOf(cd)+1) + ".txt matched");
-						return cd.name;
-					}
-				}
-			}
-		}
-		
-		return "";
-	}
-	public Boolean isSameCastle(ShogiData sd, CastleData cd, int sente) {
-		Boolean matched = false;
-		for(int[] data: cd.data) {
-			Koma k = getKomaByPosition(sd, data[1], data[2], data[0]);
-			if(k == null) {
-				if(data[3] == KomaType.Empty.id && data[0] == sente) {
-					matched = true;
-				}
-				else {
-					return false;
-				}
-			}
-			else if(k.type.id == data[3] && sente == data[0]) {
-				matched = true;
-			} else {
-				return false;
-			}
-		}
-		if(matched) return true;
-		else return false;
-	}
-	public void saveListKomaAroundKing(ShogiData sd, Koma king, FileWriter fw) {
-		Koma k;
-		try {
-			for(int x=-2; x<=2; x++) 
-				for(int y=-2; y<=2; y++) {
-					k = getKomaByPosition(sd, king.px+x, king.py+y, king.sente);
-					if(k != null) {
-						fw.write(k.sente + "," + k.px + "," + k.py + "," + k.type.id + "\n");
-					} else {
-						fw.write(king.sente + "," + String.valueOf(king.px+x) + "," + String.valueOf(king.py+y) + "," + KomaType.Empty.id + "\n");
-					}
-				}
-		
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-	}
-	public Koma getKomaByPosition(ShogiData sd, int x, int y, int sente) {
-		for(Koma k: sd.k) {
-			if(k.sente == sente && k.px == x && k.py == y) {
-				return k;
-			}
-		}
-		return null;
-	}
-	public void updateCastleIcon() {
-		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
-		if(selectedIndex < 0) return;
-		StringCount sc = castleCountData.get(selectedIndex);
-		String castleName = sc.str;
-		try {
-			BufferedImage img = ImageIO.read(new File(imgFilePathCastleIcon + castleName + ".jpg"));
-			cv.castleIcon = img.getScaledInstance(120, 160, java.awt.Image.SCALE_SMOOTH);
-		} catch(IOException e) {
-			cv.castleIcon = null;
-		}
-		cv.repaint();
-	}
-	public void initializeCastleIcon() {
-		cv.castleIcon = null;
-	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Tesuji Data >> -----------------------------
-	// -------------------------------------------------------------------------
-	List<TesujiData> tesujiDataBase = new ArrayList<TesujiData>();
-	List<StringCount> tesujiCountData = new ArrayList<StringCount>();
-	public class TesujiData {
-		String name;
-		int fileIndex;
-		int stepIndex;
-		String year;
-		TesujiData(String tesujiName, int file, int step) {
-			name = tesujiName;
-			fileIndex = file;
-			stepIndex = step;
-		}
-	}
-	public void loadTesujiData() {
-		tesujiDataBase.clear();
-		String selectedYear = (String)comboBox.getSelectedItem();
-		if(selectedYear.equals("") || selectedYear.equals("all")) loadTesujiDataByYear("");
-		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadTesujiDataByYear("2022");
-		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadTesujiDataByYear("2023");
-	}
-	public void loadTesujiDataByYear(String strY) {
-		System.out.print("Loading Tesuji Data(" + strY + ") ... ");
-		try {
-			int fileIndex = 1;
-			while(true) {
-				String fileName = kifuFilePath + strY + "/" + "tesuji" + String.format("%03d", fileIndex) + ".txt";
-				File file = new File(fileName);
-				FileReader fr = new FileReader(file);
-				BufferedReader br = new BufferedReader(fr);
-				String name = br.readLine();
-				int fileNumber = Integer.parseInt(br.readLine());
-				int stepNumber = Integer.parseInt(br.readLine());
-				TesujiData tesujiData = new TesujiData(name, fileNumber, stepNumber); 
-				tesujiData.year = strY;
-				br.close();
-				tesujiDataBase.add(tesujiData);
-				fileIndex++;
-				//System.out.println(castleData.name);
-			}
-		} catch(FileNotFoundException en) {
-			//System.out.println(en);
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-		
-		System.out.println("Completed.");
-	}
-	public void countTesujiData() {
-		listModel[ListBoxType.Tesuji.id].clear();
-		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
-		tesujiCountData.clear();
-		
-		for(TesujiData td: tesujiDataBase) {
-			Boolean found = false;
-			for(StringCount sc: tesujiCountData) {
-				if(sc.str.equals(td.name)) {
-					sc.cnt++;
-					found = true;
-				}
-			}
-			if(!found) {
-				StringCount sc = new StringCount(td.name, 1);
-				tesujiCountData.add(sc);
-			}
-		}
-		
-		Collections.sort(
-				tesujiCountData,
-				new Comparator<StringCount>() {
-					@Override
-					public int compare(StringCount obj1, StringCount obj2) {
-						return obj2.cnt - obj1.cnt;
-					}
-				}
-				);
-		
-		int totalCnt = 0;
-		for(StringCount sc: tesujiCountData) {	
-			totalCnt += sc.cnt;
-		}
-		String str = "<Total:" + String.format("%2d", totalCnt)+" Tesujis>";
-		listModel[ListBoxType.Tesuji.id].addElement(str);
-		listModel[ListBoxType.Tesuji.id].addElement("----------");
-		for(StringCount sc: tesujiCountData) {
-			str = sc.str;
-			str += ":" + String.format("%2d", sc.cnt)+" counts";
-			listModel[ListBoxType.Tesuji.id].addElement(str);
-		}
-		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
-	}
-	public void updateListBoxInfoByTesuji() {
-		int selectedIndex = listBox[ListBoxType.Tesuji.id].getSelectedIndex()-2;
-		if(selectedIndex < 0) {
-			return;
-		}
-		
-		StringCount sc = tesujiCountData.get(selectedIndex);
-		//System.out.println(sc.str);
-		String tesujiName = sc.str;
-		textBox[TextBoxType.Tesuji.id].setText(tesujiName);
-		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-
-		listModel[ListBoxType.Info.id].addElement("<"+ tesujiName + "'s Kifu>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
-		for(TesujiData td: tesujiDataBase) {
-			if(td.name.equals(tesujiName)) {
-				String str = "kf" + String.format("%03d:%03d:%s", td.fileIndex, td.stepIndex, td.year);
-				KifuDataBase kdb = getKDB(td.fileIndex, td.year);
-				if(kdb == null) continue;
-				str += ":" + kdb.playerName[SenteGote.Sente.id] + " vs " + kdb.playerName[SenteGote.Gote.id];
-				listModel[ListBoxType.Info.id].addElement(str);
-			}
-		}
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Kifu Data >> -----------------------------
-	// -------------------------------------------------------------------------
-	String kifuFilePath = "./kifu/";
-	List<Kifu> kifuData = new ArrayList<Kifu>();
-	List<KifuDataBase> kifuDB = new ArrayList<KifuDataBase>();
-	
-	public class KifuDataBase {
-		List<Kifu> db = new ArrayList<Kifu>();
-		String playerName[] = new String[2];
-		String strategyName;
-		String castleName[] = new String[2];
-		String year;
-		int index;
-		//Boolean isSenteWin;
-		int isSenteWin;
-		
-		KifuDataBase() {
-			strategyName = "";
-			for(SenteGote sg: SenteGote.values()) castleName[sg.id] = "";
-		}
-	}	
-	public class Kifu {
-		Koma k;
-		int x;
-		int y;
-		int p;
-		int pp;
-		int d;
-		
-		Kifu(Koma koma, int px, int py, int promote, int preP, int drop) {
-			k = koma;
-			x = px;
-			y = py;
-			p = promote;
-			pp = preP;
-			d = drop;
-		}
-	}
-	public KifuDataBase getKDB(int fileIndex, String year) {
-		for(KifuDataBase kdb: kifuDB) {
-			if(kdb.index == fileIndex && kdb.year.equals(year)) return kdb;
-		}
-		
-		return null;
-	}
-	public void checkKDB(int index) {
-		int i;
-		Boolean isSame;
-		List<StringCount> listSC = new ArrayList<StringCount>();
-		
-		for(KifuDataBase kdb: kifuDB) {
-			i=0;
-			isSame = true;
-			// check same moves
-			while(i<index && i<kdb.db.size()) {
-				if( kifuData.get(i).k.type != kdb.db.get(i).k.type ||
-						kifuData.get(i).x != kdb.db.get(i).x || 
-						kifuData.get(i).y != kdb.db.get(i).y || 
-						kifuData.get(i).p != kdb.db.get(i).p ) {
-					// check same position if moves were different
-					isSame = checkSamePositionKDB(index, kdb);
-					break;
-				}
-				i++;
-			}
-			
-			// count next move on kdb
-			if(isSame && index < kdb.db.size()) {
-				countNextMoveOnKDB(listSC, kdb, index);
-			}
-		}
-		
-		updateListBox2(listSC);
-	}
-	public void countNextMoveOnKDB(List<StringCount> listSC, KifuDataBase kdb, int index) {
-		Kifu kf = kdb.db.get(index);
-		String str = sd.createMoveKomaName(kf.k.type, kf.k.sente, kf.x, kf.y, kf.k.px, kf.k.py, kf.p, kf.pp, kf.d);
-		Boolean found = false;
-		// count string data if same string
-		for(StringCount sc: listSC) {
-			if(sc.str.equals(str)) {
-				sc.cnt++;
-				if(isSenteWin(kdb) == 1) sc.senteWinCnt++;
-				found = true;
-			}
-		}
-		// add new string data
-		if(!found) {
-			StringCount sc = new StringCount(str, isSenteWin(kdb));
-			sc.target = new Point(kf.x, kf.y);
-			sc.base = new Point(sd.k[kf.k.index].px, sd.k[kf.k.index].py);
-			listSC.add(sc);
-		}
-	}
-	public int isSenteWin(KifuDataBase kdb) {
-		int index = kdb.db.size()-1;
-		if((index%2) == 0) return 1;
-		return 0;
-	}
-	public Boolean checkSamePositionKDB(int index, KifuDataBase kdb) {
-		sdForKDB.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
-		
-		int i = 0;
-		while(i<index && index<kdb.db.size()) {
-			Kifu kf = kdb.db.get(i);
-			sdForKDB.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
-			i++;
-		}
-		Boolean isSame = true;
-		for(int x=0; x<40; x++) {
-			if(sd.k[x].type != sdForKDB.k[x].type || 
-					sd.k[x].px != sdForKDB.k[x].px || 
-					sd.k[x].py != sdForKDB.k[x].py ||
-					sd.k[x].promoted != sdForKDB.k[x].promoted) {
-				isSame = false;
-				break;
-			}
-		}
-		
-		return isSame;
-	}
-	public void importShogiWarsKifu() {
+ // -------------------------------------------------------------------------
+ // ----------------------- << Shogi Wars Interface >> ----------------------
+ // -------------------------------------------------------------------------
+    public void importShogiWarsKifu() {
 		System.out.print("Importing Kifu ... ");
 		String strClipBoard;
 		if( (strClipBoard = getClipboardData()) == null ) {
@@ -1513,7 +918,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
-		updatePlayerIcon();
+		pdb.updatePlayerIcon();
 		if(result) System.out.println("Completed.");
 		else System.out.println("Failed.");
 	}
@@ -1572,7 +977,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 					return false;
 				}
 				updateListBox(kf.k.type, kf.x, kf.y, kf.k.px, kf.k.py, kf.k.sente, kf.p, kf.pp, kf.d);
-				kifuData.add(kf);
+				kdb.kifuData.add(kf);
 				sd.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
 				isSente = !isSente;
 			}
@@ -1619,328 +1024,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			}
 			index++;
 		}
-		kf = new Kifu(k, x, y, p, k.promoted, drop);
+		kf = kdb.createKifu(k, x, y, p, k.promoted, drop);
 		return kf;
-	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Player Data >> -----------------------------
-	// -------------------------------------------------------------------------
-	List<PlayerData> playerDataBase = new ArrayList<PlayerData>();
-	public class PlayerData {
-		String playerName;
-		List<GameResult> grList = new ArrayList<GameResult>();
-		
-		PlayerData(String name) {
-			playerName = name;
-		}
-	}
-	public class GameResult {
-		String strategy;
-		String castle;
-		int isPlayerWin;
-		Boolean isSente;
-		
-		GameResult() {}
-	}
-	public class GameResultCount {
-		String str;
-		int cnt;
-		int senteWinCnt = 0;
-		int senteLoseCnt = 0;
-		int senteDrawCnt = 0;
-		int goteWinCnt = 0;
-		int goteLoseCnt = 0;
-		int goteDrawCnt = 0;
-		GameResultCount(String s, int isPlayerWin, Boolean isSente) {
-			str = s;
-			cnt = 1;
-			if(isPlayerWin == 1) {
-				if(isSente) {
-					senteWinCnt = 1;
-				} else {
-					goteWinCnt = 1;
-				}
-			} else if(isPlayerWin == 0) {
-				if(isSente) {
-					senteLoseCnt = 1;
-				} else {
-					goteLoseCnt = 1;
-				}
-			} else {
-				if(isSente) {
-					senteDrawCnt = 1;
-				} else {
-					goteDrawCnt = 1;
-				}
-			}
-		}
-	}
-	public void createPlayerDataBase() {
-		listModel[ListBoxType.Player.id].clear();
-		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
-		playerDataBase.clear();
-		
-		for(KifuDataBase kdb: kifuDB) {
-			Boolean foundS = false;
-			Boolean foundG = false;
-			GameResult grS = new GameResult();
-			GameResult grG = new GameResult();
-			grS.strategy = kdb.strategyName;
-			grG.strategy = kdb.strategyName;
-			grS.isSente = true;
-			grG.isSente = false;
-			if(kdb.isSenteWin == 1) {
-				grS.isPlayerWin = 1;
-				grG.isPlayerWin = 0;
-			}
-			else if(kdb.isSenteWin == 0) {
-				grS.isPlayerWin = 0;
-				grG.isPlayerWin = 1;
-			} else { // Draw
-				grS.isPlayerWin = -1;
-				grG.isPlayerWin = -1;
-			}
-			grS.castle = kdb.castleName[SenteGote.Sente.id];
-			grG.castle = kdb.castleName[SenteGote.Gote.id];
-			
-			for(PlayerData pd: playerDataBase) {
-				if(kdb.playerName[SenteGote.Sente.id].equals(pd.playerName)) {
-					foundS = true;
-					pd.grList.add(grS);
-				} else if(kdb.playerName[SenteGote.Gote.id].equals(pd.playerName)) {
-					foundG = true;
-					pd.grList.add(grG);
-				}
-			}
-			
-			if(!foundS) {
-				PlayerData pd = new PlayerData(kdb.playerName[SenteGote.Sente.id]);
-				pd.grList.add(grS);
-				playerDataBase.add(pd);
-			}
-			if(!foundG) {
-				PlayerData pd = new PlayerData(kdb.playerName[SenteGote.Gote.id]);
-				pd.grList.add(grG);
-				playerDataBase.add(pd);
-			}
-		}
-		
-		Collections.sort(
-				playerDataBase,
-				new Comparator<PlayerData>() {
-					@Override
-					public int compare(PlayerData obj1, PlayerData obj2) {
-						return obj2.grList.size() - obj1.grList.size();
-					}
-				}
-				);
-		
-		String str = "<Total:" + playerDataBase.size() + " Players>";
-		listModel[ListBoxType.Player.id].addElement(str);
-		listModel[ListBoxType.Player.id].addElement("---------");
-		
-		for(PlayerData pd: playerDataBase) {
-			listModel[ListBoxType.Player.id].addElement(pd.playerName);
-		}
-		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
-	}
-	public void updateListBox2ByPlayerName() {
-		int selectedIndex = listBox[ListBoxType.Player.id].getSelectedIndex()-2;
-		if(selectedIndex < 0) return;
-		
-		PlayerData pd = playerDataBase.get(selectedIndex);
-		textBox[TextBoxType.Player1.id].setText(pd.playerName);
-		updatePlayerIcon();
-		
-		// count strategy data
-		List<GameResultCount> grcList = new ArrayList<GameResultCount>();
-		countStrategyDataByPlayerData(grcList, pd);
-		
-		// count castle data
-		List<StringCount> strList = new ArrayList<StringCount>();
-		countCastleDataByPlayerData(strList, pd);
-		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-		
-		listModel[ListBoxType.Info.id].addElement("<" + pd.playerName + "'s Winning Rate>");
-		
-		int totalCnt = 0;
-		int totalWinCnt = 0;
-		int totalLoseCnt = 0;
-		int totalDrawCnt = 0;
-		int totalSenteWinCnt = 0;
-		int totalGoteWinCnt = 0;
-		int totalSenteLoseCnt = 0;
-		int totalGoteLoseCnt = 0;
-		int totalSenteDrawCnt = 0;
-		int totalGoteDrawCnt = 0;
-		for(GameResultCount grc: grcList) {
-			totalCnt += grc.cnt;
-			totalWinCnt += grc.senteWinCnt + grc.goteWinCnt;
-			totalLoseCnt += grc.senteLoseCnt + grc.goteLoseCnt;
-			totalDrawCnt += grc.senteDrawCnt + grc.goteDrawCnt;
-			totalSenteWinCnt += grc.senteWinCnt;
-			totalGoteWinCnt += grc.goteWinCnt;
-			totalSenteLoseCnt += grc.senteLoseCnt;
-			totalGoteLoseCnt += grc.goteLoseCnt;
-			totalSenteDrawCnt += grc.senteDrawCnt;
-			totalGoteDrawCnt += grc.goteDrawCnt;
-		}
-		String str = "Total " + String.format("%d games %d Win:%d Lose %d Draw", totalCnt, totalWinCnt, totalLoseCnt, totalDrawCnt);
-		Double d = (double)totalWinCnt/(double)(totalWinCnt+totalLoseCnt)*100;
-		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModel[ListBoxType.Info.id].addElement(str);
-		
-		str = String.format("Sente %d games %d Win:%d Lose %d Draw", totalSenteWinCnt+totalSenteLoseCnt+totalSenteDrawCnt, totalSenteWinCnt, totalSenteLoseCnt, totalSenteDrawCnt);
-		d = (double)totalSenteWinCnt/(double)(totalSenteWinCnt+totalSenteLoseCnt)*100;
-		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModel[ListBoxType.Info.id].addElement(str);
-		str = String.format("Gote %d games %d Win:%d Lose: %d Draw", totalGoteWinCnt+totalGoteLoseCnt+totalGoteDrawCnt, totalGoteWinCnt, totalGoteLoseCnt, totalGoteDrawCnt);
-		d = (double)totalGoteWinCnt/(double)(totalGoteWinCnt+totalGoteLoseCnt)*100;
-		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModel[ListBoxType.Info.id].addElement(str);
-		
-		listModel[ListBoxType.Info.id].addElement("---------");
-		str = "Total Strategies: " + grcList.size() + " patterns";
-		listModel[ListBoxType.Info.id].addElement(str);
-		for(GameResultCount grc: grcList) {
-			str = grc.str;
-			d = (double)(grc.senteWinCnt+grc.goteWinCnt)/(double)(grc.cnt)*100;
-			str += ":" + String.format("%d", grc.cnt) + " games";
-			str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-			listModel[ListBoxType.Info.id].addElement(str);
-		}
-		
-		listModel[ListBoxType.Info.id].addElement("---------");
-		for(StringCount sc: strList) {
-			str = sc.str;
-			str += ":" + String.format("%d", sc.cnt) + " games";
-			listModel[ListBoxType.Info.id].addElement(str);
-		}
-		
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-	}
-	public void countStrategyDataByPlayerData(List<GameResultCount> grcList, PlayerData pd) {
-		for(GameResult gr: pd.grList) {
-			Boolean found = false;
-			for(GameResultCount grc: grcList) {
-				if(grc.str.equals(gr.strategy)) {
-					found = true;
-					grc.cnt++;
-					if(gr.isPlayerWin == 1) {
-						if(gr.isSente) grc.senteWinCnt++;
-						else grc.goteWinCnt++;
-					} else if(gr.isPlayerWin == 0) {
-						if(gr.isSente) grc.senteLoseCnt++;
-						else grc.goteLoseCnt++;
-					} else {
-						if(gr.isSente) grc.senteDrawCnt++;
-						else grc.goteDrawCnt++;
-					}
-				}
-			}
-			if(!found) {
-				GameResultCount grc = new GameResultCount(gr.strategy, gr.isPlayerWin, gr.isSente);
-				grcList.add(grc);
-			}
-		}
-		
-		Collections.sort(
-				grcList,
-				new Comparator<GameResultCount>() {
-					@Override
-					public int compare(GameResultCount obj1, GameResultCount obj2) {
-						return obj2.cnt - obj1.cnt;
-					}
-				}
-				);
-	}
-	public void countCastleDataByPlayerData(List<StringCount> strList, PlayerData pd) {
-		for(GameResult gr: pd.grList) {
-			Boolean found = false;
-			for(StringCount sc: strList) {
-				if(sc.str.equals(gr.castle)) {
-					found = true;
-					sc.cnt++;
-				}
-			}
-			if(!found) {
-				StringCount sc = new StringCount(gr.castle, 1);
-				strList.add(sc);
-			}
-		}
-		Collections.sort(
-				strList,
-				new Comparator<StringCount>() {
-					@Override
-					public int compare(StringCount obj1, StringCount obj2) {
-						return obj2.cnt - obj1.cnt;
-					}
-				}
-				);
-	}
-	public void updatePlayerIcon() {
-		String playerName[] = new String[2];
-		playerName[SenteGote.Sente.id] = new String(textBox[TextBoxType.Player1.id].getText());
-		playerName[SenteGote.Gote.id] = new String(textBox[TextBoxType.Player2.id].getText());
-		
-		for(SenteGote sg: SenteGote.values()) {
-			try {
-				BufferedImage img = ImageIO.read(new File(imgFilePathPlayerIcon + playerName[sg.id] + ".jpg"));
-				cv.playerIcon[sg.id] = img.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
-			} catch(IOException e) {
-				cv.playerIcon[sg.id] = null;
-			}
-		}
-		cv.repaint();
-	}
-	public void initializePlayerIcon() {
-		for(SenteGote sg: SenteGote.values()) cv.playerIcon[sg.id] = null;
-	}
-	private ActionListener enterActionListener = new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            updatePlayerIcon();
-        }
-    };
-    private ActionListener checkActionListener = new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-        	for(Koma k: sd.k) {
-        		k.reverseForReverseMode();
-        	}
-        	sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-        	sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-        	cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
-        	cv.repaint();
-        	cve.repaint();
-        }
-    };
-    class MyThreadKifuAnalysis extends Thread {
-		MyThreadKifuAnalysis() {
-		}
-		@Override
-		public void run() {
-			System.out.print("Kifu Analysis start ...");
-			Boolean isUnderAnalysis = true;
-			int calcTimeMs = se.getCalculatingTimeOfEngine();
-			while(isUnderAnalysis && se.isEngineOn) {
-				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-				int size = listModel[ListBoxType.Kifu.id].getSize();
-				if(size-1 == index) isUnderAnalysis = false;
-				try {
-					Thread.sleep(calcTimeMs);
-				} catch(InterruptedException e) {
-					System.out.println(e);
-				}
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
-				commonListAction();
-			}
-			System.out.println("completed.");
-			actionForStopEngine();
-		}
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << ListBox Action >> -----------------------------
@@ -1955,16 +1040,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				getLoadNumberOnListBox2();
 			}
 			if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
-				updateListBox2ByStrategy();
+				sdb.updateListBox2ByStrategy();
 			}
 			if(e.getSource() == listBox[ListBoxType.Player.id]) {
-				updateListBox2ByPlayerName();
+				pdb.updateListBox2ByPlayerName();
 			}
 			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
-				updateListBoxInfoByCastle();
+				cdb.updateListBoxInfoByCastle();
 			}
 			if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
-				updateListBoxInfoByTesuji();
+				tdb.updateListBoxInfoByTesuji();
 			}
 		}
 	}
@@ -1994,16 +1079,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				getLoadNumberOnListBox2();
 			}
 			if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
-				updateListBox2ByStrategy();
+				sdb.updateListBox2ByStrategy();
 			}
 			if(e.getSource() == listBox[ListBoxType.Player.id]) {
-				updateListBox2ByPlayerName();
+				pdb.updateListBox2ByPlayerName();
 			}
 			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
-				updateListBoxInfoByCastle();
+				cdb.updateListBoxInfoByCastle();
 			}
 			if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
-				updateListBoxInfoByTesuji();
+				tdb.updateListBoxInfoByTesuji();
 			}
 		}
 	}
@@ -2020,7 +1105,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			int index = listModel[ListBoxType.Kifu.id].size()-1;
 			while(index > selectedIndex) {
 				listModel[ListBoxType.Kifu.id].remove(index);
-				kifuData.remove(index-1);
+				kdb.kifuData.remove(index-1);
 				index--;
 			}
 		}
@@ -2040,24 +1125,24 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		
-		for(Kifu kf: kifuData) {
-			if(kifuData.indexOf(kf) < selectedIndex) {
+		for(Kifu kf: kdb.kifuData) {
+			if(kdb.kifuData.indexOf(kf) < selectedIndex) {
 				kf.k.moveKoma(kf.x, kf.y, kf.p);
 				if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
 				cv.setLastPoint(kf.x, kf.y, true);
-				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(checkStrategy(sd));
+				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(sdb.checkStrategy(sd));
 				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(checkCastle(sd, true));
+					textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, true));
 				}
 				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(checkCastle(sd, false));
+					textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, false));
 				}
 			}
 		}
 		if(selectedIndex == 0) cv.setLastPoint(-1, -1, false);
 		cv.clearDrawPointForRightClick();
 		
-		checkKDB(selectedIndex);
+		kdb.checkKDB(selectedIndex);
 		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
 
@@ -2092,7 +1177,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Menu Action >> -----------------------------
 	// -------------------------------------------------------------------------
-	
 	public void actionForCaptureBoard() {
 		try {
 			Rectangle bounds = this.getBounds();
@@ -2118,24 +1202,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cve.repaint();
 	}
 	public void actionForStartEngine() {
-		//(JFrame fr, ShogiData s, CanvasBoard c, CanvasBoardForEngine ce, 
-		//		DefaultListModel<String> lmE, JList<String> lbE, 
-		//		DefaultListModel<String> lmK, JList<String> lbK) 
-		Process process = se.createEngine(this, sd, cv, cve, 
-				listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id],
+		se.actionForStartEngine(this, sd, cv, cve, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
 				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
-        if(process == null) {
-        	System.out.println("create engine failed");
-        	return;
-        }
-        se.createReceiverThread(process);
-        se.sendInitialCommandToEngine(process);
-        se.sendCommandToEngine();
-        se.isEngineOn = true;
 	}
 	public void actionForStopEngine() {
-		se.sendFinalCommandToEngine();
-		se.isEngineOn = false;
+		se.actionForStopEngine();
 	}
 	public void actionForSetEngine() {
 		ep.setPropertyForEngine(this);
@@ -2154,7 +1225,31 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		thread.start();
 	}
-	
+	class MyThreadKifuAnalysis extends Thread {
+		MyThreadKifuAnalysis() {
+		}
+		@Override
+		public void run() {
+			System.out.print("Kifu Analysis start ...");
+			Boolean isUnderAnalysis = true;
+			int calcTimeMs = se.getCalculatingTimeOfEngine();
+			while(isUnderAnalysis && se.isEngineOn) {
+				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+				int size = listModel[ListBoxType.Kifu.id].getSize();
+				if(size-1 == index) isUnderAnalysis = false;
+				try {
+					Thread.sleep(calcTimeMs);
+				} catch(InterruptedException e) {
+					System.out.println(e);
+				}
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
+				commonListAction();
+			}
+			System.out.println("completed.");
+			actionForStopEngine();
+		}
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -2355,22 +1450,22 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				cv.setLastPoint(X, Y, true);
 				updateListBox(type, X, Y, preX, preY, sente, promoted, preP, drop);
 			}
-			Kifu kf = new Kifu(selectedKoma, X, Y, promoted, preP, drop);
-			kifuData.add(kf);
-			checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
+			Kifu kf = kdb.createKifu(selectedKoma, X, Y, promoted, preP, drop);
+			kdb.kifuData.add(kf);
+			kdb.checkKDB(listModel[ListBoxType.Kifu.id].size()-1);
 			if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
 			se.sendCommandToEngine();
 		}
 		
 		// check strategy
 		if(textBox[TextBoxType.Strategy.id].getText().equals("")) {
-			textBox[TextBoxType.Strategy.id].setText(checkStrategy(sd));
+			textBox[TextBoxType.Strategy.id].setText(sdb.checkStrategy(sd));
 		}
 		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-			textBox[TextBoxType.Castle.id].setText(checkCastle(sd, true));
+			textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, true));
 		}
 		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-			textBox[TextBoxType.Castle.id].setText(checkCastle(sd, false));
+			textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, false));
 		}
 		
 		sd.selectedKoma = null;
