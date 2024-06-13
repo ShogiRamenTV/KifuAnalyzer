@@ -385,7 +385,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Board >> -------------------------------
 	// -------------------------------------------------------------------------
-	Color boardColor = new Color(255, 238, 203);
 	ShogiData shogiData = new ShogiData();
 	ShogiData shogiDataForKDB = new ShogiData();
 	public class ShogiData {
@@ -667,8 +666,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int index;
 		int drop;
 		Boolean forward;
-		List<Point> drawListBase;
-		List<Point> drawListTarget;
 		KomaType type;
 		Koma(KomaType t, int x, int y, int s, int i) {
 			pos = new Point();
@@ -682,12 +679,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			promoted = 0;
 			index = i;
 			drop = 0;
-			drawListBase = new ArrayList<Point>();
-			drawListTarget = new ArrayList<Point>();
-		}
-		public void clearDrawList() {
-			drawListBase.clear();
-			drawListTarget.clear();
 		}
 		public void reset(KomaType t, int x, int y, int s) {
 			type = t;
