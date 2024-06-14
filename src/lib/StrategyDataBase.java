@@ -5,7 +5,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,6 +18,7 @@ import java.util.StringTokenizer;
 
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import lib.KifuDataBase.KifuData;
@@ -67,6 +72,38 @@ public class StrategyDataBase {
 	public void update(KifuDataBase kdb, CastleDataBase cdb) {
 		kifuDataBase = kdb;
 		castleDataBase = cdb;
+	}
+	public void actionForStrategy(ShogiData sd, String strStrategy) {
+		Path path;
+		String fileName;
+		int index = 1;
+		
+		if(strStrategy.equals("")) {
+			JOptionPane.showMessageDialog(null, "Strategy name is empty");
+			return;
+		}
+		
+		while(true) {
+			fileName = strategyFilePathBase + strategyFilePath + String.format("strategy%03d.txt", index);
+			path = Paths.get(fileName);
+			if(!Files.exists(path)) break;
+			index++;
+		}
+		
+		try {
+			File file = new File(fileName);
+			FileWriter fw = new FileWriter(file);
+		
+			fw.write(strStrategy + "\n");
+			for(int i=0; i<40; i++) {
+				fw.write(sd.k[i].px + "," + sd.k[i].py + "\n");
+			}
+			fw.close();
+			
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
+		} catch(IOException er) {
+			System.out.println(er);
+		}
 	}
 	public void loadStrategyData() {
 		System.out.print("Loading Strategy Data ... ");

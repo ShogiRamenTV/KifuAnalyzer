@@ -9,6 +9,7 @@ import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -47,6 +48,8 @@ public class KifuDataBase {
 	JList<String> listBoxInfo;
 	DefaultListModel<String> listModelKifu;
 	JList<String> listBoxKifu;
+	DefaultListModel<String> listModelEngine;
+	JList<String> listBoxEngine;
 	CanvasBoard cv;
 	JCheckBox checkBoxReverse;
 	JCheckBox checkBoxDraw;
@@ -63,6 +66,7 @@ public class KifuDataBase {
 	public KifuDataBase(JFrame f, ShogiData s, ShogiData sbb, CanvasBoard c, 
 			DefaultListModel<String> lmI, JList<String> lbI, 
 			DefaultListModel<String> lmK, JList<String> lbK,
+			DefaultListModel<String> lmE, JList<String> lbE,
 			JCheckBox cR, JCheckBox cD, JCheckBox cE,
 			JTextField tP1, JTextField tP2, JTextField tS, JTextField tC, 
 			PlayerDataBase pb, CastleDataBase cb, StrategyDataBase sb,
@@ -76,6 +80,8 @@ public class KifuDataBase {
 		listBoxInfo = lbI;
 		listModelKifu = lmK;
 		listBoxKifu = lbK;
+		listModelEngine = lmE;
+		listBoxEngine = lbE;
 		checkBoxReverse = cR;
 		checkBoxDraw = cD;
 		checkBoxEdit = cE;
@@ -129,7 +135,80 @@ public class KifuDataBase {
 		engine = se;
 		cve = ce;
 	}
-	
+	public void actionForKifu() {
+		int index = listBoxKifu.getSelectedIndex();
+		listModelInfo.clear();
+		listBoxInfo.setModel(listModelInfo);
+		listModelInfo.addElement("<Kifus of Same Position>");
+		listModelInfo.addElement("-------------");
+		
+		for(KifuData kd: kifuDB) {
+			int i=0;
+			Boolean isSame = true;
+			// check same moves
+			while(i<index && i<kd.db.size()) {
+				if( kifuData.get(i).k.type != kd.db.get(i).k.type ||
+					kifuData.get(i).x != kd.db.get(i).x || 
+					kifuData.get(i).y != kd.db.get(i).y || 
+					kifuData.get(i).p != kd.db.get(i).p ) {
+					// check same position if moves were different
+					isSame = checkSamePositionKDB(index, kd);
+					break;
+				}
+				i++;
+			}
+			if(isSame && index < kd.db.size()) {
+				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
+				str += kd.playerName[SenteGote.Sente.id] + "(" + kd.castleName[SenteGote.Sente.id] + ")" + " vs " + kd.playerName[SenteGote.Gote.id] + "(" + kd.castleName[SenteGote.Gote.id] + ")";
+				if(kd.isSenteWin == 1) str+="(Sente Win)";
+				else if(kd.isSenteWin == 0) str+="(Gote Win)";
+				else str+="(Draw)";
+				listModelInfo.addElement(str);
+			}
+		}
+		
+		listBoxInfo.setModel(listModelInfo);
+	}
+	public void actionForKifuAnalysis() {
+		cve.clearBestPointData();
+		checkBoxEdit.setSelected(false);
+		listBoxKifu.setSelectedIndex(0);
+		listBoxKifu.ensureIndexIsVisible(0);
+		commonListAction();
+		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
+		engine.actionForStartEngine(fr, sd, cv, cve, listModelEngine, listBoxEngine, 
+				listModelKifu, listBoxKifu);
+		if(!engine.isEngineOn) {
+			System.out.println("Failed to start shogi engine");
+			return;
+		}
+		thread.start();
+	}
+	class MyThreadKifuAnalysis extends Thread {
+		MyThreadKifuAnalysis() {
+		}
+		@Override
+		public void run() {
+			System.out.print("Kifu Analysis start ...");
+			Boolean isUnderAnalysis = true;
+			int calcTimeMs = engine.getCalculatingTimeOfEngine();
+			while(isUnderAnalysis && engine.isEngineOn) {
+				int index = listBoxKifu.getSelectedIndex();
+				int size = listModelKifu.getSize();
+				if(size-1 == index) isUnderAnalysis = false;
+				try {
+					Thread.sleep(calcTimeMs);
+				} catch(InterruptedException e) {
+					System.out.println(e);
+				}
+				listBoxKifu.setSelectedIndex(index+1);
+				listBoxKifu.ensureIndexIsVisible(index+1);
+				commonListAction();
+			}
+			System.out.println("completed.");
+			engine.actionForStopEngine();
+		}
+	}
 	public Kifu createKifu(Koma koma, int px, int py, int promote, int preP, int drop) {
 		Kifu k = new Kifu(koma, px, py, promote, preP, drop);
 		return k;
@@ -278,6 +357,74 @@ public class KifuDataBase {
 		} catch(IOException er) {
 			System.out.println(er);
 		}
+	}
+	public void actionForDB(String comboBoxStr) {
+		kifuDB.clear();
+		String selectedYear = comboBoxStr;
+		if(selectedYear.equals("") || selectedYear.equals("all")) loadKifuDBByYear("");
+		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadKifuDBByYear("2022");
+		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadKifuDBByYear("2023");
+	}
+	public void loadKifuDBByYear(String strY) {
+		try {
+			System.out.print("Loading Kifu Data(" + strY + ") ... ");
+			int fileIndex = 1;
+			while(true) {
+				sdForKDB.resetAllKoma(checkBoxReverse.isSelected());
+				String fileName = kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
+				//System.out.println(fileName);
+				File file = new File(fileName);
+				KifuData kd = createKifuData();
+				FileReader fr = new FileReader(file);
+				BufferedReader br = new BufferedReader(fr);
+				String content;
+				for(SenteGote sg: SenteGote.values()) {
+					kd.playerName[sg.id] = br.readLine();
+				}
+				kd.year = strY;
+				kd.index = fileIndex;
+				while((content = br.readLine()) != null) {
+					StringTokenizer st = new StringTokenizer(content,",");
+					while(st.hasMoreTokens()) {
+						int i = Integer.parseInt(st.nextToken()); // index
+						if(i == -1) { // Draw game
+							kd.isSenteWin = -1;
+							continue;
+						}
+						int x = Integer.parseInt(st.nextToken()); // x
+						int y = Integer.parseInt(st.nextToken()); // y
+						int p = Integer.parseInt(st.nextToken()); // promote
+						int pp = Integer.parseInt(st.nextToken()); // preP
+						int d = Integer.parseInt(st.nextToken()); // drop
+						Kifu kf = createKifu(sd.k[i], x, y, p, pp, d);
+						kd.db.add(kf);
+						sdForKDB.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
+						if(kd.strategyName.equals("")) {
+							kd.strategyName = sdb.checkStrategy(sdForKDB);
+						}
+						if(kd.castleName[SenteGote.Sente.id].equals("")) {
+							kd.castleName[SenteGote.Sente.id] = cdb.checkCastle(sdForKDB, true);
+						}
+						if(kd.castleName[SenteGote.Gote.id].equals("")) {
+							kd.castleName[SenteGote.Gote.id] = cdb.checkCastle(sdForKDB, false);
+						}
+					}
+				}
+				br.close();
+				if(kd.isSenteWin != -1) kd.isSenteWin = isSenteWin(kd);
+				kifuDB.add(kd);
+				fileIndex++;
+			}
+		} catch(FileNotFoundException en) {
+			//System.out.println(en);
+		} catch(IOException er) {
+			System.out.println(er);
+		}
+		
+		listBoxKifu.setSelectedIndex(0);
+		commonListAction();
+		
+		System.out.println("Completed.");
 	}
 	public void initializeShogiBoard() {
 		sd.resetAllKoma(checkBoxReverse.isSelected());	

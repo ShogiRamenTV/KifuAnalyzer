@@ -4,7 +4,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -13,6 +17,7 @@ import java.util.List;
 import javax.swing.DefaultListModel;
 import javax.swing.JComboBox;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import lib.KifuDataBase.KifuData;
@@ -28,17 +33,19 @@ public class TesujiDataBase {
 	JList<String> listBoxTesuji;
 	DefaultListModel<String> listModelInfo;
 	JList<String> listBoxInfo;
+	JList<String> listBoxKifu;
 	JTextField textBoxTesuji;
 	JComboBox<String> comboBox;
 	KifuDataBase kdb;
 	public TesujiDataBase (DefaultListModel<String> lmT, JList<String> lbT,
-			DefaultListModel<String> lmI, JList<String> lbI,
+			DefaultListModel<String> lmI, JList<String> lbI, JList<String> lbK,
 			JTextField tT,
 			JComboBox<String> cb, KifuDataBase kb) {
 		listModelTesuji = lmT;
 		listBoxTesuji = lbT;
 		listModelInfo = lmI;
 		listBoxInfo = lbI;
+		listBoxKifu = lbK;
 		textBoxTesuji = tT;
 		comboBox = cb;
 		kdb = kb;
@@ -53,6 +60,38 @@ public class TesujiDataBase {
 			name = tesujiName;
 			fileIndex = file;
 			stepIndex = step;
+		}
+	}
+	public void actionForTesuji(String loadFile) {
+		Path path;
+		String fileName;
+		int index = 1;
+		
+		if(textBoxTesuji.getText().equals("")) {
+			JOptionPane.showMessageDialog(null, "Tesuji name is empty");
+			return;
+		}
+		if(loadFile.equals("")) return;
+		
+		while(true) {
+			fileName = kdb.kifuFilePath + String.format("tesuji%03d.txt", index);
+			path = Paths.get(fileName);
+			if(!Files.exists(path)) break;
+			index++;
+		}
+		
+		try {
+			File file = new File(fileName);
+			FileWriter fw = new FileWriter(file);
+		
+			fw.write(textBoxTesuji.getText() + "\n");
+			fw.write(loadFile + "\n");
+			fw.write(listBoxKifu.getSelectedIndex() + "\n");
+			fw.close();
+			
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
+		} catch(IOException er) {
+			System.out.println(er);
 		}
 	}
 	public void loadTesujiData() {

@@ -7,6 +7,9 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -16,6 +19,7 @@ import java.util.StringTokenizer;
 import javax.imageio.ImageIO;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
+import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import lib.KifuDataBase.KifuData;
@@ -68,6 +72,43 @@ public class CastleDataBase {
 		int data[][] = new int[25][4];
 		public CastleData(String castleName) {
 			name = castleName;
+		}
+	}
+	public void actionForCastle(ShogiData sd, Boolean isRadioButtonSente) {
+		Path path;
+		String fileName;
+		int index = 1;
+		
+		if(textBoxCastle.getText().equals("")) {
+			JOptionPane.showMessageDialog(null, "Castle name is empty");
+			return;
+		}
+		
+		while(true) {
+			fileName = strategyDataBase.strategyFilePathBase + castleFilePath + String.format("castle%03d.txt", index);
+			path = Paths.get(fileName);
+			if(!Files.exists(path)) break;
+			index++;
+		}
+		
+		try {
+			File file = new File(fileName);
+			FileWriter fw = new FileWriter(file);
+		
+			fw.write(textBoxCastle.getText() + "\n");
+			for(Koma k: sd.k) {
+				if((k.type == KomaType.King) && isRadioButtonSente && k.sente == 0) {
+					saveListKomaAroundKing(sd, k, fw);
+				}
+				if((k.type == KomaType.King) && !isRadioButtonSente && k.sente == 1) {
+					saveListKomaAroundKing(sd, k, fw);
+				}
+			}
+			fw.close();
+			
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
+		} catch(IOException er) {
+			System.out.println(er);
 		}
 	}
 	

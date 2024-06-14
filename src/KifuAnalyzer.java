@@ -11,19 +11,11 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
 import javax.swing.ButtonGroup;
@@ -51,7 +43,6 @@ import lib.ColorDataBase;
 import lib.EditProperty;
 import lib.KifuDataBase;
 import lib.KifuDataBase.Kifu;
-import lib.KifuDataBase.KifuData;
 import lib.KomaSound;
 import lib.PlayerDataBase;
 import lib.ShogiData;
@@ -199,6 +190,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		kdb = new KifuDataBase(this, sd, sdForKDB, cv, 
 				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
 				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id], 
+				listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
 				checkBox[CheckBoxType.Reverse.id], checkBox[CheckBoxType.Draw.id], checkBox[CheckBoxType.Edit.id],
 				textBox[TextBoxType.Player1.id], textBox[TextBoxType.Player2.id], 
 				textBox[TextBoxType.Strategy.id], textBox[TextBoxType.Castle.id],
@@ -215,6 +207,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				cv, kdb, sdb);
 		tdb = new TesujiDataBase(listModel[ListBoxType.Tesuji.id], listBox[ListBoxType.Tesuji.id],
 				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
+				listBox[ListBoxType.Kifu.id],
 				textBox[TextBoxType.Tesuji.id], comboBox, kdb
 				);
 		pdb = new PlayerDataBase(listModel[ListBoxType.Player.id], listBox[ListBoxType.Player.id],
@@ -389,7 +382,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sdb.loadStrategyData();
 		cdb.loadCastleData();
 		tdb.loadTesujiData();
-		actionForDB();
+		kdb.actionForDB((String)comboBox.getSelectedItem());
 		sdb.countStrategy();
 		cdb.countCastle();
 		tdb.countTesujiData();
@@ -397,238 +390,28 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.repaint();
 		cve.repaint();
 	}
-	public void actionForSave() {
-		kdb.actionForSave();
-	}
 	String loadFile = "";
 	String loadStep = "";
 	String loadYear = "";
-	public void actionForLoad() {
-		kdb.loadByNumber(loadFile, loadStep, loadYear);
-	}
-	
-	public void actionForDB() {
-		kdb.kifuDB.clear();
-		String selectedYear = (String)comboBox.getSelectedItem();
-		if(selectedYear.equals("") || selectedYear.equals("all")) loadKifuDBByYear("");
-		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadKifuDBByYear("2022");
-		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadKifuDBByYear("2023");
-	}
-	public void loadKifuDBByYear(String strY) {
-		try {
-			System.out.print("Loading Kifu Data(" + strY + ") ... ");
-			int fileIndex = 1;
-			while(true) {
-				sdForKDB.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
-				String fileName = kdb.kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
-				//System.out.println(fileName);
-				File file = new File(fileName);
-				KifuData kd = kdb.createKifuData();
-				FileReader fr = new FileReader(file);
-				BufferedReader br = new BufferedReader(fr);
-				String content;
-				for(SenteGote sg: SenteGote.values()) {
-					kd.playerName[sg.id] = br.readLine();
-				}
-				kd.year = strY;
-				kd.index = fileIndex;
-				while((content = br.readLine()) != null) {
-					StringTokenizer st = new StringTokenizer(content,",");
-					while(st.hasMoreTokens()) {
-						int i = Integer.parseInt(st.nextToken()); // index
-						if(i == -1) { // Draw game
-							kd.isSenteWin = -1;
-							continue;
-						}
-						int x = Integer.parseInt(st.nextToken()); // x
-						int y = Integer.parseInt(st.nextToken()); // y
-						int p = Integer.parseInt(st.nextToken()); // promote
-						int pp = Integer.parseInt(st.nextToken()); // preP
-						int d = Integer.parseInt(st.nextToken()); // drop
-						Kifu kf = kdb.createKifu(sd.k[i], x, y, p, pp, d);
-						kd.db.add(kf);
-						sdForKDB.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
-						if(kd.strategyName.equals("")) {
-							kd.strategyName = sdb.checkStrategy(sdForKDB);
-						}
-						if(kd.castleName[SenteGote.Sente.id].equals("")) {
-							kd.castleName[SenteGote.Sente.id] = cdb.checkCastle(sdForKDB, true);
-						}
-						if(kd.castleName[SenteGote.Gote.id].equals("")) {
-							kd.castleName[SenteGote.Gote.id] = cdb.checkCastle(sdForKDB, false);
-						}
-					}
-				}
-				br.close();
-				if(kd.isSenteWin != -1) kd.isSenteWin = kdb.isSenteWin(kd);
-				kdb.kifuDB.add(kd);
-				fileIndex++;
-			}
-		} catch(FileNotFoundException en) {
-			//System.out.println(en);
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-		
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-		kdb.commonListAction();
-		
-		System.out.println("Completed.");
-	}
-	public void actionForStrategy() {
-		Path path;
-		String fileName;
-		int index = 1;
-		
-		if(textBox[TextBoxType.Strategy.id].getText().equals("")) {
-			JOptionPane.showMessageDialog(null, "Strategy name is empty");
-			return;
-		}
-		
-		while(true) {
-			fileName = sdb.strategyFilePathBase + sdb.strategyFilePath + String.format("strategy%03d.txt", index);
-			path = Paths.get(fileName);
-			if(!Files.exists(path)) break;
-			index++;
-		}
-		
-		try {
-			File file = new File(fileName);
-			FileWriter fw = new FileWriter(file);
-		
-			fw.write(textBox[TextBoxType.Strategy.id].getText() + "\n");
-			for(int i=0; i<40; i++) {
-				fw.write(sd.k[i].px + "," + sd.k[i].py + "\n");
-			}
-			fw.close();
-			
-			JOptionPane.showMessageDialog(null, fileName + " is saved.");
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-	}
-	public void actionForCastle() {
-		Path path;
-		String fileName;
-		int index = 1;
-		
-		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-			JOptionPane.showMessageDialog(null, "Castle name is empty");
-			return;
-		}
-		
-		while(true) {
-			fileName = sdb.strategyFilePathBase + cdb.castleFilePath + String.format("castle%03d.txt", index);
-			path = Paths.get(fileName);
-			if(!Files.exists(path)) break;
-			index++;
-		}
-		
-		try {
-			File file = new File(fileName);
-			FileWriter fw = new FileWriter(file);
-		
-			fw.write(textBox[TextBoxType.Castle.id].getText() + "\n");
-			for(Koma k: sd.k) {
-				if((k.type == KomaType.King) && radioButtonSente.isSelected() && k.sente == 0) {
-					cdb.saveListKomaAroundKing(sd, k, fw);
-				}
-				if((k.type == KomaType.King) && radioButtonGote.isSelected() && k.sente == 1) {
-					cdb.saveListKomaAroundKing(sd, k, fw);
-				}
-			}
-			fw.close();
-			
-			JOptionPane.showMessageDialog(null, fileName + " is saved.");
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-	}
-	public void actionForTesuji() {
-		Path path;
-		String fileName;
-		int index = 1;
-		
-		if(textBox[TextBoxType.Tesuji.id].getText().equals("")) {
-			JOptionPane.showMessageDialog(null, "Tesuji name is empty");
-			return;
-		}
-		if(loadFile.equals("")) return;
-		
-		while(true) {
-			fileName = kdb.kifuFilePath + String.format("tesuji%03d.txt", index);
-			path = Paths.get(fileName);
-			if(!Files.exists(path)) break;
-			index++;
-		}
-		
-		try {
-			File file = new File(fileName);
-			FileWriter fw = new FileWriter(file);
-		
-			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
-			fw.write(loadFile + "\n");
-			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
-			fw.close();
-			
-			JOptionPane.showMessageDialog(null, fileName + " is saved.");
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-	}
-	public void actionForKifu() {
-		int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-		listModel[ListBoxType.Info.id].addElement("<Kifus of Same Position>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
-		
-		for(KifuData kd: kdb.kifuDB) {
-			int i=0;
-			Boolean isSame = true;
-			// check same moves
-			while(i<index && i<kd.db.size()) {
-				if( kdb.kifuData.get(i).k.type != kd.db.get(i).k.type ||
-					kdb.kifuData.get(i).x != kd.db.get(i).x || 
-					kdb.kifuData.get(i).y != kd.db.get(i).y || 
-					kdb.kifuData.get(i).p != kd.db.get(i).p ) {
-					// check same position if moves were different
-					isSame = kdb.checkSamePositionKDB(index, kd);
-					break;
-				}
-				i++;
-			}
-			if(isSame && index < kd.db.size()) {
-				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
-				str += kd.playerName[SenteGote.Sente.id] + "(" + kd.castleName[SenteGote.Sente.id] + ")" + " vs " + kd.playerName[SenteGote.Gote.id] + "(" + kd.castleName[SenteGote.Gote.id] + ")";
-				if(kd.isSenteWin == 1) str+="(Sente Win)";
-				else if(kd.isSenteWin == 0) str+="(Gote Win)";
-				else str+="(Draw)";
-				listModel[ListBoxType.Info.id].addElement(str);
-			}
-		}
-		
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		if(e.getActionCommand() == button[ButtonType.Initialize.id].getText()) {
 			actionForInitialize();
 		}
 		if(e.getActionCommand() == button[ButtonType.Save.id].getText()) {
-			actionForSave();
+			kdb.actionForSave();
 		}
 		if(e.getActionCommand() == button[ButtonType.Strategy.id].getText()) {
-			actionForStrategy();
+			sdb.actionForStrategy(sd, textBox[TextBoxType.Strategy.id].getText());
 		}
 		if(e.getActionCommand() == button[ButtonType.Castle.id].getText()) {
-			actionForCastle();
+			cdb.actionForCastle(sd, radioButtonSente.isSelected());
 		}
 		if(e.getActionCommand() == button[ButtonType.Tesuji.id].getText()) {
-			actionForTesuji();
+			tdb.actionForTesuji(loadFile);
 		}
 		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
-			actionForKifu();
+			kdb.actionForKifu();
 		}
 		if(e.getSource() == menuItemSetting[MenuTypeSetting.SetColor.id]) {
 			cldb.actionForSetColor(this);
@@ -642,10 +425,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			se.actionForStopEngine();
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.SetEngine.id]) {
-			actionForSetEngine();
+			ep.setPropertyForEngine(this);
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.KifuAnalysis.id]) {
-			actionForKifuAnalysis();
+			kdb.actionForKifuAnalysis();
 		}
 		if(e.getSource() == menuItemUtility[MenuTypeUtility.CaptureBoard.id]) {
 			actionForCaptureBoard();
@@ -804,49 +587,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.repaint();
 		cve.repaint();
 	}
-	public void actionForSetEngine() {
-		ep.setPropertyForEngine(this);
-	}
-	public void actionForKifuAnalysis() {
-		cve.clearBestPointData();
-		checkBox[CheckBoxType.Edit.id].setSelected(false);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
-		kdb.commonListAction();
-		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
-		se.actionForStartEngine(this, sd, cv, cve, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
-				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
-		if(!se.isEngineOn) {
-			System.out.println("Failed to start shogi engine");
-			return;
-		}
-		thread.start();
-	}
-	class MyThreadKifuAnalysis extends Thread {
-		MyThreadKifuAnalysis() {
-		}
-		@Override
-		public void run() {
-			System.out.print("Kifu Analysis start ...");
-			Boolean isUnderAnalysis = true;
-			int calcTimeMs = se.getCalculatingTimeOfEngine();
-			while(isUnderAnalysis && se.isEngineOn) {
-				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-				int size = listModel[ListBoxType.Kifu.id].getSize();
-				if(size-1 == index) isUnderAnalysis = false;
-				try {
-					Thread.sleep(calcTimeMs);
-				} catch(InterruptedException e) {
-					System.out.println(e);
-				}
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
-				kdb.commonListAction();
-			}
-			System.out.println("completed.");
-			se.actionForStopEngine();
-		}
-	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -888,7 +628,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			//System.out.println("mouse double clicked");
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				if(!loadFile.equals("")) {
-					actionForLoad();
+					kdb.loadByNumber(loadFile, loadStep, loadYear);
 				}
 			}
 			if(e.getButton() == MouseEvent.BUTTON1) {
