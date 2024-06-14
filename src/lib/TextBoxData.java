@@ -7,11 +7,11 @@ import javax.swing.JTextField;
 
 public class TextBoxData {
 	int baseXPosForItems;
-	PlayerDataBase pdb;
+	AnalysisData ad;
 	ListBoxData lbd;
-	public TextBoxData(int baseXPos, PlayerDataBase pb, ListBoxData ld) {
+	public TextBoxData(int baseXPos, AnalysisData a, ListBoxData ld) {
 		baseXPosForItems = baseXPos;
-		pdb = pb;
+		ad = a;
 		lbd = ld;
 	}
 	public enum TextBoxType {
@@ -22,8 +22,8 @@ public class TextBoxData {
 		}
 	};
 	public JTextField textBox[] = new JTextField[TextBoxType.values().length];
-	public void update(PlayerDataBase pb, ListBoxData ld) {
-		pdb = pb;
+	public void update(AnalysisData a, ListBoxData ld) {
+		ad = a;
 		lbd = ld;
 	}
 	public void initializeTextBoxSetting() {
@@ -51,7 +51,7 @@ public class TextBoxData {
 	private ActionListener enterActionListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
-            pdb.updatePlayerIcon();
+            ad.updatePlayerIcon();
         }
     };
 }

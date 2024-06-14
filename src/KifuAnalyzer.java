@@ -8,29 +8,25 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
+import lib.AnalysisData;
+import lib.AnalysisData.Kifu;
 import lib.ButtonData;
 import lib.ButtonData.ButtonType;
 import lib.CanvasBoard;
 import lib.CanvasBoardForEngine;
-import lib.CastleDataBase;
 import lib.CheckBoxData;
 import lib.CheckBoxData.CheckBoxType;
 import lib.ColorDataBase;
 import lib.EditProperty;
-import lib.KifuDataBase;
-import lib.KifuDataBase.Kifu;
 import lib.KomaSound;
 import lib.ListBoxData;
 import lib.ListBoxData.ListBoxType;
 import lib.MenuData;
-import lib.PlayerDataBase;
 import lib.ShogiData;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
 import lib.ShogiEngine;
-import lib.StrategyDataBase;
-import lib.TesujiDataBase;
 import lib.TextBoxData;
 import lib.TextBoxData.TextBoxType;
 
@@ -48,11 +44,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	CanvasBoard cv;
 	CanvasBoardForEngine cve;
 	EditProperty ep = new EditProperty();
-	KifuDataBase kdb;
-	StrategyDataBase sdb;
-	CastleDataBase cdb;
-	TesujiDataBase tdb;
-	PlayerDataBase pdb;
+	AnalysisData ad;
 	ColorDataBase cldb;
 	ListBoxData lbd;
 	TextBoxData tbd;
@@ -92,42 +84,27 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void initializeGUISetting() {
 		sd.initializeKomaSetting();
 		sdForKDB.initializeKomaSetting();
-		tbd = new TextBoxData(baseXPosForItems, pdb, lbd);
+		tbd = new TextBoxData(baseXPosForItems, ad, lbd);
 		tbd.initializeTextBoxSetting();
 		cbd = new CheckBoxData(baseXPosForItems, sd, cv, cve);
 		cbd.initializeCheckBox();
-		lbd = new ListBoxData(baseXPosForItems, se.getNumOfMultiPV(), kdb, pdb, sdb, cdb, tdb, ks);
+		lbd = new ListBoxData(baseXPosForItems, se.getNumOfMultiPV(), ad, ks);
 		lbd.initializeListBoxSetting();
-		bd = new ButtonData(baseXPosForItems, tbd, lbd, cldb, cbd, cv, cve, sd, kdb, sdb, cdb, tdb, pdb);
+		bd = new ButtonData(baseXPosForItems, tbd, lbd, cldb, cbd, cv, cve, sd, ad);
 		bd.initializeButtonSetting();
 		
-		cve = new CanvasBoardForEngine(baseXPosForItems, se, 
-				lbd.listModel[ListBoxType.Engine.id], lbd.listBox[ListBoxType.Kifu.id]);
-		cv = new CanvasBoard(sd, cbd.checkBox[CheckBoxType.Reverse.id], se, cve);
-		kdb = new KifuDataBase(this, sd, sdForKDB, cv, lbd.listModel, lbd.listBox,
-				cbd.checkBox[CheckBoxType.Reverse.id], cbd.checkBox[CheckBoxType.Draw.id], cbd.checkBox[CheckBoxType.Edit.id],
-				tbd.textBox,
-				pdb, cdb, sdb, se, cve);
-		sdb = new StrategyDataBase(lbd.listModel, lbd.listBox,
-				tbd.textBox,
-				kdb, cdb);
-		cdb = new CastleDataBase(lbd.listModel, lbd.listBox,
-				tbd.textBox, 
-				cv, kdb, sdb);
-		tdb = new TesujiDataBase(lbd.listModel, lbd.listBox,
-				tbd.textBox, cbd.comboBox, kdb
-				);
-		pdb = new PlayerDataBase(lbd.listModel, lbd.listBox,
-				tbd.textBox, kdb, cv);
+		cve = new CanvasBoardForEngine(baseXPosForItems, se, lbd.listModel, lbd.listBox);
+		cv = new CanvasBoard(sd, cbd.checkBox, se, cve);
 		cldb = new ColorDataBase(ep, cv, bd.button);
-		md = new MenuData(this, cldb, se, sd, cv, cve, lbd, cbd, ep, kdb);
+		md = new MenuData(this, cldb, se, sd, cv, cve, lbd, cbd, ep, ad);
+		ad = new AnalysisData(this, sd, sdForKDB, se, lbd.listModel, lbd.listBox, tbd.textBox, cv, cve, cbd.checkBox, cbd.comboBox);
 		
-		kdb.update(pdb, cdb, sdb, se, cve);
-		sdb.update(kdb, cdb);
-		lbd.update(kdb, pdb, sdb, cdb, tdb);
-		tbd.update(pdb, lbd);
-		bd.update(tbd, lbd, cldb, cbd, cv, cve, sd, kdb, sdb, cdb, tdb, pdb);
+		lbd.update(ad);
+		tbd.update(ad, lbd);
+		bd.update(tbd, lbd, cldb, cbd, cv, cve, sd, ad);
 		cbd.update(cv, cve);
+		md.update(ad);
+		se.update(ad);
 
 		cv.initializeSettings(this.getWidth(), this.getHeight());
 		cve.initializeSetting();
@@ -170,7 +147,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			commandKeyOn = true;
 		}
 		if(commandKeyOn && e.getKeyCode() == KeyEvent.VK_V) {
-			kdb.importShogiWarsKifu();
+			ad.importShogiWarsKifu();
 		}
 	}
 	@Override
@@ -372,24 +349,24 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(X != preX || Y != preY) {
 			if(X>0 && X<10 && Y>0 && Y<10) {
 				cv.setLastPoint(X, Y, true);
-				kdb.updateListBox(type, X, Y, preX, preY, sente, promoted, preP, drop);
+				ad.updateListBox(type, X, Y, preX, preY, sente, promoted, preP, drop);
 			}
-			Kifu kf = kdb.createKifu(selectedKoma, X, Y, promoted, preP, drop);
-			kdb.kifuData.add(kf);
-			kdb.checkKDB(lbd.listModel[ListBoxType.Kifu.id].size()-1);
+			Kifu kf = ad.createKifu(selectedKoma, X, Y, promoted, preP, drop);
+			ad.kifuData.add(kf);
+			ad.checkKDB(lbd.listModel[ListBoxType.Kifu.id].size()-1);
 			if(!cbd.checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
 			se.sendCommandToEngine();
 		}
 		
 		// check strategy
 		if(tbd.textBox[TextBoxType.Strategy.id].getText().equals("")) {
-			tbd.textBox[TextBoxType.Strategy.id].setText(sdb.checkStrategy(sd));
+			tbd.textBox[TextBoxType.Strategy.id].setText(ad.checkStrategy(sd));
 		}
 		if(tbd.textBox[TextBoxType.Castle.id].getText().equals("")) {
-			tbd.textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, true));
+			tbd.textBox[TextBoxType.Castle.id].setText(ad.checkCastle(sd, true));
 		}
 		if(tbd.textBox[TextBoxType.Castle.id].getText().equals("")) {
-			tbd.textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, false));
+			tbd.textBox[TextBoxType.Castle.id].setText(ad.checkCastle(sd, false));
 		}
 		
 		sd.selectedKoma = null;

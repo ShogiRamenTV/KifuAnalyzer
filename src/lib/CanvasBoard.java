@@ -20,6 +20,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 
+import lib.CheckBoxData.CheckBoxType;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
@@ -50,10 +51,10 @@ public class CanvasBoard extends Canvas {
 	int baseXPosForItems = 720;
 	JLabel labelNumberRow[] = new JLabel[9];
 	JLabel labelNumberCol[] = new JLabel[9];
-	JCheckBox checkBox;
+	JCheckBox checkBox[];
 	ShogiEngine shogiEngine;
 	CanvasBoardForEngine cve;
-	public CanvasBoard(ShogiData s, JCheckBox cb, ShogiEngine se, CanvasBoardForEngine ce) {
+	public CanvasBoard(ShogiData s, JCheckBox cb[], ShogiEngine se, CanvasBoardForEngine ce) {
 		lastPointX = -1;
 		lastPointY = -1;
 		mousePressed = false;
@@ -147,7 +148,7 @@ public class CanvasBoard extends Canvas {
 	public void drawMovableArea(Graphics g) {
 		if(mousePressed) {
 			for(int x=1; x<10; x++) for(int y=1; y<10; y++) {
-				if(!checkBox.isSelected()) {
+				if(!checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					if(sd.selectedKoma.isMovable(x, y)) drawPoint(x, y, Color.pink);
 				} else {
 					if(sd.selectedKoma.isMovable(10-x, 10-y)) drawPoint(x, y, Color.pink);
@@ -158,7 +159,7 @@ public class CanvasBoard extends Canvas {
 	public void drawLastPoint(Graphics g) {
 		if(enableLastPoint) {
 			int X, Y;
-			if(checkBox.isSelected()) {
+			if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 				X = 10 - lastPointX;
 				Y = 10 - lastPointY;
 			} else {
@@ -178,7 +179,7 @@ public class CanvasBoard extends Canvas {
 		for(Point p: drawList) {
 			Point pB = drawListBase.get(index);
 			int pBX, pBY, pX, pY;
-			if(checkBox.isSelected()) {
+			if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 				pBX = 10 - pB.x;
 				pBY = 10 - pB.y;
 				pX = 10 - p.x;
@@ -220,7 +221,7 @@ public class CanvasBoard extends Canvas {
 					cve.bestPointFromEngine.score = ps.score;
 				}
 				int pBX, pBY, pX, pY;
-				if(checkBox.isSelected()) {
+				if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
 					pBX = 10 - ps.base.x;
 					pBY = 10 - ps.base.y;
 					pX = 10 - ps.target.x;

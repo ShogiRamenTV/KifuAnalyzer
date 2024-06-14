@@ -27,16 +27,11 @@ public class ButtonData implements ActionListener, MouseListener{
 	CanvasBoard cv;
 	CanvasBoardForEngine cve;
 	ShogiData sd;
-	KifuDataBase kdb;
-	StrategyDataBase sdb;
-	CastleDataBase cdb;
-	TesujiDataBase tdb;
-	PlayerDataBase pdb;
+	AnalysisData ad;
 	
 	public ButtonData(int bPos, TextBoxData td, ListBoxData ld, ColorDataBase clb,
 			CheckBoxData chb, CanvasBoard c, CanvasBoardForEngine ce, ShogiData s, 
-			KifuDataBase kb, StrategyDataBase sb, CastleDataBase cb, 
-			TesujiDataBase tb, PlayerDataBase pb) {
+			AnalysisData a) {
 		baseXPosForItems = bPos;
 		tbd = td;
 		lbd = ld;
@@ -45,16 +40,11 @@ public class ButtonData implements ActionListener, MouseListener{
 		cv = c;
 		cve = ce;
 		sd = s;
-		kdb = kb;
-		sdb = sb;
-		cdb = cb;
-		tdb = tb;
-		pdb = pb;
+		ad = a;
 	}
 	public void update(TextBoxData td, ListBoxData ld, ColorDataBase clb,
 			CheckBoxData chb, CanvasBoard c, CanvasBoardForEngine ce, ShogiData s, 
-			KifuDataBase kb, StrategyDataBase sb, CastleDataBase cb, 
-			TesujiDataBase tb, PlayerDataBase pb) {
+			AnalysisData a) {
 		tbd = td;
 		lbd = ld;
 		cldb = clb;
@@ -62,11 +52,7 @@ public class ButtonData implements ActionListener, MouseListener{
 		cv = c;
 		cve = ce;
 		sd = s;
-		kdb = kb;
-		sdb = sb;
-		cdb = cb;
-		tdb = tb;
-		pdb = pb;
+		ad = a;
 	}
 	public void initializeButtonSetting() {
 		for(ButtonType b: ButtonType.values()) {
@@ -89,25 +75,25 @@ public class ButtonData implements ActionListener, MouseListener{
 		sd.resetAllKoma(cbd.checkBox[CheckBoxType.Reverse.id].isSelected());	
 		sd.viewKomaOnBoard(cbd.checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.viewKomaOnHand(cbd.checkBox[CheckBoxType.Reverse.id].isSelected());
-		kdb.clearListBox();
+		ad.clearListBox();
 		clearIcons();
-		kdb.kifuData.clear();
+		ad.kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
 		cve.clearBestPointData();
-		sdb.loadStrategyData();
-		cdb.loadCastleData();
-		tdb.loadTesujiData();
-		kdb.actionForDB((String)cbd.comboBox.getSelectedItem());
-		sdb.countStrategy();
-		cdb.countCastle();
-		tdb.countTesujiData();
-		pdb.createPlayerDataBase();
+		ad.loadStrategyData();
+		ad.loadCastleData();
+		ad.loadTesujiData();
+		ad.actionForDB((String)cbd.comboBox.getSelectedItem());
+		ad.countStrategy();
+		ad.countCastle();
+		ad.countTesujiData();
+		ad.createPlayerDataBase();
 		cv.repaint();
 		cve.repaint();
 	}
 	public void clearIcons() {
-		pdb.initializePlayerIcon();
-		cdb.initializeCastleIcon();
+		ad.initializePlayerIcon();
+		ad.initializeCastleIcon();
 	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -116,19 +102,19 @@ public class ButtonData implements ActionListener, MouseListener{
 			actionForInitialize();
 		}
 		if(e.getActionCommand() == button[ButtonType.Save.id].getText()) {
-			kdb.actionForSave();
+			ad.actionForSave();
 		}
 		if(e.getActionCommand() == button[ButtonType.Strategy.id].getText()) {
-			sdb.actionForStrategy(sd, tbd.textBox[TextBoxType.Strategy.id].getText());
+			ad.actionForStrategy(sd, tbd.textBox[TextBoxType.Strategy.id].getText());
 		}
 		if(e.getActionCommand() == button[ButtonType.Castle.id].getText()) {
-			cdb.actionForCastle(sd, cbd.radioButtonSente.isSelected());
+			ad.actionForCastle(sd, cbd.radioButtonSente.isSelected());
 		}
 		if(e.getActionCommand() == button[ButtonType.Tesuji.id].getText()) {
-			tdb.actionForTesuji(lbd.loadFile);
+			ad.actionForTesuji(lbd.loadFile);
 		}
 		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
-			kdb.actionForKifu();
+			ad.actionForKifu();
 		}
 	}
 	@Override

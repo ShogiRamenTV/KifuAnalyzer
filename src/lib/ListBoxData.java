@@ -18,23 +18,14 @@ public class ListBoxData implements ListSelectionListener, MouseListener, MouseM
 	public String loadYear = "";
 	int baseXPosForItems;
 	int numOfMultiPV;
-	KifuDataBase kdb;
-	PlayerDataBase pdb;
-	StrategyDataBase sdb;
-	CastleDataBase cdb;
-	TesujiDataBase tdb;
+	AnalysisData ad;
 	KomaSound ks;
 	public ListBoxData(int baseXPos, int numOfMPV,
-			KifuDataBase kb, PlayerDataBase pb, StrategyDataBase sb,
-			CastleDataBase cb, TesujiDataBase tb, 
+			AnalysisData a, 
 			KomaSound s) {
 		baseXPosForItems = baseXPos;
 		numOfMultiPV = numOfMPV;
-		kdb = kb;
-		pdb = pb;
-		sdb = sb;
-		cdb = cb;
-		tdb = tb;
+		ad = a;
 		ks = s;
 	}
 
@@ -51,13 +42,8 @@ public class ListBoxData implements ListSelectionListener, MouseListener, MouseM
 	@SuppressWarnings("unchecked")
 	public JList<String> listBox[] = new JList[ListBoxType.values().length];
 	
-	public void update(KifuDataBase kb, PlayerDataBase pb, StrategyDataBase sb,
-			CastleDataBase cb, TesujiDataBase tb) {
-		kdb = kb;
-		pdb = pb;
-		sdb = sb;
-		cdb = cb;
-		tdb = tb;
+	public void update(AnalysisData a) {
+		ad = a;
 	}
 	public void initializeListBoxSetting() {
 		for(ListBoxType lb: ListBoxType.values()) {
@@ -105,22 +91,22 @@ public class ListBoxData implements ListSelectionListener, MouseListener, MouseM
 		// TODO 自動生成されたメソッド・スタブ
 		if(e.getValueIsAdjusting()) {
 			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
-				kdb.commonListAction();
+				ad.commonListAction();
 			}
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				getLoadNumberOnListBox2();
 			}
 			if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
-				sdb.updateListBox2ByStrategy();
+				ad.updateListBox2ByStrategy();
 			}
 			if(e.getSource() == listBox[ListBoxType.Player.id]) {
-				pdb.updateListBox2ByPlayerName();
+				ad.updateListBox2ByPlayerName();
 			}
 			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
-				cdb.updateListBoxInfoByCastle();
+				ad.updateListBoxInfoByCastle();
 			}
 			if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
-				tdb.updateListBoxInfoByTesuji();
+				ad.updateListBoxInfoByTesuji();
 			}
 		}
 	}
@@ -132,7 +118,7 @@ public class ListBoxData implements ListSelectionListener, MouseListener, MouseM
 			//System.out.println("mouse double clicked");
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				if(!loadFile.equals("")) {
-					kdb.loadByNumber(loadFile, loadStep, loadYear);
+					ad.loadByNumber(loadFile, loadStep, loadYear);
 				}
 			}
 		}
@@ -178,23 +164,23 @@ public class ListBoxData implements ListSelectionListener, MouseListener, MouseM
 		// TODO 自動生成されたメソッド・スタブ
 		if((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_DOWN)) {
 			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
-				kdb.commonListAction();
+				ad.commonListAction();
 				ks.soundKoma();
 			}
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				getLoadNumberOnListBox2();
 			}
 			if(e.getSource() == listBox[ListBoxType.Strategy.id]) {
-				sdb.updateListBox2ByStrategy();
+				ad.updateListBox2ByStrategy();
 			}
 			if(e.getSource() == listBox[ListBoxType.Player.id]) {
-				pdb.updateListBox2ByPlayerName();
+				ad.updateListBox2ByPlayerName();
 			}
 			if(e.getSource() == listBox[ListBoxType.Castle.id]) {
-				cdb.updateListBoxInfoByCastle();
+				ad.updateListBoxInfoByCastle();
 			}
 			if(e.getSource() == listBox[ListBoxType.Tesuji.id]) {
-				tdb.updateListBoxInfoByTesuji();
+				ad.updateListBoxInfoByTesuji();
 			}
 		}
 	}

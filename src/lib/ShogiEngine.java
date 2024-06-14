@@ -14,6 +14,7 @@ import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JList;
 
+import lib.AnalysisData.StringCount;
 import lib.EditProperty.PropertyType;
 import lib.ListBoxData.ListBoxType;
 import lib.ShogiData.Koma;
@@ -34,13 +35,16 @@ public class ShogiEngine {
 	ShogiData sd;
 	DefaultListModel<String> listModel[];
 	JList<String> listBox[];
+	AnalysisData ad;
 	
 	public ShogiEngine() {
 	}
-	
+	public void update(AnalysisData a) {
+		ad = a;
+	}
 	public Process createEngine(JFrame fr, ShogiData s, 
 			CanvasBoard c, CanvasBoardForEngine ce, 
-			DefaultListModel<String> lm[], JList<String> lb[]
+			DefaultListModel<String> lm[], JList<String> lb[], AnalysisData a
 					) {
 		String enginePath = ep.loadProperty(PropertyType.Engine.name());
 		if(enginePath == null) {
@@ -63,6 +67,7 @@ public class ShogiEngine {
 		cve = ce;
 		listModel = lm;
 		listBox = lb;
+		ad = a;
 		return process;
 	}
 	
@@ -161,7 +166,7 @@ public class ShogiEngine {
 				}
 			}
 			if(!found) {
-				StringCount sc = new StringCount(k.type.name(), 0);
+				StringCount sc = ad.createStringCount(k.type.name(), 0);
 				listSC.add(sc);
 			}
 		}
@@ -332,7 +337,7 @@ public class ShogiEngine {
 	public void actionForStartEngine(JFrame fr, ShogiData s, CanvasBoard c, CanvasBoardForEngine ce, 
 			DefaultListModel<String> lm[], JList<String> lb[]) {
 		Process process = createEngine(fr, s, c, ce, 
-				lm, lb);
+				lm, lb, ad);
         if(process == null) {
         	System.out.println("create engine failed");
         	return;

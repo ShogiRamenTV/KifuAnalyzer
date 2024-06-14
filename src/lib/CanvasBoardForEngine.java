@@ -11,6 +11,8 @@ import java.util.List;
 import javax.swing.DefaultListModel;
 import javax.swing.JList;
 
+import lib.ListBoxData.ListBoxType;
+
 public class CanvasBoardForEngine extends Canvas {
 	public static final int maxSizeOfKifu = 200;
 	public static final int maxScoreOfEngine = 4000;
@@ -19,15 +21,15 @@ public class CanvasBoardForEngine extends Canvas {
 	List<BestPointData> bestPointData = new ArrayList<BestPointData>();
 	int selectedIndex;
 	ShogiEngine se;
-	DefaultListModel<String> listModelEngine;
-	JList<String> listBoxKifu;
+	DefaultListModel<String> listModel[];
+	JList<String> listBox[];
 	int baseXPosForItems;
-	public CanvasBoardForEngine(int bPosX, ShogiEngine s, DefaultListModel<String> lmE, JList<String> lbK) {
+	public CanvasBoardForEngine(int bPosX, ShogiEngine s, DefaultListModel<String> lm[], JList<String> lb[]) {
 		baseXPosForItems = bPosX;
 		se = s;
 		selectedIndex = 0;
-		listModelEngine = lmE;
-		listBoxKifu = lbK;
+		listModel = lm;
+		listBox = lb;
 		bestPointFromEngine = new BestPointData(se.getNumOfMultiPV());
 		for(int index=0; index<maxSizeOfKifu; index++) {
 			BestPointData bpt = new BestPointData(se.getNumOfMultiPV());
@@ -59,7 +61,7 @@ public class CanvasBoardForEngine extends Canvas {
 	}
 	private void getPointFromEngine() {
 		if(!se.isEngineOn) return;
-		int index = listBoxKifu.getSelectedIndex();
+		int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
 		if(bestPointFromEngine.score == 0) return;
 		BestPointData bpd = bestPointData.get(index);
 		bpd.score = bestPointFromEngine.score;
@@ -92,7 +94,7 @@ public class CanvasBoardForEngine extends Canvas {
 	}
 	private void drawPointOfCurrentPosition(Graphics g) {
 		if(!se.isEngineOn) {
-			int selectedIndex = listBoxKifu.getSelectedIndex();
+			int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
 			BestPointData bpd = bestPointData.get(selectedIndex);
 			updateListBoxEngine(bpd);
 			if(bpd.score == 0) return;
@@ -116,7 +118,7 @@ public class CanvasBoardForEngine extends Canvas {
 	public void updateListBoxEngine(BestPointData bpd) {
 		for(int index=0; index<se.getNumOfMultiPV(); index++) {
 			//listModel[ListBoxType.Engine.id].set(index, bpd.moveName[index]);
-			listModelEngine.set(index, bpd.moveName[index]);
+			listModel[ListBoxType.Engine.id].set(index, bpd.moveName[index]);
 		}
 	}
 }

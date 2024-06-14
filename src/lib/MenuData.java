@@ -57,11 +57,11 @@ public class MenuData implements ActionListener{
 	ListBoxData lbd;
 	CheckBoxData cbd;
 	EditProperty ep;
-	KifuDataBase kdb;
+	AnalysisData ad;
 	
 	public MenuData(JFrame f, ColorDataBase clb, ShogiEngine sen, ShogiData s,
 			CanvasBoard c, CanvasBoardForEngine ce, ListBoxData ld, CheckBoxData cd,
-			EditProperty e, KifuDataBase kb) {
+			EditProperty e, AnalysisData a) {
 		fr = f;
 		cldb = clb;
 		se = sen;
@@ -71,7 +71,10 @@ public class MenuData implements ActionListener{
 		lbd = ld;
 		cbd = cd;
 		ep = e;
-		kdb = kb;
+		ad = a;
+	}
+	public void update(AnalysisData a) {
+		ad = a;
 	}
 	public void initializeMenuBar() {
 		for(MenuTypeSetting mt: MenuTypeSetting.values()) {
@@ -138,7 +141,7 @@ public class MenuData implements ActionListener{
 			ep.setPropertyForEngine(fr);
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.KifuAnalysis.id]) {
-			kdb.actionForKifuAnalysis();
+			ad.actionForKifuAnalysis();
 		}
 		if(e.getSource() == menuItemUtility[MenuTypeUtility.CaptureBoard.id]) {
 			actionForCaptureBoard();
