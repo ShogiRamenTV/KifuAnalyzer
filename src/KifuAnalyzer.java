@@ -1,19 +1,12 @@
 import java.awt.Point;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 
 import lib.ButtonData;
 import lib.ButtonData.ButtonType;
@@ -37,13 +30,11 @@ import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
 import lib.ShogiEngine;
 import lib.StrategyDataBase;
-import lib.StringCount;
 import lib.TesujiDataBase;
 import lib.TextBoxData;
 import lib.TextBoxData.TextBoxType;
 
-public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, 
-	ActionListener, ListSelectionListener, KeyListener {
+public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, KeyListener {
 	// -------------------------------------------------------------------------
 	// ----------------------- << Global Variables >> --------------------------
 	// -------------------------------------------------------------------------
@@ -166,25 +157,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.addKeyListener(this);
 	}
 	private final int baseXPosForItems = 720;
-
-	// -------------------------------------------------------------------------
-	// ----------------------- << Button Action >> -----------------------------
-	// -------------------------------------------------------------------------
-	
-	@Override
-	public void actionPerformed(ActionEvent e) {
-	
-	}
-    
-    
- 
 	// -------------------------------------------------------------------------
 	// ----------------------- << lbd.listBox Action >> -----------------------------
 	// -------------------------------------------------------------------------
-	@Override
-	public void valueChanged(ListSelectionEvent e) {
-		
-	}
 	Boolean commandKeyOn = false;
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -203,31 +178,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		//System.out.println("Key Released");
 		commandKeyOn = false;
 	}
-	public void updateListBox2(List<StringCount> listSC) {
-		lbd.listModel[ListBoxType.Info.id].clear();
-		lbd.listBox[ListBoxType.Info.id].setModel(lbd.listModel[ListBoxType.Info.id]);
-		cv.clearDrawPoint();
-		
-		Collections.sort(
-				listSC,
-				new Comparator<StringCount>() {
-					@Override
-					public int compare(StringCount obj1, StringCount obj2) {
-						return obj2.cnt - obj1.cnt;
-					}
-				}
-				);
-		for(StringCount sc: listSC) {
-			String str = sc.str;
-			Double d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
-			str += ":" + String.format("%2d", sc.cnt)+" games";
-			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
-			cv.addDrawPoint(sc.target,  sc.base);
-			lbd.listModel[ListBoxType.Info.id].addElement(str);
-		}
-		lbd.listBox[ListBoxType.Info.id].setModel(lbd.listModel[ListBoxType.Info.id]);
-	}
-	
 	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
