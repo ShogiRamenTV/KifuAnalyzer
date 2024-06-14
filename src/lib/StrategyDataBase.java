@@ -64,6 +64,10 @@ public class StrategyDataBase {
 			p = new Point[40];
 		}
 	}
+	public void update(KifuDataBase kdb, CastleDataBase cdb) {
+		kifuDataBase = kdb;
+		castleDataBase = cdb;
+	}
 	public void loadStrategyData() {
 		System.out.print("Loading Strategy Data ... ");
 		strategyDataBase.clear();

@@ -1,15 +1,8 @@
 import java.awt.AWTException;
 import java.awt.Color;
-import java.awt.FileDialog;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.Robot;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
-import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -48,15 +41,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.border.LineBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import lib.CanvasBoard;
 import lib.CanvasBoardForEngine;
 import lib.CastleDataBase;
+import lib.ColorDataBase;
 import lib.EditProperty;
-import lib.EditProperty.PropertyType;
 import lib.KifuDataBase;
 import lib.KifuDataBase.Kifu;
 import lib.KifuDataBase.KifuData;
@@ -91,6 +83,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	CastleDataBase cdb;
 	TesujiDataBase tdb;
 	PlayerDataBase pdb;
+	ColorDataBase cldb;
 	
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
@@ -163,18 +156,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	JMenuItem menuItemSetting[] = new JMenuItem[MenuTypeSetting.values().length];
 	JMenuItem menuItemEngine[] = new JMenuItem[MenuTypeEngine.values().length];
 	JMenuItem menuItemUtility[] = new JMenuItem[MenuTypeEngine.values().length];
-	
-	public enum ColorSetType {
-		Default(0), Sakura(1), GreenTea(2), BlueSky(3), Evening(4), Universe(5);
-		private final int id;		
-		private ColorSetType(final int id) {
-			this.id = id;
-		}
-	};
-	Color buttonColor;
-	Color buttonFocusedColor;
-	ColorSet listColorSet[] = new ColorSet[ColorSetType.values().length];
-	
+		
 	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
@@ -214,9 +196,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		initializeListBoxSetting();
 		cve = new CanvasBoardForEngine(se, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Kifu.id]);
 		cv = new CanvasBoard(sd, checkBox[CheckBoxType.Reverse.id], se, cve);
-		kdb = new KifuDataBase(sd, sdForKDB, cv, 
+		kdb = new KifuDataBase(this, sd, sdForKDB, cv, 
 				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
-				listBox[ListBoxType.Kifu.id], checkBox[CheckBoxType.Reverse.id]);
+				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id], 
+				checkBox[CheckBoxType.Reverse.id], checkBox[CheckBoxType.Draw.id], checkBox[CheckBoxType.Edit.id],
+				textBox[TextBoxType.Player1.id], textBox[TextBoxType.Player2.id], 
+				textBox[TextBoxType.Strategy.id], textBox[TextBoxType.Castle.id],
+				pdb, cdb, sdb, se, cve);
 		sdb = new StrategyDataBase(listModel[ListBoxType.Strategy.id], listBox[ListBoxType.Strategy.id],
 				listModel[ListBoxType.Player.id], listBox[ListBoxType.Player.id],
 				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
@@ -234,11 +220,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		pdb = new PlayerDataBase(listModel[ListBoxType.Player.id], listBox[ListBoxType.Player.id],
 				listModel[ListBoxType.Info.id], listBox[ListBoxType.Info.id],
 				textBox[TextBoxType.Player1.id], textBox[TextBoxType.Player2.id], kdb, cv);
+		cldb = new ColorDataBase(ep, cv, button);
+		
+		kdb.update(pdb, cdb, sdb, se, cve);
+		sdb.update(kdb, cdb);
+		
 		initializeCanvasSetting();
 		ks.initializeSoundSetting();
 		initializeMenuBar();
 		cv.initializeNumberRowCol();
-		initializeColorSet();
+		cldb.initializeColorSet();
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
@@ -380,119 +371,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		
 		this.setJMenuBar(menuBar);
 	}
-	
-	// -------------------------------------------------------------------------
-	// ---------------------------- << Color >> -------------------------------
-	// -------------------------------------------------------------------------
-	public class ColorSet {
-		Color button;
-		Color buttonFocused;
-		Color buttonBorder;
-		Color font;
-		Image board;
-		Image background;
-		ColorSet(Color b, Color bf, Color bb, Color f) {
-			button = b;
-			buttonFocused = bf;
-			buttonBorder = bb;
-			font = f;
-			board = null;
-			background = null;
-		}
-	}
-	public void actionForSetColor() {
-		String[] selectvalues = new String[ColorSetType.values().length];
-		for(ColorSetType cst: ColorSetType.values()) selectvalues[cst.id] = cst.name();
-		int select = JOptionPane.showOptionDialog(
-				this,
-				"Which color style?",
-				"Color Style",
-				JOptionPane.YES_NO_OPTION,
-				JOptionPane.QUESTION_MESSAGE,
-				null,
-				selectvalues,
-				selectvalues[0]
-				);
-		if (select == JOptionPane.CLOSED_OPTION) {
-			System.out.println("cancel");
-		} else {
-			ep.setProperty(PropertyType.Color.name(), Integer.valueOf(select).toString());
-			setColor();
-		}
-	}
-	public void initializeColorSet() {
-		listColorSet[ColorSetType.Default.id] = new ColorSet(
-				new Color(235, 235, 235), // button;
-				new Color(215, 215, 215), // buttonFocused;
-				new Color(0, 0, 0),		 // buttonBorder;
-				new Color(0, 0, 0)		 // font;
-				);
-		listColorSet[ColorSetType.Sakura.id] = new ColorSet(
-				new Color(230, 205, 227), 
-				new Color(229, 171, 190), 
-				new Color(201, 117, 134),
-				new Color(201, 67, 84)
-				);
-		listColorSet[ColorSetType.GreenTea.id] = new ColorSet(
-				new Color(205, 230, 227), 
-				new Color(171, 229, 190), 
-				new Color(117, 201, 134),
-				new Color(255, 255, 255)
-				);
-		listColorSet[ColorSetType.BlueSky.id] = new ColorSet(
-				new Color(160, 216, 239), 
-				new Color(171, 190, 229), 
-				new Color(117, 134, 201),
-				new Color(0, 0, 0)	
-				);
-		listColorSet[ColorSetType.Evening.id] = new ColorSet(
-				new Color(255, 255, 0), 
-				new Color(255, 215, 0), 
-				new Color(255, 140, 0),
-				new Color(255, 255, 255)
-				);
-		listColorSet[ColorSetType.Universe.id] = new ColorSet(
-				new Color(255, 255, 0), 
-				new Color(255, 215, 0), 
-				new Color(255, 140, 0),
-				new Color(255, 255, 255)
-				);
-		initializeImageSet();
-		setColor();
-	}
-	public void initializeImageSet() {
-		for(ColorSetType cst: ColorSetType.values()) {
-			try {
-				String fileName = cv.imgFilePathBoard + "shogi board" + cst.id + ".png";
-				BufferedImage img = ImageIO.read(new File(fileName));
-				listColorSet[cst.id].board = img.getScaledInstance((50+10)*9, (63+10)*9, java.awt.Image.SCALE_SMOOTH);
-				fileName = cv.imgFilePathBackground + "background" + cst.id + ".png";
-				img = ImageIO.read(new File(fileName));
-				listColorSet[cst.id].background = img.getScaledInstance(50*25, 63*12, java.awt.Image.SCALE_SMOOTH);
-			} catch(IOException e) {
-				listColorSet[cst.id].board = null;
-				listColorSet[cst.id].background = null;
-			}
-		}
-	}
-	public void setColor() {
-		String value = ep.loadProperty(PropertyType.Color.name());
-		int select;
-		if(value == null) select = ColorSetType.Default.id;
-		else select = Integer.parseInt(value);
-		
-		buttonColor = listColorSet[select].button;
-		buttonFocusedColor = listColorSet[select].buttonFocused;
-		LineBorder border = new LineBorder(listColorSet[select].buttonBorder, 1, true);
-		for(ButtonType bt: ButtonType.values()) {
-			button[bt.id].setBackground(buttonColor);
-			button[bt.id].setBorder(border);
-		}
-		cv.imgBoard = listColorSet[select].board;
-		cv.imgBackground = listColorSet[select].background;
-		cv.clrFont =  listColorSet[select].font;
-		cv.repaint();
-	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Button Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -503,7 +381,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
 		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-		clearListBox();
+		kdb.clearListBox();
 		clearIcons();
 		kdb.kifuData.clear();
 		cv.setLastPoint(-1, -1, false);
@@ -520,107 +398,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cve.repaint();
 	}
 	public void actionForSave() {
-		Path path;
-		String fileName;
-		int index = 1;
-		
-		while(true) {
-			fileName = kdb.kifuFilePath + String.format("kifu%03d.txt", index);
-			path = Paths.get(fileName);
-			if(!Files.exists(path)) break;
-			index++;
-		}
-		
-		try {
-			File file = new File(fileName);
-			FileWriter fw = new FileWriter(file);
-			fw.write(textBox[TextBoxType.Player1.id].getText() + "\n");
-			fw.write(textBox[TextBoxType.Player2.id].getText() + "\n");
-			for(Kifu kf: kdb.kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
-			if(checkBox[CheckBoxType.Draw.id].isSelected()) fw.write("-1");
-			fw.close();
-			
-			JOptionPane.showMessageDialog(null, fileName + " is saved.");
-		} catch(IOException er) {
-			System.out.println(er);
-		}
+		kdb.actionForSave();
 	}
 	String loadFile = "";
 	String loadStep = "";
 	String loadYear = "";
 	public void actionForLoad() {
-		loadByNumber(loadFile, loadStep, loadYear);
+		kdb.loadByNumber(loadFile, loadStep, loadYear);
 	}
-	public void loadByNumber(String numStrFile, String numStrStep, String numStrYear) {
-		String fileName;
-		if(numStrFile.equals("")) {
-			Path path = Paths.get("").toAbsolutePath();
-			FileDialog fd = new FileDialog(this, "Load", FileDialog.LOAD);
-			fd.setDirectory(path.toString() + "/kifu/");
-			fd.setVisible(true);
-			if(fd.getFile() == null) return;
-			fileName = kdb.kifuFilePath + fd.getFile();
-		} else {
-			fileName = kdb.kifuFilePath + numStrYear + "/" + "kifu" + numStrFile + ".txt";
-		}
-		initializeShogiBoard();
-		try {
-			File file = new File(fileName);
-			FileReader fr = new FileReader(file);
-			BufferedReader br = new BufferedReader(fr);
-			String content;
-			textBox[TextBoxType.Player1.id].setText(br.readLine());
-			textBox[TextBoxType.Player2.id].setText(br.readLine());
-			while((content = br.readLine()) != null) {
-				StringTokenizer st = new StringTokenizer(content,",");
-				while(st.hasMoreTokens()) {
-					int i = Integer.parseInt(st.nextToken()); // index
-					if(i == -1) continue; // Draw game
-					int x = Integer.parseInt(st.nextToken()); // x
-					int y = Integer.parseInt(st.nextToken()); // y
-					int p = Integer.parseInt(st.nextToken()); // promote
-					int pp = Integer.parseInt(st.nextToken()); // preP
-					int d = Integer.parseInt(st.nextToken()); // drop
-					updateListBox(sd.k[i].type, x, y, sd.k[i].px, sd.k[i].py, sd.k[i].sente, p, pp, d);
-					Kifu kf = kdb.createKifu(sd.k[i], x, y, p, pp, d);
-					kdb.kifuData.add(kf);
-					sd.k[i].moveKoma(x, y, p);
-				}
-			}
-			br.close();
-			
-			sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
-			if(numStrStep.equals("")) {
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
-			} else {
-				int selectedIndex = Integer.parseInt(numStrStep);
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(selectedIndex);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(selectedIndex);
-				commonListAction();
-			}
-			
-			sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-			sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-			pdb.updatePlayerIcon();
-			cv.repaint();
-		} catch(IOException er) {
-			System.out.println(er);
-		}
-	}
-	public void initializeShogiBoard() {
-		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-		clearListBox();
-		kdb.kifuData.clear();
-		cv.setLastPoint(-1, -1, false);
-		cv.clearDrawPoint();
-		actionForStopEngine();
-		cve.clearBestPointData();
-		//clearTextBox();
-		cv.repaint();
-		cve.repaint();
-	}
+	
 	public void actionForDB() {
 		kdb.kifuDB.clear();
 		String selectedYear = (String)comboBox.getSelectedItem();
@@ -685,7 +471,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-		commonListAction();
+		kdb.commonListAction();
 		
 		System.out.println("Completed.");
 	}
@@ -845,13 +631,15 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			actionForKifu();
 		}
 		if(e.getSource() == menuItemSetting[MenuTypeSetting.SetColor.id]) {
-			actionForSetColor();
+			cldb.actionForSetColor(this);
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.StartEngine.id]) {
-			actionForStartEngine();
+			se.actionForStartEngine(this, sd, cv, cve, 
+					listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
+					listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.StopEngine.id]) {
-			actionForStopEngine();
+			se.actionForStopEngine();
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.SetEngine.id]) {
 			actionForSetEngine();
@@ -866,10 +654,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			actionForKomaInHand();
 		}
 	}
-
-	
-
-
 	private ActionListener enterActionListener = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
@@ -903,130 +687,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(subStrStep.matches("[+-]?\\d*(\\.\\d+)?")) loadStep = subStrStep;
 		if(subStrYear.matches("[+-]?\\d*(\\.\\d+)?")) loadYear = subStrYear;
 	}
- // -------------------------------------------------------------------------
- // ----------------------- << Shogi Wars Interface >> ----------------------
- // -------------------------------------------------------------------------
-    public void importShogiWarsKifu() {
-		System.out.print("Importing Kifu ... ");
-		String strClipBoard;
-		if( (strClipBoard = getClipboardData()) == null ) {
-			System.out.println("Failed.");
-			return;
-		}
-		initializeShogiBoard();
-		Boolean result = parseShogiWarsKifu(strClipBoard);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
-		commonListAction();
-		pdb.updatePlayerIcon();
-		if(result) System.out.println("Completed.");
-		else System.out.println("Failed.");
-	}
-	public String getClipboardData() {
-		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-		Transferable object = clipboard.getContents(null);
-		String strClipBoard;
-		try {
-			strClipBoard = (String)object.getTransferData(DataFlavor.stringFlavor);
-		} catch(UnsupportedFlavorException e) {
-			return null;
-		} catch (IOException e) {
-			return null;
-		}
-		return strClipBoard;
-	}
-	String endPattern[] = {"中断", "投了", "持将棋", "千日手", "切れ負け", "反則勝ち", "反則負け", "入玉勝ち", "詰み"};
-	public Boolean parseShogiWarsKifu(String strClipBoard) {
-		String content;
-		StringTokenizer stLine = new StringTokenizer(strClipBoard, System.lineSeparator());
-		Boolean startKifu = false;
-		Boolean isSente = true;
-		while(stLine.hasMoreTokens()) {
-			content = stLine.nextToken();
-			//System.out.println(content);
-			if(content.contains("先手：")) {
-				textBox[TextBoxType.Player1.id].setText(content.substring(content.indexOf("：")+1));
-			}
-			if(content.contains("後手：")) {
-				textBox[TextBoxType.Player2.id].setText(content.substring(content.indexOf("：")+1));
-			}
-			if(content.contains("手数----指手---------消費時間--")) {
-				startKifu = true;
-				continue;
-			}
-			if(!startKifu) continue;
-			else {
-				for(String endStr: endPattern) {
-					if(content.contains(endStr)) return true;
-				}
-			}
-			StringTokenizer st = new StringTokenizer(content," ");
-			while(st.hasMoreTokens()) {
-				String token = st.nextToken();
-				if(!token.matches("[+-]?\\d*(\\.\\d+)?")) continue;					
-				token = st.nextToken();
-				Kifu kf;
-				try {
-					kf = convertShogiWarsKifu(token, isSente);
-				} catch(Exception e) {
-					System.out.println("format error");
-					return false;
-				}
-				if(kf == null) {
-					JOptionPane.showMessageDialog(null, "Loading kifu failed");
-					return false;
-				}
-				updateListBox(kf.k.type, kf.x, kf.y, kf.k.px, kf.k.py, kf.k.sente, kf.p, kf.pp, kf.d);
-				kdb.kifuData.add(kf);
-				sd.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
-				isSente = !isSente;
-			}
-		}
-		return startKifu;
-	}
-	public Kifu convertShogiWarsKifu(String token, Boolean isSente) {
-		Kifu kf = null;
-		String kanjiNum = "一二三四五六七八九";
-		Koma k = null;
-		KomaType type = null;
-		int x = 0;
-		int y = 0;
-		int p = 0;
-		int drop = 0;
-		int index = 0;
-		while(index<token.length()) {
-			String s = token.substring(index, index+1);
-			if(index == 0) x = Integer.parseInt(s);
-			if(index == 1) {
-				y = kanjiNum.indexOf(s)+1;
-			}
-			if(index == 2) {
-				for(KomaType t: KomaType.values()) {
-					if(sd.komaName[t.id].equals(s)) {
-						type = t;
-						break;
-					}
-				}
-			}
-			if(index == 3) {
-				if(s.equals("成")) p = 1;
-				if(s.equals("打")) {
-					drop = 1;
-					k = sd.findKomaInHand(type, isSente);
-					if(k == null) return null;
-				}
-			}
-			if(s.equals("(")) {
-				int preX = Integer.parseInt(token.substring(index+1, index+2));
-				int preY = Integer.parseInt(token.substring(index+2, index+3));
-				k = sd.findKoma(preX, preY);
-				if(k == null) return null;
-			}
-			index++;
-		}
-		kf = kdb.createKifu(k, x, y, p, k.promoted, drop);
-		return kf;
-	}
+ 
 	// -------------------------------------------------------------------------
 	// ----------------------- << ListBox Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -1034,7 +695,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void valueChanged(ListSelectionEvent e) {
 		if(e.getValueIsAdjusting()) {
 			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
-				commonListAction();
+				kdb.commonListAction();
 			}
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
 				getLoadNumberOnListBox2();
@@ -1063,7 +724,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			commandKeyOn = true;
 		}
 		if(commandKeyOn && e.getKeyCode() == KeyEvent.VK_V) {
-			importShogiWarsKifu();
+			kdb.importShogiWarsKifu();
 		}
 	}
 	@Override
@@ -1072,7 +733,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		commandKeyOn = false;
 		if((e.getKeyCode() == KeyEvent.VK_UP) || (e.getKeyCode() == KeyEvent.VK_DOWN)) {
 			if(e.getSource() == listBox[ListBoxType.Kifu.id]) {
-				commonListAction();
+				kdb.commonListAction();
 				ks.soundKoma();
 			}
 			if(e.getSource() == listBox[ListBoxType.Info.id]) {
@@ -1091,64 +752,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				tdb.updateListBoxInfoByTesuji();
 			}
 		}
-	}
-	public void clearListBox() {
-		listModel[ListBoxType.Kifu.id].clear();
-		listModel[ListBoxType.Kifu.id].addElement("--------");
-		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-	}
-	public void updateListBox(KomaType type, int x, int y, int preX, int preY, int sente, int promoted, int preP, int drop) {
-		// remove items under selected item 
-		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		if(selectedIndex != -1 && selectedIndex <= listModel[ListBoxType.Kifu.id].size()-1) {
-			int index = listModel[ListBoxType.Kifu.id].size()-1;
-			while(index > selectedIndex) {
-				listModel[ListBoxType.Kifu.id].remove(index);
-				kdb.kifuData.remove(index-1);
-				index--;
-			}
-		}
-		
-		// add new item
-		String s = sd.createMoveKomaName(type, sente, x, y, preX, preY, promoted, preP, drop);
-		s = listModel[ListBoxType.Kifu.id].size() + ":"+s;
-		listModel[ListBoxType.Kifu.id].addElement(s);
-		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
-		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(listModel[ListBoxType.Kifu.id].size()-1);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(listModel[ListBoxType.Kifu.id].size()-1);
-		
-		cv.clearDrawPointForRightClick();
-	}
-	public void commonListAction() {
-		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-		
-		for(Kifu kf: kdb.kifuData) {
-			if(kdb.kifuData.indexOf(kf) < selectedIndex) {
-				kf.k.moveKoma(kf.x, kf.y, kf.p);
-				if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
-				cv.setLastPoint(kf.x, kf.y, true);
-				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(sdb.checkStrategy(sd));
-				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, true));
-				}
-				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, false));
-				}
-			}
-		}
-		if(selectedIndex == 0) cv.setLastPoint(-1, -1, false);
-		cv.clearDrawPointForRightClick();
-		
-		kdb.checkKDB(selectedIndex);
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-
-		se.sendCommandToEngine();
-		cv.repaint();
-		cve.repaint();
 	}
 	public void updateListBox2(List<StringCount> listSC) {
 		listModel[ListBoxType.Info.id].clear();
@@ -1201,13 +804,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.repaint();
 		cve.repaint();
 	}
-	public void actionForStartEngine() {
-		se.actionForStartEngine(this, sd, cv, cve, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
-				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
-	}
-	public void actionForStopEngine() {
-		se.actionForStopEngine();
-	}
 	public void actionForSetEngine() {
 		ep.setPropertyForEngine(this);
 	}
@@ -1216,9 +812,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		checkBox[CheckBoxType.Edit.id].setSelected(false);
 		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
-		commonListAction();
+		kdb.commonListAction();
 		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
-		actionForStartEngine();
+		se.actionForStartEngine(this, sd, cv, cve, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
+				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
 		if(!se.isEngineOn) {
 			System.out.println("Failed to start shogi engine");
 			return;
@@ -1244,10 +841,10 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				}
 				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
 				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
-				commonListAction();
+				kdb.commonListAction();
 			}
 			System.out.println("completed.");
-			actionForStopEngine();
+			se.actionForStopEngine();
 		}
 	}
 	// -------------------------------------------------------------------------
@@ -1448,7 +1045,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(X != preX || Y != preY) {
 			if(X>0 && X<10 && Y>0 && Y<10) {
 				cv.setLastPoint(X, Y, true);
-				updateListBox(type, X, Y, preX, preY, sente, promoted, preP, drop);
+				kdb.updateListBox(type, X, Y, preX, preY, sente, promoted, preP, drop);
 			}
 			Kifu kf = kdb.createKifu(selectedKoma, X, Y, promoted, preP, drop);
 			kdb.kifuData.add(kf);
@@ -1474,7 +1071,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void mouseEntered(MouseEvent e) {
 		for(ButtonType bt: ButtonType.values()) {
 			if(e.getSource() == button[bt.id]) {
-				button[bt.id].setBackground(buttonFocusedColor);
+				button[bt.id].setBackground(cldb.buttonFocusedColor);
 			}
 		}
 	}
@@ -1482,7 +1079,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void mouseExited(MouseEvent e) {
 		for(ButtonType bt: ButtonType.values()) {
 			if(e.getSource() == button[bt.id]) {
-				button[bt.id].setBackground(buttonColor);
+				button[bt.id].setBackground(cldb.buttonColor);
 			}
 		}
 	}
