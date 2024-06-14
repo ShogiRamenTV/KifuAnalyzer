@@ -75,6 +75,9 @@ public class CanvasBoard extends Canvas {
 		castleIcon = null;
 		clrFont = new Color(0, 0, 0);
 	}
+	public void initializeSettings(int width, int height) {
+		setBounds(0, 0, width, height);
+	}
 	public void paint(Graphics g) {
 		drawBackground(g);
 		drawShogiBoardBackground(g);

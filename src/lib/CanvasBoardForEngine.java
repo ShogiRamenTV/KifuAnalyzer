@@ -21,7 +21,9 @@ public class CanvasBoardForEngine extends Canvas {
 	ShogiEngine se;
 	DefaultListModel<String> listModelEngine;
 	JList<String> listBoxKifu;
-	public CanvasBoardForEngine(ShogiEngine s, DefaultListModel<String> lmE, JList<String> lbK) {
+	int baseXPosForItems;
+	public CanvasBoardForEngine(int bPosX, ShogiEngine s, DefaultListModel<String> lmE, JList<String> lbK) {
+		baseXPosForItems = bPosX;
 		se = s;
 		selectedIndex = 0;
 		listModelEngine = lmE;
@@ -39,6 +41,10 @@ public class CanvasBoardForEngine extends Canvas {
 			moveName = new String[numOfMultiPV];
 			for(int index=0; index<numOfMultiPV; index++) moveName[index] = new String("");
 		}
+	}
+	public void initializeSetting() {
+		setBounds(baseXPosForItems+165, 590,330, 90);
+		setBackground(Color.white);
 	}
 	public void paint(Graphics g) {
 		drawBaseField(g);

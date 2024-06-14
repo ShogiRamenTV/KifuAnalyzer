@@ -1,8 +1,4 @@
-import java.awt.AWTException;
-import java.awt.Color;
 import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
@@ -10,31 +6,22 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import javax.imageio.ImageIO;
-import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
-import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JRadioButton;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
+import lib.ButtonData;
+import lib.ButtonData.ButtonType;
 import lib.CanvasBoard;
 import lib.CanvasBoardForEngine;
 import lib.CastleDataBase;
+import lib.CheckBoxData;
+import lib.CheckBoxData.CheckBoxType;
 import lib.ColorDataBase;
 import lib.EditProperty;
 import lib.KifuDataBase;
@@ -42,6 +29,7 @@ import lib.KifuDataBase.Kifu;
 import lib.KomaSound;
 import lib.ListBoxData;
 import lib.ListBoxData.ListBoxType;
+import lib.MenuData;
 import lib.PlayerDataBase;
 import lib.ShogiData;
 import lib.ShogiData.Koma;
@@ -77,59 +65,9 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	ColorDataBase cldb;
 	ListBoxData lbd;
 	TextBoxData tbd;
-	
-	public enum ButtonType {
-		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
-		private final int id;
-		private ButtonType(final int id) {
-			this.id = id;
-		}
-	};
-	JButton button[] = new JButton[ButtonType.values().length];
-	
-	public enum CheckBoxType {
-		Edit(0), Reverse(1), Draw(2);
-		private final int id;
-		private CheckBoxType(final int id) {
-			this.id = id;
-		}
-	};
-	JCheckBox checkBox[] = new JCheckBox[CheckBoxType.values().length];
-	JRadioButton radioButtonSente = new JRadioButton("Sente", true);
-	JRadioButton radioButtonGote = new JRadioButton("Gote");
-	JComboBox<String> comboBox;
-	
-	
-	
-	public enum MenuTypeSetting {
-		SetColor(0);
-		private final int id;
-		private MenuTypeSetting(final int id) {
-			this.id = id;
-		}
-	};
-	public enum MenuTypeEngine {
-		StartEngine(0), StopEngine(1), SetEngine(2), KifuAnalysis(3);
-		private final int id;
-		private MenuTypeEngine(final int id) {
-			this.id = id;
-		}
-	};
-	public enum MenuTypeUtility {
-		CaptureBoard(0), KomaInHand(1);
-		private final int id;
-		private MenuTypeUtility(final int id) {
-			this.id = id;
-		}
-	};
-	JMenuBar menuBar = new JMenuBar();
-	JMenu menuSetting = new JMenu("Setting");
-	JMenu menuEngine = new JMenu("Engine");
-	JMenu menuUtility = new JMenu("Utility");
-	JMenuItem menuItemSetting[] = new JMenuItem[MenuTypeSetting.values().length];
-	JMenuItem menuItemEngine[] = new JMenuItem[MenuTypeEngine.values().length];
-	JMenuItem menuItemUtility[] = new JMenuItem[MenuTypeEngine.values().length];
-		
+	ButtonData bd;
+	CheckBoxData cbd;
+	MenuData md;
 	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
@@ -154,7 +92,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		contentPaneSetting();
 		listenerSetting();		
 		System.out.println("Completed.");
-		actionForInitialize();
+		bd.actionForInitialize();
 	}
 	public void initializeAppIcon() {
 		ImageIcon icon = new ImageIcon(imgFilePath + "Shogi Ramen TV.jpg");
@@ -163,16 +101,20 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void initializeGUISetting() {
 		sd.initializeKomaSetting();
 		sdForKDB.initializeKomaSetting();
-		initializeButtonSetting();
 		tbd = new TextBoxData(baseXPosForItems, pdb, lbd);
 		tbd.initializeTextBoxSetting();
-		initializeCheckBox();
+		cbd = new CheckBoxData(baseXPosForItems, sd, cv, cve);
+		cbd.initializeCheckBox();
 		lbd = new ListBoxData(baseXPosForItems, se.getNumOfMultiPV(), kdb, pdb, sdb, cdb, tdb, ks);
 		lbd.initializeListBoxSetting();
-		cve = new CanvasBoardForEngine(se, lbd.listModel[ListBoxType.Engine.id], lbd.listBox[ListBoxType.Kifu.id]);
-		cv = new CanvasBoard(sd, checkBox[CheckBoxType.Reverse.id], se, cve);
+		bd = new ButtonData(baseXPosForItems, tbd, lbd, cldb, cbd, cv, cve, sd, kdb, sdb, cdb, tdb, pdb);
+		bd.initializeButtonSetting();
+		
+		cve = new CanvasBoardForEngine(baseXPosForItems, se, 
+				lbd.listModel[ListBoxType.Engine.id], lbd.listBox[ListBoxType.Kifu.id]);
+		cv = new CanvasBoard(sd, cbd.checkBox[CheckBoxType.Reverse.id], se, cve);
 		kdb = new KifuDataBase(this, sd, sdForKDB, cv, lbd.listModel, lbd.listBox,
-				checkBox[CheckBoxType.Reverse.id], checkBox[CheckBoxType.Draw.id], checkBox[CheckBoxType.Edit.id],
+				cbd.checkBox[CheckBoxType.Reverse.id], cbd.checkBox[CheckBoxType.Draw.id], cbd.checkBox[CheckBoxType.Edit.id],
 				tbd.textBox,
 				pdb, cdb, sdb, se, cve);
 		sdb = new StrategyDataBase(lbd.listModel, lbd.listBox,
@@ -182,33 +124,36 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 				tbd.textBox, 
 				cv, kdb, sdb);
 		tdb = new TesujiDataBase(lbd.listModel, lbd.listBox,
-				tbd.textBox, comboBox, kdb
+				tbd.textBox, cbd.comboBox, kdb
 				);
 		pdb = new PlayerDataBase(lbd.listModel, lbd.listBox,
 				tbd.textBox, kdb, cv);
-		cldb = new ColorDataBase(ep, cv, button);
+		cldb = new ColorDataBase(ep, cv, bd.button);
+		md = new MenuData(this, cldb, se, sd, cv, cve, lbd, cbd, ep, kdb);
 		
 		kdb.update(pdb, cdb, sdb, se, cve);
 		sdb.update(kdb, cdb);
 		lbd.update(kdb, pdb, sdb, cdb, tdb);
 		tbd.update(pdb, lbd);
-		
-		
-		initializeCanvasSetting();
+		bd.update(tbd, lbd, cldb, cbd, cv, cve, sd, kdb, sdb, cdb, tdb, pdb);
+		cbd.update(cv, cve);
+
+		cv.initializeSettings(this.getWidth(), this.getHeight());
+		cve.initializeSetting();
 		ks.initializeSoundSetting();
-		initializeMenuBar();
+		md.initializeMenuBar();
 		cv.initializeNumberRowCol();
 		cldb.initializeColorSet();
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
-		for(ButtonType b: ButtonType.values()) getContentPane().add(button[b.id]);
+		for(ButtonType b: ButtonType.values()) getContentPane().add(bd.button[b.id]);
 		for(TextBoxType t: TextBoxType.values()) getContentPane().add(tbd.textBox[t.id]);
 		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(lbd.scrollPane[lb.id]);
-		for(CheckBoxType cb: CheckBoxType.values()) getContentPane().add(checkBox[cb.id]);
-		getContentPane().add(radioButtonSente);
-		getContentPane().add(radioButtonGote);
-		getContentPane().add(comboBox);
+		for(CheckBoxType cb: CheckBoxType.values()) getContentPane().add(cbd.checkBox[cb.id]);
+		getContentPane().add(cbd.radioButtonSente);
+		getContentPane().add(cbd.radioButtonGote);
+		getContentPane().add(cbd.comboBox);
 		getContentPane().add(cve);
 		getContentPane().add(cv);
 	}
@@ -221,161 +166,16 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cv.addKeyListener(this);
 	}
 	private final int baseXPosForItems = 720;
-	public void initializeCanvasSetting() {
-		cv.setBounds(0, 0, this.getSize().width, this.getSize().height);
-		cve.setBounds(baseXPosForItems+165, 590,330, 90);
-		cve.setBackground(Color.white);
-	}
-	public void initializeButtonSetting() {
-		for(ButtonType b: ButtonType.values()) {
-			button[b.id] = new JButton(b.name());
-			button[b.id].addActionListener(this);
-			button[b.id].addMouseListener(this);
-			button[b.id].setOpaque(true);
-		}
-		button[ButtonType.Initialize.id].setBounds(baseXPosForItems, 10, 80, 20);
-		button[ButtonType.Save.id].setBounds(baseXPosForItems, 30, 80, 20);
-		button[ButtonType.Kifu.id].setBounds(baseXPosForItems, 50, 80, 20);
-		button[ButtonType.Strategy.id].setBounds(baseXPosForItems+280, 10, 80, 20);
-		button[ButtonType.Tesuji.id].setBounds(baseXPosForItems+280, 30, 80, 20);
-		button[ButtonType.Castle.id].setBounds(baseXPosForItems+280, 50, 80, 20);
-	}
-	
-	public void initializeCheckBox() {
-		for(CheckBoxType cb: CheckBoxType.values()) {
-			checkBox[cb.id] = new JCheckBox(cb.name());
-		}
-		checkBox[CheckBoxType.Edit.id].setBounds(baseXPosForItems+140, 35, 60, 12);
-		checkBox[CheckBoxType.Reverse.id].setBounds(baseXPosForItems+190, 35, 80, 12);
-		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListener);
-		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+80, 35, 80, 12);
-		radioButtonSente.setBounds(baseXPosForItems+360, 75, 70, 14);
-		radioButtonGote.setBounds(baseXPosForItems+420, 75, 70, 14);
-		ButtonGroup buttonGroup = new ButtonGroup();
-		buttonGroup.add(radioButtonSente);
-		buttonGroup.add(radioButtonGote);
-		comboBox = new JComboBox<>();
-		comboBox.addItem("");
-		comboBox.addItem("2023");
-		comboBox.addItem("2022");
-		comboBox.addItem("all");
-		comboBox.setBounds(baseXPosForItems+80, 8, 100, 25);
-	}
-	public void clearCheckBox() {
-		for(CheckBoxType cb: CheckBoxType.values()) {
-			checkBox[cb.id].setSelected(false);
-		}
-		radioButtonSente.setSelected(true);
-	}
-	public void clearIcons() {
-		pdb.initializePlayerIcon();
-		cdb.initializeCastleIcon();
-	}
-	public void initializeMenuBar() {
-		for(MenuTypeSetting mt: MenuTypeSetting.values()) {
-			menuItemSetting[mt.id] = new JMenuItem(mt.name());
-			menuItemSetting[mt.id].addActionListener(this);
-			menuSetting.add(menuItemSetting[mt.id]);
-		}
-		menuBar.add(menuSetting);
-		for(MenuTypeEngine mt: MenuTypeEngine.values()) {
-			menuItemEngine[mt.id] = new JMenuItem(mt.name());
-			menuItemEngine[mt.id].addActionListener(this);
-			menuEngine.add(menuItemEngine[mt.id]);
-		}
-		menuBar.add(menuEngine);
-		for(MenuTypeUtility mt: MenuTypeUtility.values()) {
-			menuItemUtility[mt.id] = new JMenuItem(mt.name());
-			menuItemUtility[mt.id].addActionListener(this);
-			menuUtility.add(menuItemUtility[mt.id]);
-		}
-		menuBar.add(menuUtility);
-		
-		this.setJMenuBar(menuBar);
-	}
+
 	// -------------------------------------------------------------------------
 	// ----------------------- << Button Action >> -----------------------------
 	// -------------------------------------------------------------------------
-	public void actionForInitialize() {
-		tbd.clearTextBox();
-		clearCheckBox();
-		cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-		kdb.clearListBox();
-		clearIcons();
-		kdb.kifuData.clear();
-		cv.setLastPoint(-1, -1, false);
-		cve.clearBestPointData();
-		sdb.loadStrategyData();
-		cdb.loadCastleData();
-		tdb.loadTesujiData();
-		kdb.actionForDB((String)comboBox.getSelectedItem());
-		sdb.countStrategy();
-		cdb.countCastle();
-		tdb.countTesujiData();
-		pdb.createPlayerDataBase();
-		cv.repaint();
-		cve.repaint();
-	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		if(e.getActionCommand() == button[ButtonType.Initialize.id].getText()) {
-			actionForInitialize();
-		}
-		if(e.getActionCommand() == button[ButtonType.Save.id].getText()) {
-			kdb.actionForSave();
-		}
-		if(e.getActionCommand() == button[ButtonType.Strategy.id].getText()) {
-			sdb.actionForStrategy(sd, tbd.textBox[TextBoxType.Strategy.id].getText());
-		}
-		if(e.getActionCommand() == button[ButtonType.Castle.id].getText()) {
-			cdb.actionForCastle(sd, radioButtonSente.isSelected());
-		}
-		if(e.getActionCommand() == button[ButtonType.Tesuji.id].getText()) {
-			tdb.actionForTesuji(lbd.loadFile);
-		}
-		if(e.getActionCommand() == button[ButtonType.Kifu.id].getText()) {
-			kdb.actionForKifu();
-		}
-		if(e.getSource() == menuItemSetting[MenuTypeSetting.SetColor.id]) {
-			cldb.actionForSetColor(this);
-		}
-		if(e.getSource() == menuItemEngine[MenuTypeEngine.StartEngine.id]) {
-			se.actionForStartEngine(this, sd, cv, cve, 
-					lbd.listModel[ListBoxType.Engine.id], lbd.listBox[ListBoxType.Engine.id], 
-					lbd.listModel[ListBoxType.Kifu.id], lbd.listBox[ListBoxType.Kifu.id]);
-		}
-		if(e.getSource() == menuItemEngine[MenuTypeEngine.StopEngine.id]) {
-			se.actionForStopEngine();
-		}
-		if(e.getSource() == menuItemEngine[MenuTypeEngine.SetEngine.id]) {
-			ep.setPropertyForEngine(this);
-		}
-		if(e.getSource() == menuItemEngine[MenuTypeEngine.KifuAnalysis.id]) {
-			kdb.actionForKifuAnalysis();
-		}
-		if(e.getSource() == menuItemUtility[MenuTypeUtility.CaptureBoard.id]) {
-			actionForCaptureBoard();
-		}
-		if(e.getSource() == menuItemUtility[MenuTypeUtility.KomaInHand.id]) {
-			actionForKomaInHand();
-		}
+	
 	}
-    private ActionListener checkActionListener = new ActionListener() {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-        	for(Koma k: sd.k) {
-        		k.reverseForReverseMode();
-        	}
-        	sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-        	sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-        	cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
-        	cv.repaint();
-        	cve.repaint();
-        }
-    };
+    
     
  
 	// -------------------------------------------------------------------------
@@ -427,33 +227,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		lbd.listBox[ListBoxType.Info.id].setModel(lbd.listModel[ListBoxType.Info.id]);
 	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Menu Action >> -----------------------------
-	// -------------------------------------------------------------------------
-	public void actionForCaptureBoard() {
-		try {
-			Rectangle bounds = this.getBounds();
-			Robot robot = new Robot();
-			BufferedImage image = robot.createScreenCapture(bounds);
-			image = image.getSubimage(0, 70, (sd.iconWidth+10)*11+55, (sd.iconHeight+10)*9);
-			String dirName = imgFilePath;
-			String fileName = "CaptureBoard.jpg";
-			ImageIO.write(image, "jpg", new File(dirName, fileName));
-			
-			JOptionPane.showMessageDialog(null, dirName + fileName + " is saved.");
-		} catch (AWTException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	public void actionForKomaInHand() {
-		sd.putAllKomaInHand(checkBox[CheckBoxType.Reverse.id].isSelected(),radioButtonSente.isSelected());
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
-		cv.repaint();
-		cve.repaint();
-	}
+	
+	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -574,11 +349,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		return null;
 	}
 	public void commonMousePressed(Koma k, Boolean isOnBoard) {
-		if(sd.turnIsSente && k.sente == 1 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
+		if(sd.turnIsSente && k.sente == 1 && !cbd.checkBox[CheckBoxType.Edit.id].isSelected()) {
 			sd.selectedKoma = null;
 			return;
 		}
-		if(!sd.turnIsSente && k.sente == 0 && !checkBox[CheckBoxType.Edit.id].isSelected()) {
+		if(!sd.turnIsSente && k.sente == 0 && !cbd.checkBox[CheckBoxType.Edit.id].isSelected()) {
 			sd.selectedKoma = null;
 			return;
 		}
@@ -617,7 +392,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int preP = selectedKoma.promoted;
 		
 		int X, Y;
-		if(checkBox[CheckBoxType.Reverse.id].isSelected()) {
+		if(cbd.checkBox[CheckBoxType.Reverse.id].isSelected()) {
 			X = 10 - (9-x);
 			Y = 10 - y;
 		} else {
@@ -626,8 +401,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		Boolean result = selectedKoma.moveKoma(X, Y, -1);
 		ks.soundKoma();
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnBoard(cbd.checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnHand(cbd.checkBox[CheckBoxType.Reverse.id].isSelected());
 		
 		cv.mousePressed = false;
 		cv.repaint();
@@ -652,7 +427,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Kifu kf = kdb.createKifu(selectedKoma, X, Y, promoted, preP, drop);
 			kdb.kifuData.add(kf);
 			kdb.checkKDB(lbd.listModel[ListBoxType.Kifu.id].size()-1);
-			if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
+			if(!cbd.checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
 			se.sendCommandToEngine();
 		}
 		
@@ -671,19 +446,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	}
 	@Override
 	public void mouseEntered(MouseEvent e) {
-		for(ButtonType bt: ButtonType.values()) {
-			if(e.getSource() == button[bt.id]) {
-				button[bt.id].setBackground(cldb.buttonFocusedColor);
-			}
-		}
+		
 	}
 	@Override
 	public void mouseExited(MouseEvent e) {
-		for(ButtonType bt: ButtonType.values()) {
-			if(e.getSource() == button[bt.id]) {
-				button[bt.id].setBackground(cldb.buttonColor);
-			}
-		}
+		
 	}
 	@Override
 	public void mouseMoved(MouseEvent e) {
