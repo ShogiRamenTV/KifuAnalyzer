@@ -22,7 +22,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import lib.KifuDataBase.KifuData;
+import lib.ListBoxData.ListBoxType;
 import lib.ShogiData.SenteGote;
+import lib.TextBoxData.TextBoxType;
 
 // -------------------------------------------------------------------------
 // ----------------------- << Strategy Data >> -----------------------------
@@ -34,29 +36,17 @@ public class StrategyDataBase {
 	//String castleFilePath = "castle/";
 	List<StrategyData> strategyDataBase = new ArrayList<StrategyData>();
 	List<StringCount> strategyCountData = new ArrayList<StringCount>();
-	DefaultListModel<String> listModelStrategy;
-	JList<String> listBoxStrategy;
-	DefaultListModel<String> listModelPlayer;
-	JList<String> listBoxPlayer;
-	DefaultListModel<String> listModelInfo;
-	JList<String> listBoxInfo;
-	JList<String> listBoxCastle;
-	JTextField textBoxCastle;
+	DefaultListModel<String> listModel[];
+	JList<String> listBox[];
+	JTextField textBox[];
 	KifuDataBase kifuDataBase;
 	CastleDataBase castleDataBase;
-	public StrategyDataBase(DefaultListModel<String> lmS, JList<String> lbS,
-			DefaultListModel<String> lmP, JList<String> lbP,
-			DefaultListModel<String> lmI, JList<String> lbI, JList<String> lbC,
-			JTextField tC,
+	public StrategyDataBase(DefaultListModel<String> lm[], JList<String> lb[],
+			JTextField tb[],
 			KifuDataBase kdb, CastleDataBase cdb) {
-		listModelStrategy = lmS;	
-		listBoxStrategy = lbS;
-		listModelPlayer = lmP;
-		listBoxPlayer = lbP;
-		listModelInfo = lmI;
-		listBoxInfo = lbI;
-		listBoxCastle = lbC;
-		textBoxCastle = tC;
+		listModel = lm;
+		listBox = lb;
+		textBox = tb;
 		kifuDataBase = kdb;
 		castleDataBase = cdb;
 	}
@@ -157,8 +147,8 @@ public class StrategyDataBase {
 		return "";
 	}
 	public void countStrategy() {
-		listModelStrategy.clear();
-		listBoxStrategy.setModel(listModelStrategy);
+		listModel[ListBoxType.Strategy.id].clear();
+		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
 		strategyCountData.clear();
 		
 		for(KifuData kd: kifuDataBase.kifuDB) {
@@ -194,27 +184,27 @@ public class StrategyDataBase {
 		}
 		Double d = (double)totalSenteWinCnt/(double)totalCnt*100;
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Games" + "(Sente Winning Rate" + String.format("%.0f", d) + "%)>";
-		listModelStrategy.addElement(str);
-		listModelStrategy.addElement("----------");
+		listModel[ListBoxType.Strategy.id].addElement(str);
+		listModel[ListBoxType.Strategy.id].addElement("----------");
 		for(StringCount sc: strategyCountData) {
 			str = sc.str;
 			d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
 			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
-			listModelStrategy.addElement(str);
+			listModel[ListBoxType.Strategy.id].addElement(str);
 		}
-		listBoxStrategy.setModel(listModelStrategy);
+		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
 	}
 	public void updateListBox2ByStrategy() {
-		int selectedIndex = listBoxStrategy.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Strategy.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
-		int selectedIndex4 = listBoxPlayer.getSelectedIndex();
+		int selectedIndex4 = listBox[ListBoxType.Player.id].getSelectedIndex();
 		String playerName = "";
 		if(selectedIndex4 >= 2) {
-			playerName = listModelPlayer.getElementAt(selectedIndex4);
+			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndex4);
 			//System.out.println(playerName);
 		}
-		int selectedIndexCastle = listBoxCastle.getSelectedIndex();
+		int selectedIndexCastle = listBox[ListBoxType.Castle.id].getSelectedIndex();
 		String castleName = "";
 		if(selectedIndexCastle >= 2) {
 			StringCount sc = castleDataBase.castleCountData.get(selectedIndexCastle-2);
@@ -224,14 +214,14 @@ public class StrategyDataBase {
 		StringCount sc = strategyCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String strategy = sc.str;
-		textBoxCastle.setText(strategy);
+		textBox[TextBoxType.Castle.id].setText(strategy);
 		
-		listModelInfo.clear();
-		listBoxInfo.setModel(listModelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	
-		if(playerName.equals("")) listModelInfo.addElement("<"+ strategy + "'s Kifu>");
-		else listModelInfo.addElement("<"+ strategy + "(" + playerName + ")"+"'s Kifu>");
-		listModelInfo.addElement("-------------");
+		if(playerName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ strategy + "'s Kifu>");
+		else listModel[ListBoxType.Info.id].addElement("<"+ strategy + "(" + playerName + ")"+"'s Kifu>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuData kd: kifuDataBase.kifuDB) {
 			if(kd.strategyName.equals(strategy)) {
 				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
@@ -240,18 +230,18 @@ public class StrategyDataBase {
 				else if(kd.isSenteWin == 0) str+="(Gote Win)";
 				else str+="(Draw)";
 				if(playerName.equals("") && castleName.equals("")) {
-					listModelInfo.addElement(str);
+					listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("") && !castleName.equals("")) {
 					if(str.contains(playerName) && (kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName))) {
-						listModelInfo.addElement(str);
+						listModel[ListBoxType.Info.id].addElement(str);
 					}
 				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) listModelInfo.addElement(str);
+					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!castleName.equals("")) {
-					if(kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName)) listModelInfo.addElement(str);
+					if(kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName)) listModel[ListBoxType.Info.id].addElement(str);
 				}
 			}
 		}
-		listBoxInfo.setModel(listModelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}	
 }

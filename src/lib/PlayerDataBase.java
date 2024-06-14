@@ -14,7 +14,9 @@ import javax.swing.JList;
 import javax.swing.JTextField;
 
 import lib.KifuDataBase.KifuData;
+import lib.ListBoxData.ListBoxType;
 import lib.ShogiData.SenteGote;
+import lib.TextBoxData.TextBoxType;
 
 // -------------------------------------------------------------------------
 // ----------------------- << Player Data >> -----------------------------
@@ -23,23 +25,16 @@ public class PlayerDataBase {
 	String imgFilePath = "./img/";
 	String imgFilePathPlayerIcon = imgFilePath + "playerIcon/";
 	List<PlayerData> playerDataBase = new ArrayList<PlayerData>();
-	DefaultListModel<String> listModelPlayer;
-	JList<String> listBoxPlayer;
-	DefaultListModel<String> listModelInfo;
-	JList<String> listBoxInfo;
-	JTextField textBoxPlayer1;
-	JTextField textBoxPlayer2;
+	DefaultListModel<String> listModel[];
+	JList<String> listBox[];
+	JTextField textBox[];
 	KifuDataBase kdb;
 	CanvasBoard cv;
-	public PlayerDataBase(DefaultListModel<String> lmP, JList<String> lbP,
-			DefaultListModel<String> lmI, JList<String> lbI,
-			JTextField tP1, JTextField tP2, KifuDataBase kb, CanvasBoard c) {
-		listModelPlayer = lmP;
-		listBoxPlayer = lbP;
-		listModelInfo = lmI;
-		listBoxInfo = lbI;
-		textBoxPlayer1 = tP1;
-		textBoxPlayer2 = tP2;
+	public PlayerDataBase(DefaultListModel<String> lm[], JList<String> lb[],
+			JTextField tb[], KifuDataBase kb, CanvasBoard c) {
+		listModel = lm;
+		listBox = lb;
+		textBox = tb;
 		kdb = kb;
 		cv = c;
 	}
@@ -94,8 +89,8 @@ public class PlayerDataBase {
 		}
 	}
 	public void createPlayerDataBase() {
-		listModelPlayer.clear();
-		listBoxPlayer.setModel(listModelPlayer);
+		listModel[ListBoxType.Player.id].clear();
+		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
 		playerDataBase.clear();
 		
 		for(KifuData kd: kdb.kifuDB) {
@@ -154,20 +149,20 @@ public class PlayerDataBase {
 				);
 		
 		String str = "<Total:" + playerDataBase.size() + " Players>";
-		listModelPlayer.addElement(str);
-		listModelPlayer.addElement("---------");
+		listModel[ListBoxType.Player.id].addElement(str);
+		listModel[ListBoxType.Player.id].addElement("---------");
 		
 		for(PlayerData pd: playerDataBase) {
-			listModelPlayer.addElement(pd.playerName);
+			listModel[ListBoxType.Player.id].addElement(pd.playerName);
 		}
-		listBoxPlayer.setModel(listModelPlayer);
+		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
 	}
 	public void updateListBox2ByPlayerName() {
-		int selectedIndex = listBoxPlayer.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Player.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
 		
 		PlayerData pd = playerDataBase.get(selectedIndex);
-		textBoxPlayer1.setText(pd.playerName);
+		textBox[TextBoxType.Player1.id].setText(pd.playerName);
 		updatePlayerIcon();
 		
 		// count strategy data
@@ -178,10 +173,10 @@ public class PlayerDataBase {
 		List<StringCount> strList = new ArrayList<StringCount>();
 		countCastleDataByPlayerData(strList, pd);
 		
-		listModelInfo.clear();
-		listBoxInfo.setModel(listModelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 		
-		listModelInfo.addElement("<" + pd.playerName + "'s Winning Rate>");
+		listModel[ListBoxType.Info.id].addElement("<" + pd.playerName + "'s Winning Rate>");
 		
 		int totalCnt = 0;
 		int totalWinCnt = 0;
@@ -208,36 +203,36 @@ public class PlayerDataBase {
 		String str = "Total " + String.format("%d games %d Win:%d Lose %d Draw", totalCnt, totalWinCnt, totalLoseCnt, totalDrawCnt);
 		Double d = (double)totalWinCnt/(double)(totalWinCnt+totalLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		
 		str = String.format("Sente %d games %d Win:%d Lose %d Draw", totalSenteWinCnt+totalSenteLoseCnt+totalSenteDrawCnt, totalSenteWinCnt, totalSenteLoseCnt, totalSenteDrawCnt);
 		d = (double)totalSenteWinCnt/(double)(totalSenteWinCnt+totalSenteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		str = String.format("Gote %d games %d Win:%d Lose: %d Draw", totalGoteWinCnt+totalGoteLoseCnt+totalGoteDrawCnt, totalGoteWinCnt, totalGoteLoseCnt, totalGoteDrawCnt);
 		d = (double)totalGoteWinCnt/(double)(totalGoteWinCnt+totalGoteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		
-		listModelInfo.addElement("---------");
+		listModel[ListBoxType.Info.id].addElement("---------");
 		str = "Total Strategies: " + grcList.size() + " patterns";
-		listModelInfo.addElement(str);
+		listModel[ListBoxType.Info.id].addElement(str);
 		for(GameResultCount grc: grcList) {
 			str = grc.str;
 			d = (double)(grc.senteWinCnt+grc.goteWinCnt)/(double)(grc.cnt)*100;
 			str += ":" + String.format("%d", grc.cnt) + " games";
 			str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-			listModelInfo.addElement(str);
+			listModel[ListBoxType.Info.id].addElement(str);
 		}
 		
-		listModelInfo.addElement("---------");
+		listModel[ListBoxType.Info.id].addElement("---------");
 		for(StringCount sc: strList) {
 			str = sc.str;
 			str += ":" + String.format("%d", sc.cnt) + " games";
-			listModelInfo.addElement(str);
+			listModel[ListBoxType.Info.id].addElement(str);
 		}
 		
-		listBoxInfo.setModel(listModelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	public void countStrategyDataByPlayerData(List<GameResultCount> grcList, PlayerData pd) {
 		for(GameResult gr: pd.grList) {
@@ -300,8 +295,8 @@ public class PlayerDataBase {
 	}
 	public void updatePlayerIcon() {
 		String playerName[] = new String[2];
-		playerName[SenteGote.Sente.id] = new String(textBoxPlayer1.getText());
-		playerName[SenteGote.Gote.id] = new String(textBoxPlayer2.getText());
+		playerName[SenteGote.Sente.id] = new String(textBox[TextBoxType.Player1.id].getText());
+		playerName[SenteGote.Gote.id] = new String(textBox[TextBoxType.Player2.id].getText());
 		
 		for(SenteGote sg: SenteGote.values()) {
 			try {

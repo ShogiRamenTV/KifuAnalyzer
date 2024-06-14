@@ -21,7 +21,9 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import lib.KifuDataBase.KifuData;
+import lib.ListBoxData.ListBoxType;
 import lib.ShogiData.SenteGote;
+import lib.TextBoxData.TextBoxType;
 
 // -------------------------------------------------------------------------
 // ----------------------- << Tesuji Data >> -----------------------------
@@ -29,24 +31,17 @@ import lib.ShogiData.SenteGote;
 public class TesujiDataBase {
 	List<TesujiData> tesujiDataBase = new ArrayList<TesujiData>();
 	List<StringCount> tesujiCountData = new ArrayList<StringCount>();
-	DefaultListModel<String> listModelTesuji;
-	JList<String> listBoxTesuji;
-	DefaultListModel<String> listModelInfo;
-	JList<String> listBoxInfo;
-	JList<String> listBoxKifu;
-	JTextField textBoxTesuji;
+	DefaultListModel<String> listModel[];
+	JList<String> listBox[];
+	JTextField textBox[];
 	JComboBox<String> comboBox;
 	KifuDataBase kdb;
-	public TesujiDataBase (DefaultListModel<String> lmT, JList<String> lbT,
-			DefaultListModel<String> lmI, JList<String> lbI, JList<String> lbK,
-			JTextField tT,
+	public TesujiDataBase (DefaultListModel<String> lm[], JList<String> lb[],
+			JTextField tb[],
 			JComboBox<String> cb, KifuDataBase kb) {
-		listModelTesuji = lmT;
-		listBoxTesuji = lbT;
-		listModelInfo = lmI;
-		listBoxInfo = lbI;
-		listBoxKifu = lbK;
-		textBoxTesuji = tT;
+		listModel = lm;
+		listBox = lb;
+		textBox = tb;
 		comboBox = cb;
 		kdb = kb;
 	}
@@ -67,7 +62,7 @@ public class TesujiDataBase {
 		String fileName;
 		int index = 1;
 		
-		if(textBoxTesuji.getText().equals("")) {
+		if(textBox[TextBoxType.Tesuji.id].getText().equals("")) {
 			JOptionPane.showMessageDialog(null, "Tesuji name is empty");
 			return;
 		}
@@ -84,9 +79,9 @@ public class TesujiDataBase {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 		
-			fw.write(textBoxTesuji.getText() + "\n");
+			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
 			fw.write(loadFile + "\n");
-			fw.write(listBoxKifu.getSelectedIndex() + "\n");
+			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
 			
 			JOptionPane.showMessageDialog(null, fileName + " is saved.");
@@ -129,8 +124,8 @@ public class TesujiDataBase {
 		System.out.println("Completed.");
 	}
 	public void countTesujiData() {
-		listModelTesuji.clear();
-		listBoxTesuji.setModel(listModelTesuji);
+		listModel[ListBoxType.Tesuji.id].clear();
+		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
 		tesujiCountData.clear();
 		
 		for(TesujiData td: tesujiDataBase) {
@@ -162,17 +157,17 @@ public class TesujiDataBase {
 			totalCnt += sc.cnt;
 		}
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Tesujis>";
-		listModelTesuji.addElement(str);
-		listModelTesuji.addElement("----------");
+		listModel[ListBoxType.Tesuji.id].addElement(str);
+		listModel[ListBoxType.Tesuji.id].addElement("----------");
 		for(StringCount sc: tesujiCountData) {
 			str = sc.str;
 			str += ":" + String.format("%2d", sc.cnt)+" counts";
-			listModelTesuji.addElement(str);
+			listModel[ListBoxType.Tesuji.id].addElement(str);
 		}
-		listBoxTesuji.setModel(listModelTesuji);
+		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
 	}
 	public void updateListBoxInfoByTesuji() {
-		int selectedIndex = listBoxTesuji.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Tesuji.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) {
 			return;
 		}
@@ -180,22 +175,22 @@ public class TesujiDataBase {
 		StringCount sc = tesujiCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String tesujiName = sc.str;
-		textBoxTesuji.setText(tesujiName);
+		textBox[TextBoxType.Tesuji.id].setText(tesujiName);
 		
-		listModelInfo.clear();
-		listBoxInfo.setModel(listModelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	
-		listModelInfo.addElement("<"+ tesujiName + "'s Kifu>");
-		listModelInfo.addElement("-------------");
+		listModel[ListBoxType.Info.id].addElement("<"+ tesujiName + "'s Kifu>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(TesujiData td: tesujiDataBase) {
 			if(td.name.equals(tesujiName)) {
 				String str = "kf" + String.format("%03d:%03d:%s", td.fileIndex, td.stepIndex, td.year);
 				KifuData kd = kdb.getKDB(td.fileIndex, td.year);
 				if(kd == null) continue;
 				str += ":" + kd.playerName[SenteGote.Sente.id] + " vs " + kd.playerName[SenteGote.Gote.id];
-				listModelInfo.addElement(str);
+				listModel[ListBoxType.Info.id].addElement(str);
 			}
 		}
-		listBoxInfo.setModel(listModelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 }

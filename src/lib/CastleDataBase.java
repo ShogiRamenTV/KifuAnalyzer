@@ -23,9 +23,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import lib.KifuDataBase.KifuData;
+import lib.ListBoxData.ListBoxType;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
+import lib.TextBoxData.TextBoxType;
 
 //-------------------------------------------------------------------------
 // ----------------------- << Castle Data >> -----------------------------
@@ -38,30 +40,18 @@ public class CastleDataBase {
 	String imgFilePathCastleIcon = imgFilePath + "castleIcon/";
 	List<CastleData> castleDataBase = new ArrayList<CastleData>();
 	public List<StringCount> castleCountData = new ArrayList<StringCount>();
-	DefaultListModel<String> listModelCastle;
-	JList<String> listBoxCastle;
-	DefaultListModel<String> listModelPlayer;
-	JList<String> listBoxPlayer;
-	DefaultListModel<String> listModelInfo;
-	JList<String> listBoxInfo;
-	JList<String> listBoxStrategy;
-	JTextField textBoxCastle;
+	DefaultListModel<String> listModel[];
+	JList<String> listBox[];
+	JTextField textBox[];
 	KifuDataBase kifuDataBase;
 	CanvasBoard cv;
 	StrategyDataBase strategyDataBase;
-	public CastleDataBase(DefaultListModel<String> lmC, JList<String> lbC,
-			DefaultListModel<String> lmP, JList<String> lbP,
-			DefaultListModel<String> lmI, JList<String> lbI, JList<String> lbS,
-			JTextField tC, CanvasBoard c,
+	public CastleDataBase(DefaultListModel<String> lm[], JList<String> lb[],
+			JTextField tb[], CanvasBoard c,
 			KifuDataBase kdb, StrategyDataBase sdb) {
-		listModelCastle = lmC;
-		listBoxCastle = lbC;
-		listModelPlayer = lmP;
-		listBoxPlayer = lbP;
-		listModelInfo = lmI;
-		listBoxInfo = lbI;
-		listBoxStrategy = lbS;
-		textBoxCastle = tC;
+		listModel = lm;
+		listBox = lb;
+		textBox = tb;
 		kifuDataBase = kdb;
 		cv = c;
 		strategyDataBase = sdb;
@@ -79,7 +69,7 @@ public class CastleDataBase {
 		String fileName;
 		int index = 1;
 		
-		if(textBoxCastle.getText().equals("")) {
+		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
 			JOptionPane.showMessageDialog(null, "Castle name is empty");
 			return;
 		}
@@ -95,7 +85,7 @@ public class CastleDataBase {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 		
-			fw.write(textBoxCastle.getText() + "\n");
+			fw.write(textBox[TextBoxType.Castle.id].getText() + "\n");
 			for(Koma k: sd.k) {
 				if((k.type == KomaType.King) && isRadioButtonSente && k.sente == 0) {
 					saveListKomaAroundKing(sd, k, fw);
@@ -150,8 +140,8 @@ public class CastleDataBase {
 		System.out.println("Completed.");
 	}
 	public void countCastle() {
-		listModelCastle.clear();
-		listBoxCastle.setModel(listModelCastle);
+		listModel[ListBoxType.Castle.id].clear();
+		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
 		castleCountData.clear();
 		
 		for(KifuData kd: kifuDataBase.kifuDB) {
@@ -196,31 +186,31 @@ public class CastleDataBase {
 			totalCnt += sc.cnt;
 		}
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Castles>";
-		listModelCastle.addElement(str);
-		listModelCastle.addElement("----------");
+		listModel[ListBoxType.Castle.id].addElement(str);
+		listModel[ListBoxType.Castle.id].addElement("----------");
 		for(StringCount sc: castleCountData) {
 			str = sc.str;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
-			listModelCastle.addElement(str);
+			listModel[ListBoxType.Castle.id].addElement(str);
 		}
-		listBoxCastle.setModel(listModelCastle);
+		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
 	}
 	public void updateListBoxInfoByCastle() {
-		int selectedIndex = listBoxCastle.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) {
 			initializeCastleIcon();
 			return;
 		}
-		int selectedIndexStrategy = listBoxStrategy.getSelectedIndex();
+		int selectedIndexStrategy = listBox[ListBoxType.Strategy.id].getSelectedIndex();
 		String strategyName = "";
 		if(selectedIndexStrategy >= 2) {
 			StringCount sc = strategyDataBase.strategyCountData.get(selectedIndexStrategy-2);
 			strategyName = sc.str;
 		}
-		int selectedIndexPlayer = listBoxPlayer.getSelectedIndex();
+		int selectedIndexPlayer = listBox[ListBoxType.Player.id].getSelectedIndex();
 		String playerName = "";
 		if(selectedIndexPlayer >= 2) {
-			playerName = listModelPlayer.getElementAt(selectedIndexPlayer);
+			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndexPlayer);
 			//System.out.println(playerName);
 		}
 		
@@ -228,14 +218,14 @@ public class CastleDataBase {
 		//System.out.println(sc.str);
 		String castleName = sc.str;
 		updateCastleIcon();
-		textBoxCastle.setText(castleName);
+		textBox[TextBoxType.Castle.id].setText(castleName);
 		
-		listModelInfo.clear();
-		listBoxInfo.setModel(listModelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 
-		if(strategyName.equals("")) listModelInfo.addElement("<"+ castleName + "'s Kifu>");
-		else listModelInfo.addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
-		listModelInfo.addElement("-------------");
+		if(strategyName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ castleName + "'s Kifu>");
+		else listModel[ListBoxType.Info.id].addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuData kd: kifuDataBase.kifuDB) {
 			if(kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName)) {
 				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
@@ -245,17 +235,17 @@ public class CastleDataBase {
 				else str+="(Draw)";
 				
 				if(strategyName.equals("") && playerName.equals("")) {
-					listModelInfo.addElement(str);
+					listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!strategyName.equals("") && !playerName.equals("")) {
-					if(kd.strategyName.equals(strategyName) && str.contains(playerName)) listModelInfo.addElement(str);
+					if(kd.strategyName.equals(strategyName) && str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!strategyName.equals("")) {
-					if(kd.strategyName.equals(strategyName)) listModelInfo.addElement(str);
+					if(kd.strategyName.equals(strategyName)) listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) listModelInfo.addElement(str);
+					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
 				}
 			}
 		}
-		listBoxInfo.setModel(listModelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	public String checkCastle(ShogiData sd, Boolean isSente) {
 		for(Koma k: sd.k) {
@@ -318,7 +308,7 @@ public class CastleDataBase {
 		}
 	}
 	public void updateCastleIcon() {
-		int selectedIndex = listBoxCastle.getSelectedIndex()-2;
+		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
 		StringCount sc = castleCountData.get(selectedIndex);
 		String castleName = sc.str;

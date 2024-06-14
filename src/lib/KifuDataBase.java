@@ -29,9 +29,11 @@ import javax.swing.JList;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
+import lib.ListBoxData.ListBoxType;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
+import lib.TextBoxData.TextBoxType;
 
 //-------------------------------------------------------------------------
 // ----------------------- << Kifu Data >> -----------------------------
@@ -44,31 +46,22 @@ public class KifuDataBase {
 	JFrame fr;
 	ShogiData sd;
 	ShogiData sdForKDB;
-	DefaultListModel<String> listModelInfo;
-	JList<String> listBoxInfo;
-	DefaultListModel<String> listModelKifu;
-	JList<String> listBoxKifu;
-	DefaultListModel<String> listModelEngine;
-	JList<String> listBoxEngine;
+	DefaultListModel<String> listModel[];
+	JList<String> listBox[];
 	CanvasBoard cv;
 	JCheckBox checkBoxReverse;
 	JCheckBox checkBoxDraw;
 	JCheckBox checkBoxEdit;
-	JTextField textBoxPlayer1;
-	JTextField textBoxPlayer2;
-	JTextField textBoxStrategy;
-	JTextField textBoxCastle;
+	JTextField textBox[];
 	PlayerDataBase pdb;
 	CastleDataBase cdb;
 	StrategyDataBase sdb;
 	ShogiEngine engine;
 	CanvasBoardForEngine cve;
 	public KifuDataBase(JFrame f, ShogiData s, ShogiData sbb, CanvasBoard c, 
-			DefaultListModel<String> lmI, JList<String> lbI, 
-			DefaultListModel<String> lmK, JList<String> lbK,
-			DefaultListModel<String> lmE, JList<String> lbE,
+			DefaultListModel<String> lm[], JList<String> lb[],
 			JCheckBox cR, JCheckBox cD, JCheckBox cE,
-			JTextField tP1, JTextField tP2, JTextField tS, JTextField tC, 
+			JTextField tb[], 
 			PlayerDataBase pb, CastleDataBase cb, StrategyDataBase sb,
 			ShogiEngine se, CanvasBoardForEngine ce) 
 	{
@@ -76,19 +69,12 @@ public class KifuDataBase {
 		sd = s;
 		sdForKDB = sbb;
 		cv = c;
-		listModelInfo = lmI;
-		listBoxInfo = lbI;
-		listModelKifu = lmK;
-		listBoxKifu = lbK;
-		listModelEngine = lmE;
-		listBoxEngine = lbE;
+		listModel = lm;
+		listBox = lb;
 		checkBoxReverse = cR;
 		checkBoxDraw = cD;
 		checkBoxEdit = cE;
-		textBoxPlayer1 = tP1;
-		textBoxPlayer2 = tP2;
-		textBoxStrategy = tS;
-		textBoxCastle = tC;
+		textBox = tb;
 		pdb = pb;
 		cdb = cb;
 		sdb = sb;
@@ -136,11 +122,11 @@ public class KifuDataBase {
 		cve = ce;
 	}
 	public void actionForKifu() {
-		int index = listBoxKifu.getSelectedIndex();
-		listModelInfo.clear();
-		listBoxInfo.setModel(listModelInfo);
-		listModelInfo.addElement("<Kifus of Same Position>");
-		listModelInfo.addElement("-------------");
+		int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		listModel[ListBoxType.Info.id].addElement("<Kifus of Same Position>");
+		listModel[ListBoxType.Info.id].addElement("-------------");
 		
 		for(KifuData kd: kifuDB) {
 			int i=0;
@@ -163,21 +149,21 @@ public class KifuDataBase {
 				if(kd.isSenteWin == 1) str+="(Sente Win)";
 				else if(kd.isSenteWin == 0) str+="(Gote Win)";
 				else str+="(Draw)";
-				listModelInfo.addElement(str);
+				listModel[ListBoxType.Info.id].addElement(str);
 			}
 		}
 		
-		listBoxInfo.setModel(listModelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	public void actionForKifuAnalysis() {
 		cve.clearBestPointData();
 		checkBoxEdit.setSelected(false);
-		listBoxKifu.setSelectedIndex(0);
-		listBoxKifu.ensureIndexIsVisible(0);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
 		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
-		engine.actionForStartEngine(fr, sd, cv, cve, listModelEngine, listBoxEngine, 
-				listModelKifu, listBoxKifu);
+		engine.actionForStartEngine(fr, sd, cv, cve, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
+				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
 		if(!engine.isEngineOn) {
 			System.out.println("Failed to start shogi engine");
 			return;
@@ -193,16 +179,16 @@ public class KifuDataBase {
 			Boolean isUnderAnalysis = true;
 			int calcTimeMs = engine.getCalculatingTimeOfEngine();
 			while(isUnderAnalysis && engine.isEngineOn) {
-				int index = listBoxKifu.getSelectedIndex();
-				int size = listModelKifu.getSize();
+				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+				int size = listModel[ListBoxType.Kifu.id].getSize();
 				if(size-1 == index) isUnderAnalysis = false;
 				try {
 					Thread.sleep(calcTimeMs);
 				} catch(InterruptedException e) {
 					System.out.println(e);
 				}
-				listBoxKifu.setSelectedIndex(index+1);
-				listBoxKifu.ensureIndexIsVisible(index+1);
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
 				commonListAction();
 			}
 			System.out.println("completed.");
@@ -232,8 +218,8 @@ public class KifuDataBase {
 		try {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
-			fw.write(textBoxPlayer1.getText() + "\n");
-			fw.write(textBoxPlayer2.getText() + "\n");
+			fw.write(textBox[TextBoxType.Player1.id].getText() + "\n");
+			fw.write(textBox[TextBoxType.Player2.id].getText() + "\n");
 			for(Kifu kf: kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
 			if(checkBoxDraw.isSelected()) fw.write("-1");
 			fw.close();
@@ -244,18 +230,18 @@ public class KifuDataBase {
 		}
 	}
 	public void clearListBox() {
-		listModelKifu.clear();
-		listModelKifu.addElement("--------");
-		listBoxKifu.setModel(listModelKifu);
-		listBoxKifu.setSelectedIndex(0);
+		listModel[ListBoxType.Kifu.id].clear();
+		listModel[ListBoxType.Kifu.id].addElement("--------");
+		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 	}
 	public void updateListBox(KomaType type, int x, int y, int preX, int preY, int sente, int promoted, int preP, int drop) {
 		// remove items under selected item 
-		int selectedIndex = listBoxKifu.getSelectedIndex();
-		if(selectedIndex != -1 && selectedIndex <= listModelKifu.size()-1) {
-			int index = listModelKifu.size()-1;
+		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
+		if(selectedIndex != -1 && selectedIndex <= listModel[ListBoxType.Kifu.id].size()-1) {
+			int index = listModel[ListBoxType.Kifu.id].size()-1;
 			while(index > selectedIndex) {
-				listModelKifu.remove(index);
+				listModel[ListBoxType.Kifu.id].remove(index);
 				kifuData.remove(index-1);
 				index--;
 			}
@@ -263,16 +249,16 @@ public class KifuDataBase {
 		
 		// add new item
 		String s = sd.createMoveKomaName(type, sente, x, y, preX, preY, promoted, preP, drop);
-		s = listModelKifu.size() + ":"+s;
-		listModelKifu.addElement(s);
-		listBoxKifu.setModel(listModelKifu);
-		listBoxKifu.ensureIndexIsVisible(listModelKifu.size()-1);
-		listBoxKifu.setSelectedIndex(listModelKifu.size()-1);
+		s = listModel[ListBoxType.Kifu.id].size() + ":"+s;
+		listModel[ListBoxType.Kifu.id].addElement(s);
+		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
+		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(listModel[ListBoxType.Kifu.id].size()-1);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(listModel[ListBoxType.Kifu.id].size()-1);
 		
 		cv.clearDrawPointForRightClick();
 	}
 	public void commonListAction() {
-		int selectedIndex = listBoxKifu.getSelectedIndex();
+		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
 		sd.resetAllKoma(checkBoxReverse.isSelected());
 		sd.viewKomaOnBoard(checkBoxReverse.isSelected());
 		
@@ -281,12 +267,12 @@ public class KifuDataBase {
 				kf.k.moveKoma(kf.x, kf.y, kf.p);
 				if(!checkBoxEdit.isSelected()) sd.turnIsSente = !sd.turnIsSente;
 				cv.setLastPoint(kf.x, kf.y, true);
-				if(textBoxStrategy.getText().equals("")) textBoxStrategy.setText(sdb.checkStrategy(sd));
-				if(textBoxCastle.getText().equals("")) {
-					textBoxCastle.setText(cdb.checkCastle(sd, true));
+				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(sdb.checkStrategy(sd));
+				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+					textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, true));
 				}
-				if(textBoxCastle.getText().equals("")) {
-					textBoxCastle.setText(cdb.checkCastle(sd, false));
+				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+					textBox[TextBoxType.Castle.id].setText(cdb.checkCastle(sd, false));
 				}
 			}
 		}
@@ -319,8 +305,8 @@ public class KifuDataBase {
 			FileReader fr = new FileReader(file);
 			BufferedReader br = new BufferedReader(fr);
 			String content;
-			textBoxPlayer1.setText(br.readLine());
-			textBoxPlayer2.setText(br.readLine());
+			textBox[TextBoxType.Player1.id].setText(br.readLine());
+			textBox[TextBoxType.Player2.id].setText(br.readLine());
 			while((content = br.readLine()) != null) {
 				StringTokenizer st = new StringTokenizer(content,",");
 				while(st.hasMoreTokens()) {
@@ -341,12 +327,12 @@ public class KifuDataBase {
 			
 			sd.resetAllKoma(checkBoxReverse.isSelected());
 			if(numStrStep.equals("")) {
-				listBoxKifu.setSelectedIndex(0);
-				listBoxKifu.ensureIndexIsVisible(0);
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 			} else {
 				int selectedIndex = Integer.parseInt(numStrStep);
-				listBoxKifu.setSelectedIndex(selectedIndex);
-				listBoxKifu.ensureIndexIsVisible(selectedIndex);
+				listBox[ListBoxType.Kifu.id].setSelectedIndex(selectedIndex);
+				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(selectedIndex);
 				commonListAction();
 			}
 			
@@ -421,7 +407,7 @@ public class KifuDataBase {
 			System.out.println(er);
 		}
 		
-		listBoxKifu.setSelectedIndex(0);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		commonListAction();
 		
 		System.out.println("Completed.");
@@ -524,8 +510,8 @@ public class KifuDataBase {
 	
 	
 	public void updateListBox2(List<StringCount> listSC) {
-		listModelInfo.clear();
-		listBoxInfo.setModel(listModelInfo);
+		listModel[ListBoxType.Info.id].clear();
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 		cv.clearDrawPoint();
 		
 		Collections.sort(
@@ -543,9 +529,9 @@ public class KifuDataBase {
 			str += ":" + String.format("%2d", sc.cnt)+" games";
 			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
 			cv.addDrawPoint(sc.target,  sc.base);
-			listModelInfo.addElement(str);
+			listModel[ListBoxType.Info.id].addElement(str);
 		}
-		listBoxInfo.setModel(listModelInfo);
+		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -560,8 +546,8 @@ public class KifuDataBase {
 		}
 		initializeShogiBoard();
 		Boolean result = parseShogiWarsKifu(strClipBoard);
-		listBoxKifu.setSelectedIndex(0);
-		listBoxKifu.ensureIndexIsVisible(0);
+		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
 		pdb.updatePlayerIcon();
 		if(result) System.out.println("Completed.");
@@ -590,10 +576,10 @@ public class KifuDataBase {
 			content = stLine.nextToken();
 			//System.out.println(content);
 			if(content.contains("先手：")) {
-				textBoxPlayer1.setText(content.substring(content.indexOf("：")+1));
+				textBox[TextBoxType.Player1.id].setText(content.substring(content.indexOf("：")+1));
 			}
 			if(content.contains("後手：")) {
-				textBoxPlayer2.setText(content.substring(content.indexOf("：")+1));
+				textBox[TextBoxType.Player2.id].setText(content.substring(content.indexOf("：")+1));
 			}
 			if(content.contains("手数----指手---------消費時間--")) {
 				startKifu = true;
