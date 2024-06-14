@@ -23,6 +23,7 @@ import javax.swing.JLabel;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
+import lib.ShogiEngine.PointWithScore;
 // -------------------------------------------------------------------------
 	// ----------------------- << Canvas >> ------------------------------------
 	// -------------------------------------------------------------------------

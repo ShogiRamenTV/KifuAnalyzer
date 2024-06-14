@@ -222,6 +222,16 @@ public class ShogiEngine {
 		int drop;
 		KomaType type;
 	}
+	public class PointWithScore {
+		Point base;
+		Point target;
+		int score;
+		public PointWithScore(Point b, Point t, int s) {
+			base = b;
+			target = t;
+			score = s;
+		}
+	}
 	public void getPointFromInfo(String info) {
 		Point base = new Point();
 		Point target = new Point();

@@ -32,6 +32,14 @@ public class CanvasBoardForEngine extends Canvas {
 			bestPointData.add(bpt);
 		}
 	}
+	public class BestPointData {
+		int score;
+		String[] moveName;
+		BestPointData(int numOfMultiPV) {
+			moveName = new String[numOfMultiPV];
+			for(int index=0; index<numOfMultiPV; index++) moveName[index] = new String("");
+		}
+	}
 	public void paint(Graphics g) {
 		drawBaseField(g);
 		getPointFromEngine();
