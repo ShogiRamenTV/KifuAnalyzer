@@ -162,8 +162,7 @@ public class KifuDataBase {
 		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
 		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
-		engine.actionForStartEngine(fr, sd, cv, cve, listModel[ListBoxType.Engine.id], listBox[ListBoxType.Engine.id], 
-				listModel[ListBoxType.Kifu.id], listBox[ListBoxType.Kifu.id]);
+		engine.actionForStartEngine(fr, sd, cv, cve, listModel, listBox);
 		if(!engine.isEngineOn) {
 			System.out.println("Failed to start shogi engine");
 			return;

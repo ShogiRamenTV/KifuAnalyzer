@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JList;
 
 import lib.EditProperty.PropertyType;
+import lib.ListBoxData.ListBoxType;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 
@@ -31,13 +32,16 @@ public class ShogiEngine {
 	CanvasBoard cv;
 	CanvasBoardForEngine cve;
 	ShogiData sd;
-	DefaultListModel<String> listModelEngine;
-	JList<String> listBoxEngine;
-	DefaultListModel<String> listModelKifu;
-	JList<String> listBoxKifu;
-	public Process createEngine(JFrame fr, ShogiData s, CanvasBoard c, CanvasBoardForEngine ce, 
-			DefaultListModel<String> lmE, JList<String> lbE, 
-			DefaultListModel<String> lmK, JList<String> lbK) {
+	DefaultListModel<String> listModel[];
+	JList<String> listBox[];
+	
+	public ShogiEngine() {
+	}
+	
+	public Process createEngine(JFrame fr, ShogiData s, 
+			CanvasBoard c, CanvasBoardForEngine ce, 
+			DefaultListModel<String> lm[], JList<String> lb[]
+					) {
 		String enginePath = ep.loadProperty(PropertyType.Engine.name());
 		if(enginePath == null) {
 			ep.setPropertyForEngine(fr);
@@ -57,10 +61,8 @@ public class ShogiEngine {
 		sd = s;
 		cv = c;
 		cve = ce;
-		listModelEngine = lmE;
-		listBoxEngine = lbE;
-		listModelKifu = lmK;
-		listBoxKifu = lbK;
+		listModel = lm;
+		listBox = lb;
 		return process;
 	}
 	
@@ -212,8 +214,7 @@ public class ShogiEngine {
 				System.out.println(e);
 			}
 			for(int index=0; index<numOfMultiPV; index++) {
-				//listModel[ListBoxType.Engine.id].set(index, "");
-				listModelEngine.set(index, "");
+				listModel[ListBoxType.Engine.id].set(index, "");
 			}
 		}
 	}
@@ -238,15 +239,13 @@ public class ShogiEngine {
 		if(info.contains("multipv 1")) {
 			cv.clearDrawListForEngine();
 			for(int index=0; index<numOfMultiPV; index++) {
-				//listModel[ListBoxType.Engine.id].set(index, "");
-				listModelEngine.set(index, "");
+				listModel[ListBoxType.Engine.id].set(index, "");
 			}
 		}
 		if(!info.contains("multipv")) { // case of there are only 1 way to move
 			cv.clearDrawListForEngine();
 			for(int index=0; index<numOfMultiPV; index++) {
-				//listModel[ListBoxType.Engine.id].set(index, "");
-				listModelEngine.set(index, "");
+				listModel[ListBoxType.Engine.id].set(index, "");
 			}
 		}
 		
@@ -255,7 +254,6 @@ public class ShogiEngine {
 		int score = 0;
 		int index = 0;
 		ConvertedData cd = new ConvertedData();
-		//Point p = new Point(); // for promote and drop
 		for(int i=0; i<names.length; i++) {
 			if(names[i].equals("pv")) str = names[i+1];
 			if(names[i].equals("cp")) score = Integer.parseInt(names[i+1]);
@@ -275,10 +273,8 @@ public class ShogiEngine {
 			if(k != null) {
 				String komaMove = sd.createMoveKomaName(k.type, k.sente, target.x, target.y, k.px, k.py, cd.promote, k.promoted, cd.drop);
 				komaMove += " " + score;
-				//listModel[ListBoxType.Engine.id].set(index, komaMove);
-				listModelEngine.set(index, komaMove);
-				//listBox[ListBoxType.Engine.id].setModel(listModel[ListBoxType.Engine.id]);
-				listBoxEngine.setModel(listModelEngine);
+				listModel[ListBoxType.Engine.id].set(index, komaMove);
+				listBox[ListBoxType.Engine.id].setModel(listModel[ListBoxType.Engine.id]);
 				cve.bestPointFromEngine.moveName[index] = komaMove;
 			}
 		}
@@ -334,10 +330,9 @@ public class ShogiEngine {
 		}
 	}
 	public void actionForStartEngine(JFrame fr, ShogiData s, CanvasBoard c, CanvasBoardForEngine ce, 
-			DefaultListModel<String> lmE, JList<String> lbE, 
-			DefaultListModel<String> lmK, JList<String> lbK) {
+			DefaultListModel<String> lm[], JList<String> lb[]) {
 		Process process = createEngine(fr, s, c, ce, 
-				lmE, lbE, lmK, lbK);
+				lm, lb);
         if(process == null) {
         	System.out.println("create engine failed");
         	return;

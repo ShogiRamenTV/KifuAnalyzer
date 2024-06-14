@@ -17,7 +17,6 @@ import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
 import lib.CheckBoxData.CheckBoxType;
-import lib.ListBoxData.ListBoxType;
 
 public class MenuData implements ActionListener{
 	String imgFilePath = "./img/";
@@ -130,9 +129,7 @@ public class MenuData implements ActionListener{
 			cldb.actionForSetColor(fr);
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.StartEngine.id]) {
-			se.actionForStartEngine(fr, sd, cv, cve, 
-					lbd.listModel[ListBoxType.Engine.id], lbd.listBox[ListBoxType.Engine.id], 
-					lbd.listModel[ListBoxType.Kifu.id], lbd.listBox[ListBoxType.Kifu.id]);
+			se.actionForStartEngine(fr, sd, cv, cve, lbd.listModel, lbd.listBox);
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.StopEngine.id]) {
 			se.actionForStopEngine();
