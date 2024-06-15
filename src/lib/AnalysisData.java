@@ -541,6 +541,28 @@ public class AnalysisData {
 		if(result) System.out.println("Completed.");
 		else System.out.println("Failed.");
 	}
+    public void importKIF() {
+    	System.out.print("Importing Kifu ... ");
+		FileDialog fd = new FileDialog(fr, "Load", FileDialog.LOAD);
+		fd.setVisible(true);
+		if(fd.getFile() == null) return;
+		String fileName = fd.getDirectory() + fd.getFile();
+		Path path = Paths.get(fileName);
+		String strData = "";
+		try {
+			strData = Files.readString(path);
+		} catch(IOException ex) {
+			System.out.println("Import (" + fileName + ") error.");
+			return;
+		}
+		Boolean result = parseShogiWarsKifu(strData);
+		gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+		commonListAction();
+		updatePlayerIcon();
+		if(result) System.out.println("Completed.");
+		else System.out.println("Failed.");
+    }
 	public String getClipboardData() {
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		Transferable object = clipboard.getContents(null);

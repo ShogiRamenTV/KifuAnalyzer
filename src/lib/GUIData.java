@@ -407,7 +407,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		}
 	};
 	public enum MenuTypeUtility {
-		CaptureBoard(0), KomaInHand(1);
+		CaptureBoard(0), KomaInHand(1), ImportKIF(2);
 		private final int id;
 		private MenuTypeUtility(final int id) {
 			this.id = id;
@@ -507,6 +507,9 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		}
 		if(e.getSource() == menuItemUtility[MenuTypeUtility.KomaInHand.id]) {
 			actionForKomaInHand();
+		}
+		if(e.getSource() == menuItemUtility[MenuTypeUtility.ImportKIF.id]) {
+			ad.importKIF();
 		}
 	}
 }
