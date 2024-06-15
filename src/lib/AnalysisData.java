@@ -24,48 +24,31 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.imageio.ImageIO;
-import javax.swing.DefaultListModel;
-import javax.swing.JCheckBox;
-import javax.swing.JComboBox;
 import javax.swing.JFrame;
-import javax.swing.JList;
 import javax.swing.JOptionPane;
-import javax.swing.JTextField;
 
-import lib.CheckBoxData.CheckBoxType;
-import lib.ListBoxData.ListBoxType;
+import lib.GUIData.CheckBoxType;
+import lib.GUIData.ListBoxType;
+import lib.GUIData.TextBoxType;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
-import lib.TextBoxData.TextBoxType;
 
 public class AnalysisData {
 	JFrame fr;
 	ShogiData sd;
 	ShogiData sdForKDB;
 	ShogiEngine se;
-	DefaultListModel<String> listModel[];
-	JList<String> listBox[];
-	JTextField textBox[];
-	CanvasBoard cv;
-	CanvasBoardForEngine cve;
-	JCheckBox checkBox[];
-	JComboBox<String> comboBox;
+	CanvasData cd;
+	GUIData gd;
 	
-	public AnalysisData(JFrame f, ShogiData s, ShogiData sdKDB, ShogiEngine sen, 
-			DefaultListModel<String> lm[], JList<String> lb[], JTextField tb[],
-			CanvasBoard c, CanvasBoardForEngine ce, JCheckBox cb[], JComboBox<String> cmb) {
+	public AnalysisData(JFrame f, ShogiData s, ShogiData sdKDB, ShogiEngine sen, CanvasData c, GUIData g) {
 		fr = f;
 		sd = s;
 		sdForKDB = sdKDB;
 		se = sen;
-		listModel = lm;
-		listBox = lb;
-		textBox = tb;
-		cv = c;
-		cve = ce;
-		checkBox = cb;
-		comboBox = cmb;
+		cd = c;
+		gd = g;
 	}
 	public class StringCount {
 		public String str;
@@ -128,11 +111,11 @@ public class AnalysisData {
 		}
 	}
 	public void actionForKifu() {
-		int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-		listModel[ListBoxType.Info.id].addElement("<Kifus of Same Position>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
+		int index = gd.listBox[ListBoxType.Kifu.id].getSelectedIndex();
+		gd.listModel[ListBoxType.Info.id].clear();
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
+		gd.listModel[ListBoxType.Info.id].addElement("<Kifus of Same Position>");
+		gd.listModel[ListBoxType.Info.id].addElement("-------------");
 		
 		for(KifuData kd: kifuDB) {
 			int i=0;
@@ -155,20 +138,20 @@ public class AnalysisData {
 				if(kd.isSenteWin == 1) str+="(Sente Win)";
 				else if(kd.isSenteWin == 0) str+="(Gote Win)";
 				else str+="(Draw)";
-				listModel[ListBoxType.Info.id].addElement(str);
+				gd.listModel[ListBoxType.Info.id].addElement(str);
 			}
 		}
 		
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	}
 	public void actionForKifuAnalysis() {
-		cve.clearBestPointData();
-		checkBox[CheckBoxType.Edit.id].setSelected(false);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+		cd.cve.clearBestPointData();
+		gd.checkBox[CheckBoxType.Edit.id].setSelected(false);
+		gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
 		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
-		se.actionForStartEngine(fr, sd, cv, cve, listModel, listBox);
+		se.actionForStartEngine(fr, sd, cd, gd, this);
 		if(!se.isEngineOn) {
 			System.out.println("Failed to start shogi engine");
 			return;
@@ -184,16 +167,16 @@ public class AnalysisData {
 			Boolean isUnderAnalysis = true;
 			int calcTimeMs = se.getCalculatingTimeOfEngine();
 			while(isUnderAnalysis && se.isEngineOn) {
-				int index = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-				int size = listModel[ListBoxType.Kifu.id].getSize();
+				int index = gd.listBox[ListBoxType.Kifu.id].getSelectedIndex();
+				int size = gd.listModel[ListBoxType.Kifu.id].getSize();
 				if(size-1 == index) isUnderAnalysis = false;
 				try {
 					Thread.sleep(calcTimeMs);
 				} catch(InterruptedException e) {
 					System.out.println(e);
 				}
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
+				gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(index+1);
+				gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(index+1);
 				commonListAction();
 			}
 			System.out.println("completed.");
@@ -223,10 +206,10 @@ public class AnalysisData {
 		try {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
-			fw.write(textBox[TextBoxType.Player1.id].getText() + "\n");
-			fw.write(textBox[TextBoxType.Player2.id].getText() + "\n");
+			fw.write(gd.textBox[TextBoxType.Player1.id].getText() + "\n");
+			fw.write(gd.textBox[TextBoxType.Player2.id].getText() + "\n");
 			for(Kifu kf: kifuData) fw.write(kf.k.index + "," + kf.x + "," + kf.y + "," + kf.p + "," + kf.pp + "," + kf.d + "\n");
-			if(checkBox[CheckBoxType.Draw.id].isSelected()) fw.write("-1");
+			if(gd.checkBox[CheckBoxType.Draw.id].isSelected()) fw.write("-1");
 			fw.close();
 			
 			JOptionPane.showMessageDialog(null, fileName + " is saved.");
@@ -235,18 +218,18 @@ public class AnalysisData {
 		}
 	}
 	public void clearListBox() {
-		listModel[ListBoxType.Kifu.id].clear();
-		listModel[ListBoxType.Kifu.id].addElement("--------");
-		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		gd.listModel[ListBoxType.Kifu.id].clear();
+		gd.listModel[ListBoxType.Kifu.id].addElement("--------");
+		gd.listBox[ListBoxType.Kifu.id].setModel(gd.listModel[ListBoxType.Kifu.id]);
+		gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 	}
 	public void updateListBox(KomaType type, int x, int y, int preX, int preY, int sente, int promoted, int preP, int drop) {
 		// remove items under selected item 
-		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		if(selectedIndex != -1 && selectedIndex <= listModel[ListBoxType.Kifu.id].size()-1) {
-			int index = listModel[ListBoxType.Kifu.id].size()-1;
+		int selectedIndex = gd.listBox[ListBoxType.Kifu.id].getSelectedIndex();
+		if(selectedIndex != -1 && selectedIndex <= gd.listModel[ListBoxType.Kifu.id].size()-1) {
+			int index = gd.listModel[ListBoxType.Kifu.id].size()-1;
 			while(index > selectedIndex) {
-				listModel[ListBoxType.Kifu.id].remove(index);
+				gd.listModel[ListBoxType.Kifu.id].remove(index);
 				kifuData.remove(index-1);
 				index--;
 			}
@@ -254,43 +237,43 @@ public class AnalysisData {
 		
 		// add new item
 		String s = sd.createMoveKomaName(type, sente, x, y, preX, preY, promoted, preP, drop);
-		s = listModel[ListBoxType.Kifu.id].size() + ":"+s;
-		listModel[ListBoxType.Kifu.id].addElement(s);
-		listBox[ListBoxType.Kifu.id].setModel(listModel[ListBoxType.Kifu.id]);
-		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(listModel[ListBoxType.Kifu.id].size()-1);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(listModel[ListBoxType.Kifu.id].size()-1);
+		s = gd.listModel[ListBoxType.Kifu.id].size() + ":"+s;
+		gd.listModel[ListBoxType.Kifu.id].addElement(s);
+		gd.listBox[ListBoxType.Kifu.id].setModel(gd.listModel[ListBoxType.Kifu.id]);
+		gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(gd.listModel[ListBoxType.Kifu.id].size()-1);
+		gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(gd.listModel[ListBoxType.Kifu.id].size()-1);
 		
-		cv.clearDrawPointForRightClick();
+		cd.cv.clearDrawPointForRightClick();
 	}
 	public void commonListAction() {
-		int selectedIndex = listBox[ListBoxType.Kifu.id].getSelectedIndex();
-		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+		int selectedIndex = gd.listBox[ListBoxType.Kifu.id].getSelectedIndex();
+		sd.resetAllKoma(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnBoard(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 		
 		for(Kifu kf: kifuData) {
 			if(kifuData.indexOf(kf) < selectedIndex) {
 				kf.k.moveKoma(kf.x, kf.y, kf.p);
-				if(!checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
-				cv.setLastPoint(kf.x, kf.y, true);
-				if(textBox[TextBoxType.Strategy.id].getText().equals("")) textBox[TextBoxType.Strategy.id].setText(checkStrategy(sd));
-				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(checkCastle(sd, true));
+				if(!gd.checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
+				cd.cv.setLastPoint(kf.x, kf.y, true);
+				if(gd.textBox[TextBoxType.Strategy.id].getText().equals("")) gd.textBox[TextBoxType.Strategy.id].setText(checkStrategy(sd));
+				if(gd.textBox[TextBoxType.Castle.id].getText().equals("")) {
+					gd.textBox[TextBoxType.Castle.id].setText(checkCastle(sd, true));
 				}
-				if(textBox[TextBoxType.Castle.id].getText().equals("")) {
-					textBox[TextBoxType.Castle.id].setText(checkCastle(sd, false));
+				if(gd.textBox[TextBoxType.Castle.id].getText().equals("")) {
+					gd.textBox[TextBoxType.Castle.id].setText(checkCastle(sd, false));
 				}
 			}
 		}
-		if(selectedIndex == 0) cv.setLastPoint(-1, -1, false);
-		cv.clearDrawPointForRightClick();
+		if(selectedIndex == 0) cd.cv.setLastPoint(-1, -1, false);
+		cd.cv.clearDrawPointForRightClick();
 		
 		checkKDB(selectedIndex);
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnBoard(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnHand(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 
 		se.sendCommandToEngine();
-		cv.repaint();
-		cve.repaint();
+		cd.cv.repaint();
+		cd.cve.repaint();
 	}
 	public void loadByNumber(String numStrFile, String numStrStep, String numStrYear) {
 		String fileName;
@@ -310,8 +293,8 @@ public class AnalysisData {
 			FileReader fr = new FileReader(file);
 			BufferedReader br = new BufferedReader(fr);
 			String content;
-			textBox[TextBoxType.Player1.id].setText(br.readLine());
-			textBox[TextBoxType.Player2.id].setText(br.readLine());
+			gd.textBox[TextBoxType.Player1.id].setText(br.readLine());
+			gd.textBox[TextBoxType.Player2.id].setText(br.readLine());
 			while((content = br.readLine()) != null) {
 				StringTokenizer st = new StringTokenizer(content,",");
 				while(st.hasMoreTokens()) {
@@ -330,21 +313,21 @@ public class AnalysisData {
 			}
 			br.close();
 			
-			sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
+			sd.resetAllKoma(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 			if(numStrStep.equals("")) {
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+				gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+				gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 			} else {
 				int selectedIndex = Integer.parseInt(numStrStep);
-				listBox[ListBoxType.Kifu.id].setSelectedIndex(selectedIndex);
-				listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(selectedIndex);
+				gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(selectedIndex);
+				gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(selectedIndex);
 				commonListAction();
 			}
 			
-			sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
-			sd.viewKomaOnHand(checkBox[CheckBoxType.Reverse.id].isSelected());
+			sd.viewKomaOnBoard(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
+			sd.viewKomaOnHand(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 			updatePlayerIcon();
-			cv.repaint();
+			cd.cv.repaint();
 		} catch(IOException er) {
 			System.out.println(er);
 		}
@@ -361,7 +344,7 @@ public class AnalysisData {
 			System.out.print("Loading Kifu Data(" + strY + ") ... ");
 			int fileIndex = 1;
 			while(true) {
-				sdForKDB.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
+				sdForKDB.resetAllKoma(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 				String fileName = kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
 				//System.out.println(fileName);
 				File file = new File(fileName);
@@ -412,22 +395,22 @@ public class AnalysisData {
 			System.out.println(er);
 		}
 		
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		commonListAction();
 		
 		System.out.println("Completed.");
 	}
 	public void initializeShogiBoard() {
-		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
-		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.resetAllKoma(gd.checkBox[CheckBoxType.Reverse.id].isSelected());	
+		sd.viewKomaOnBoard(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 		clearListBox();
 		kifuData.clear();
-		cv.setLastPoint(-1, -1, false);
-		cv.clearDrawPoint();
+		cd.cv.setLastPoint(-1, -1, false);
+		cd.cv.clearDrawPoint();
 		se.actionForStopEngine();
-		cve.clearBestPointData();
-		cv.repaint();
-		cve.repaint();
+		cd.cve.clearBestPointData();
+		cd.cv.repaint();
+		cd.cve.repaint();
 	}
 	public KifuData getKDB(int fileIndex, String year) {
 		for(KifuData kd: kifuDB) {
@@ -491,7 +474,7 @@ public class AnalysisData {
 		return 0;
 	}
 	public Boolean checkSamePositionKDB(int index, KifuData kd) {
-		sdForKDB.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());
+		sdForKDB.resetAllKoma(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 		
 		int i = 0;
 		while(i<index && index<kd.db.size()) {
@@ -515,9 +498,9 @@ public class AnalysisData {
 	
 	
 	public void updateListBox2(List<StringCount> listSC) {
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
-		cv.clearDrawPoint();
+		gd.listModel[ListBoxType.Info.id].clear();
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
+		cd.cv.clearDrawPoint();
 		
 		Collections.sort(
 				listSC,
@@ -533,10 +516,10 @@ public class AnalysisData {
 			Double d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
 			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
-			cv.addDrawPoint(sc.target,  sc.base);
-			listModel[ListBoxType.Info.id].addElement(str);
+			cd.cv.addDrawPoint(sc.target,  sc.base);
+			gd.listModel[ListBoxType.Info.id].addElement(str);
 		}
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	}
 	
 	// -------------------------------------------------------------------------
@@ -551,8 +534,8 @@ public class AnalysisData {
 		}
 		initializeShogiBoard();
 		Boolean result = parseShogiWarsKifu(strClipBoard);
-		listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
-		listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
+		gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
+		gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
 		updatePlayerIcon();
 		if(result) System.out.println("Completed.");
@@ -581,10 +564,10 @@ public class AnalysisData {
 			content = stLine.nextToken();
 			//System.out.println(content);
 			if(content.contains("先手：")) {
-				textBox[TextBoxType.Player1.id].setText(content.substring(content.indexOf("：")+1));
+				gd.textBox[TextBoxType.Player1.id].setText(content.substring(content.indexOf("：")+1));
 			}
 			if(content.contains("後手：")) {
-				textBox[TextBoxType.Player2.id].setText(content.substring(content.indexOf("：")+1));
+				gd.textBox[TextBoxType.Player2.id].setText(content.substring(content.indexOf("：")+1));
 			}
 			if(content.contains("手数----指手---------消費時間--")) {
 				startKifu = true;
@@ -762,8 +745,8 @@ public class AnalysisData {
 		return "";
 	}
 	public void countStrategy() {
-		listModel[ListBoxType.Strategy.id].clear();
-		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
+		gd.listModel[ListBoxType.Strategy.id].clear();
+		gd.listBox[ListBoxType.Strategy.id].setModel(gd.listModel[ListBoxType.Strategy.id]);
 		strategyCountData.clear();
 		
 		for(KifuData kd: kifuDB) {
@@ -799,27 +782,27 @@ public class AnalysisData {
 		}
 		Double d = (double)totalSenteWinCnt/(double)totalCnt*100;
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Games" + "(Sente Winning Rate" + String.format("%.0f", d) + "%)>";
-		listModel[ListBoxType.Strategy.id].addElement(str);
-		listModel[ListBoxType.Strategy.id].addElement("----------");
+		gd.listModel[ListBoxType.Strategy.id].addElement(str);
+		gd.listModel[ListBoxType.Strategy.id].addElement("----------");
 		for(StringCount sc: strategyCountData) {
 			str = sc.str;
 			d = (double)sc.senteWinCnt/(double)(sc.cnt)*100;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
 			str += "(Sente Winning Rate" + String.format("%.0f", d) + "%)";
-			listModel[ListBoxType.Strategy.id].addElement(str);
+			gd.listModel[ListBoxType.Strategy.id].addElement(str);
 		}
-		listBox[ListBoxType.Strategy.id].setModel(listModel[ListBoxType.Strategy.id]);
+		gd.listBox[ListBoxType.Strategy.id].setModel(gd.listModel[ListBoxType.Strategy.id]);
 	}
 	public void updateListBox2ByStrategy() {
-		int selectedIndex = listBox[ListBoxType.Strategy.id].getSelectedIndex()-2;
+		int selectedIndex = gd.listBox[ListBoxType.Strategy.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
-		int selectedIndex4 = listBox[ListBoxType.Player.id].getSelectedIndex();
+		int selectedIndex4 = gd.listBox[ListBoxType.Player.id].getSelectedIndex();
 		String playerName = "";
 		if(selectedIndex4 >= 2) {
-			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndex4);
+			playerName = gd.listModel[ListBoxType.Player.id].getElementAt(selectedIndex4);
 			//System.out.println(playerName);
 		}
-		int selectedIndexCastle = listBox[ListBoxType.Castle.id].getSelectedIndex();
+		int selectedIndexCastle = gd.listBox[ListBoxType.Castle.id].getSelectedIndex();
 		String castleName = "";
 		if(selectedIndexCastle >= 2) {
 			StringCount sc = castleCountData.get(selectedIndexCastle-2);
@@ -829,14 +812,14 @@ public class AnalysisData {
 		StringCount sc = strategyCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String strategy = sc.str;
-		textBox[TextBoxType.Castle.id].setText(strategy);
+		gd.textBox[TextBoxType.Castle.id].setText(strategy);
 		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listModel[ListBoxType.Info.id].clear();
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	
-		if(playerName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ strategy + "'s Kifu>");
-		else listModel[ListBoxType.Info.id].addElement("<"+ strategy + "(" + playerName + ")"+"'s Kifu>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
+		if(playerName.equals("")) gd.listModel[ListBoxType.Info.id].addElement("<"+ strategy + "'s Kifu>");
+		else gd.listModel[ListBoxType.Info.id].addElement("<"+ strategy + "(" + playerName + ")"+"'s Kifu>");
+		gd.listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuData kd: kifuDB) {
 			if(kd.strategyName.equals(strategy)) {
 				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
@@ -845,19 +828,19 @@ public class AnalysisData {
 				else if(kd.isSenteWin == 0) str+="(Gote Win)";
 				else str+="(Draw)";
 				if(playerName.equals("") && castleName.equals("")) {
-					listModel[ListBoxType.Info.id].addElement(str);
+					gd.listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("") && !castleName.equals("")) {
 					if(str.contains(playerName) && (kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName))) {
-						listModel[ListBoxType.Info.id].addElement(str);
+						gd.listModel[ListBoxType.Info.id].addElement(str);
 					}
 				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
+					if(str.contains(playerName)) gd.listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!castleName.equals("")) {
-					if(kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName)) listModel[ListBoxType.Info.id].addElement(str);
+					if(kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName)) gd.listModel[ListBoxType.Info.id].addElement(str);
 				}
 			}
 		}
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	}	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Castle Data >> -------------------------------
@@ -879,7 +862,7 @@ public class AnalysisData {
 		String fileName;
 		int index = 1;
 		
-		if(textBox[TextBoxType.Castle.id].getText().equals("")) {
+		if(gd.textBox[TextBoxType.Castle.id].getText().equals("")) {
 			JOptionPane.showMessageDialog(null, "Castle name is empty");
 			return;
 		}
@@ -895,7 +878,7 @@ public class AnalysisData {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 		
-			fw.write(textBox[TextBoxType.Castle.id].getText() + "\n");
+			fw.write(gd.textBox[TextBoxType.Castle.id].getText() + "\n");
 			for(Koma k: sd.k) {
 				if((k.type == KomaType.King) && isRadioButtonSente && k.sente == 0) {
 					saveListKomaAroundKing(sd, k, fw);
@@ -950,8 +933,8 @@ public class AnalysisData {
 		System.out.println("Completed.");
 	}
 	public void countCastle() {
-		listModel[ListBoxType.Castle.id].clear();
-		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
+		gd.listModel[ListBoxType.Castle.id].clear();
+		gd.listBox[ListBoxType.Castle.id].setModel(gd.listModel[ListBoxType.Castle.id]);
 		castleCountData.clear();
 		
 		for(KifuData kd: kifuDB) {
@@ -996,31 +979,31 @@ public class AnalysisData {
 			totalCnt += sc.cnt;
 		}
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Castles>";
-		listModel[ListBoxType.Castle.id].addElement(str);
-		listModel[ListBoxType.Castle.id].addElement("----------");
+		gd.listModel[ListBoxType.Castle.id].addElement(str);
+		gd.listModel[ListBoxType.Castle.id].addElement("----------");
 		for(StringCount sc: castleCountData) {
 			str = sc.str;
 			str += ":" + String.format("%2d", sc.cnt)+" games";
-			listModel[ListBoxType.Castle.id].addElement(str);
+			gd.listModel[ListBoxType.Castle.id].addElement(str);
 		}
-		listBox[ListBoxType.Castle.id].setModel(listModel[ListBoxType.Castle.id]);
+		gd.listBox[ListBoxType.Castle.id].setModel(gd.listModel[ListBoxType.Castle.id]);
 	}
 	public void updateListBoxInfoByCastle() {
-		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
+		int selectedIndex = gd.listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) {
 			initializeCastleIcon();
 			return;
 		}
-		int selectedIndexStrategy = listBox[ListBoxType.Strategy.id].getSelectedIndex();
+		int selectedIndexStrategy = gd.listBox[ListBoxType.Strategy.id].getSelectedIndex();
 		String strategyName = "";
 		if(selectedIndexStrategy >= 2) {
 			StringCount sc = strategyCountData.get(selectedIndexStrategy-2);
 			strategyName = sc.str;
 		}
-		int selectedIndexPlayer = listBox[ListBoxType.Player.id].getSelectedIndex();
+		int selectedIndexPlayer = gd.listBox[ListBoxType.Player.id].getSelectedIndex();
 		String playerName = "";
 		if(selectedIndexPlayer >= 2) {
-			playerName = listModel[ListBoxType.Player.id].getElementAt(selectedIndexPlayer);
+			playerName = gd.listModel[ListBoxType.Player.id].getElementAt(selectedIndexPlayer);
 			//System.out.println(playerName);
 		}
 		
@@ -1028,14 +1011,14 @@ public class AnalysisData {
 		//System.out.println(sc.str);
 		String castleName = sc.str;
 		updateCastleIcon();
-		textBox[TextBoxType.Castle.id].setText(castleName);
+		gd.textBox[TextBoxType.Castle.id].setText(castleName);
 		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listModel[ListBoxType.Info.id].clear();
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 
-		if(strategyName.equals("")) listModel[ListBoxType.Info.id].addElement("<"+ castleName + "'s Kifu>");
-		else listModel[ListBoxType.Info.id].addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
+		if(strategyName.equals("")) gd.listModel[ListBoxType.Info.id].addElement("<"+ castleName + "'s Kifu>");
+		else gd.listModel[ListBoxType.Info.id].addElement("<"+ strategyName + "(" + castleName + ")"+"'s Kifu>");
+		gd.listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuData kd: kifuDB) {
 			if(kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName)) {
 				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
@@ -1045,17 +1028,17 @@ public class AnalysisData {
 				else str+="(Draw)";
 				
 				if(strategyName.equals("") && playerName.equals("")) {
-					listModel[ListBoxType.Info.id].addElement(str);
+					gd.listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!strategyName.equals("") && !playerName.equals("")) {
-					if(kd.strategyName.equals(strategyName) && str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
+					if(kd.strategyName.equals(strategyName) && str.contains(playerName)) gd.listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!strategyName.equals("")) {
-					if(kd.strategyName.equals(strategyName)) listModel[ListBoxType.Info.id].addElement(str);
+					if(kd.strategyName.equals(strategyName)) gd.listModel[ListBoxType.Info.id].addElement(str);
 				} else if(!playerName.equals("")) {
-					if(str.contains(playerName)) listModel[ListBoxType.Info.id].addElement(str);
+					if(str.contains(playerName)) gd.listModel[ListBoxType.Info.id].addElement(str);
 				}
 			}
 		}
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	}
 	public String checkCastle(ShogiData sd, Boolean isSente) {
 		for(Koma k: sd.k) {
@@ -1118,20 +1101,20 @@ public class AnalysisData {
 		}
 	}
 	public void updateCastleIcon() {
-		int selectedIndex = listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
+		int selectedIndex = gd.listBox[ListBoxType.Castle.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
 		StringCount sc = castleCountData.get(selectedIndex);
 		String castleName = sc.str;
 		try {
 			BufferedImage img = ImageIO.read(new File(imgFilePathCastleIcon + castleName + ".jpg"));
-			cv.castleIcon = img.getScaledInstance(120, 160, java.awt.Image.SCALE_SMOOTH);
+			cd.cv.castleIcon = img.getScaledInstance(120, 160, java.awt.Image.SCALE_SMOOTH);
 		} catch(IOException e) {
-			cv.castleIcon = null;
+			cd.cv.castleIcon = null;
 		}
-		cv.repaint();
+		cd.cv.repaint();
 	}
 	public void initializeCastleIcon() {
-		cv.castleIcon = null;
+		cd.cv.castleIcon = null;
 	}
 	
 // -------------------------------------------------------------------------
@@ -1189,8 +1172,8 @@ public class AnalysisData {
 		}
 	}
 	public void createPlayerDataBase() {
-		listModel[ListBoxType.Player.id].clear();
-		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
+		gd.listModel[ListBoxType.Player.id].clear();
+		gd.listBox[ListBoxType.Player.id].setModel(gd.listModel[ListBoxType.Player.id]);
 		playerDataBase.clear();
 		
 		for(KifuData kd: kifuDB) {
@@ -1249,20 +1232,20 @@ public class AnalysisData {
 				);
 		
 		String str = "<Total:" + playerDataBase.size() + " Players>";
-		listModel[ListBoxType.Player.id].addElement(str);
-		listModel[ListBoxType.Player.id].addElement("---------");
+		gd.listModel[ListBoxType.Player.id].addElement(str);
+		gd.listModel[ListBoxType.Player.id].addElement("---------");
 		
 		for(PlayerData pd: playerDataBase) {
-			listModel[ListBoxType.Player.id].addElement(pd.playerName);
+			gd.listModel[ListBoxType.Player.id].addElement(pd.playerName);
 		}
-		listBox[ListBoxType.Player.id].setModel(listModel[ListBoxType.Player.id]);
+		gd.listBox[ListBoxType.Player.id].setModel(gd.listModel[ListBoxType.Player.id]);
 	}
 	public void updateListBox2ByPlayerName() {
-		int selectedIndex = listBox[ListBoxType.Player.id].getSelectedIndex()-2;
+		int selectedIndex = gd.listBox[ListBoxType.Player.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) return;
 		
 		PlayerData pd = playerDataBase.get(selectedIndex);
-		textBox[TextBoxType.Player1.id].setText(pd.playerName);
+		gd.textBox[TextBoxType.Player1.id].setText(pd.playerName);
 		updatePlayerIcon();
 		
 		// count strategy data
@@ -1273,10 +1256,10 @@ public class AnalysisData {
 		List<StringCount> strList = new ArrayList<StringCount>();
 		countCastleDataByPlayerData(strList, pd);
 		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listModel[ListBoxType.Info.id].clear();
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 		
-		listModel[ListBoxType.Info.id].addElement("<" + pd.playerName + "'s Winning Rate>");
+		gd.listModel[ListBoxType.Info.id].addElement("<" + pd.playerName + "'s Winning Rate>");
 		
 		int totalCnt = 0;
 		int totalWinCnt = 0;
@@ -1303,36 +1286,36 @@ public class AnalysisData {
 		String str = "Total " + String.format("%d games %d Win:%d Lose %d Draw", totalCnt, totalWinCnt, totalLoseCnt, totalDrawCnt);
 		Double d = (double)totalWinCnt/(double)(totalWinCnt+totalLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModel[ListBoxType.Info.id].addElement(str);
+		gd.listModel[ListBoxType.Info.id].addElement(str);
 		
 		str = String.format("Sente %d games %d Win:%d Lose %d Draw", totalSenteWinCnt+totalSenteLoseCnt+totalSenteDrawCnt, totalSenteWinCnt, totalSenteLoseCnt, totalSenteDrawCnt);
 		d = (double)totalSenteWinCnt/(double)(totalSenteWinCnt+totalSenteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModel[ListBoxType.Info.id].addElement(str);
+		gd.listModel[ListBoxType.Info.id].addElement(str);
 		str = String.format("Gote %d games %d Win:%d Lose: %d Draw", totalGoteWinCnt+totalGoteLoseCnt+totalGoteDrawCnt, totalGoteWinCnt, totalGoteLoseCnt, totalGoteDrawCnt);
 		d = (double)totalGoteWinCnt/(double)(totalGoteWinCnt+totalGoteLoseCnt)*100;
 		str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-		listModel[ListBoxType.Info.id].addElement(str);
+		gd.listModel[ListBoxType.Info.id].addElement(str);
 		
-		listModel[ListBoxType.Info.id].addElement("---------");
+		gd.listModel[ListBoxType.Info.id].addElement("---------");
 		str = "Total Strategies: " + grcList.size() + " patterns";
-		listModel[ListBoxType.Info.id].addElement(str);
+		gd.listModel[ListBoxType.Info.id].addElement(str);
 		for(GameResultCount grc: grcList) {
 			str = grc.str;
 			d = (double)(grc.senteWinCnt+grc.goteWinCnt)/(double)(grc.cnt)*100;
 			str += ":" + String.format("%d", grc.cnt) + " games";
 			str += "(Winning Rate" + String.format("%.0f", d) + "%)";
-			listModel[ListBoxType.Info.id].addElement(str);
+			gd.listModel[ListBoxType.Info.id].addElement(str);
 		}
 		
-		listModel[ListBoxType.Info.id].addElement("---------");
+		gd.listModel[ListBoxType.Info.id].addElement("---------");
 		for(StringCount sc: strList) {
 			str = sc.str;
 			str += ":" + String.format("%d", sc.cnt) + " games";
-			listModel[ListBoxType.Info.id].addElement(str);
+			gd.listModel[ListBoxType.Info.id].addElement(str);
 		}
 		
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	}
 	public void countStrategyDataByPlayerData(List<GameResultCount> grcList, PlayerData pd) {
 		for(GameResult gr: pd.grList) {
@@ -1395,21 +1378,21 @@ public class AnalysisData {
 	}
 	public void updatePlayerIcon() {
 		String playerName[] = new String[2];
-		playerName[SenteGote.Sente.id] = new String(textBox[TextBoxType.Player1.id].getText());
-		playerName[SenteGote.Gote.id] = new String(textBox[TextBoxType.Player2.id].getText());
+		playerName[SenteGote.Sente.id] = new String(gd.textBox[TextBoxType.Player1.id].getText());
+		playerName[SenteGote.Gote.id] = new String(gd.textBox[TextBoxType.Player2.id].getText());
 		
 		for(SenteGote sg: SenteGote.values()) {
 			try {
 				BufferedImage img = ImageIO.read(new File(imgFilePathPlayerIcon + playerName[sg.id] + ".jpg"));
-				cv.playerIcon[sg.id] = img.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
+				cd.cv.playerIcon[sg.id] = img.getScaledInstance(100, 133, java.awt.Image.SCALE_SMOOTH);
 			} catch(IOException e) {
-				cv.playerIcon[sg.id] = null;
+				cd.cv.playerIcon[sg.id] = null;
 			}
 		}
-		cv.repaint();
+		cd.cv.repaint();
 	}
 	public void initializePlayerIcon() {
-		for(SenteGote sg: SenteGote.values()) cv.playerIcon[sg.id] = null;
+		for(SenteGote sg: SenteGote.values()) cd.cv.playerIcon[sg.id] = null;
 	}
 
 	// -------------------------------------------------------------------------
@@ -1433,7 +1416,7 @@ public class AnalysisData {
 		String fileName;
 		int index = 1;
 		
-		if(textBox[TextBoxType.Tesuji.id].getText().equals("")) {
+		if(gd.textBox[TextBoxType.Tesuji.id].getText().equals("")) {
 			JOptionPane.showMessageDialog(null, "Tesuji name is empty");
 			return;
 		}
@@ -1450,9 +1433,9 @@ public class AnalysisData {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 		
-			fw.write(textBox[TextBoxType.Tesuji.id].getText() + "\n");
+			fw.write(gd.textBox[TextBoxType.Tesuji.id].getText() + "\n");
 			fw.write(loadFile + "\n");
-			fw.write(listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
+			fw.write(gd.listBox[ListBoxType.Kifu.id].getSelectedIndex() + "\n");
 			fw.close();
 			
 			JOptionPane.showMessageDialog(null, fileName + " is saved.");
@@ -1462,7 +1445,7 @@ public class AnalysisData {
 	}
 	public void loadTesujiData() {
 		tesujiDataBase.clear();
-		String selectedYear = (String)comboBox.getSelectedItem();
+		String selectedYear = (String)gd.comboBox.getSelectedItem();
 		if(selectedYear.equals("") || selectedYear.equals("all")) loadTesujiDataByYear("");
 		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadTesujiDataByYear("2022");
 		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadTesujiDataByYear("2023");
@@ -1495,8 +1478,8 @@ public class AnalysisData {
 		System.out.println("Completed.");
 	}
 	public void countTesujiData() {
-		listModel[ListBoxType.Tesuji.id].clear();
-		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
+		gd.listModel[ListBoxType.Tesuji.id].clear();
+		gd.listBox[ListBoxType.Tesuji.id].setModel(gd.listModel[ListBoxType.Tesuji.id]);
 		tesujiCountData.clear();
 		
 		for(TesujiData td: tesujiDataBase) {
@@ -1528,17 +1511,17 @@ public class AnalysisData {
 			totalCnt += sc.cnt;
 		}
 		String str = "<Total:" + String.format("%2d", totalCnt)+" Tesujis>";
-		listModel[ListBoxType.Tesuji.id].addElement(str);
-		listModel[ListBoxType.Tesuji.id].addElement("----------");
+		gd.listModel[ListBoxType.Tesuji.id].addElement(str);
+		gd.listModel[ListBoxType.Tesuji.id].addElement("----------");
 		for(StringCount sc: tesujiCountData) {
 			str = sc.str;
 			str += ":" + String.format("%2d", sc.cnt)+" counts";
-			listModel[ListBoxType.Tesuji.id].addElement(str);
+			gd.listModel[ListBoxType.Tesuji.id].addElement(str);
 		}
-		listBox[ListBoxType.Tesuji.id].setModel(listModel[ListBoxType.Tesuji.id]);
+		gd.listBox[ListBoxType.Tesuji.id].setModel(gd.listModel[ListBoxType.Tesuji.id]);
 	}
 	public void updateListBoxInfoByTesuji() {
-		int selectedIndex = listBox[ListBoxType.Tesuji.id].getSelectedIndex()-2;
+		int selectedIndex = gd.listBox[ListBoxType.Tesuji.id].getSelectedIndex()-2;
 		if(selectedIndex < 0) {
 			return;
 		}
@@ -1546,22 +1529,22 @@ public class AnalysisData {
 		StringCount sc = tesujiCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String tesujiName = sc.str;
-		textBox[TextBoxType.Tesuji.id].setText(tesujiName);
+		gd.textBox[TextBoxType.Tesuji.id].setText(tesujiName);
 		
-		listModel[ListBoxType.Info.id].clear();
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listModel[ListBoxType.Info.id].clear();
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	
-		listModel[ListBoxType.Info.id].addElement("<"+ tesujiName + "'s Kifu>");
-		listModel[ListBoxType.Info.id].addElement("-------------");
+		gd.listModel[ListBoxType.Info.id].addElement("<"+ tesujiName + "'s Kifu>");
+		gd.listModel[ListBoxType.Info.id].addElement("-------------");
 		for(TesujiData td: tesujiDataBase) {
 			if(td.name.equals(tesujiName)) {
 				String str = "kf" + String.format("%03d:%03d:%s", td.fileIndex, td.stepIndex, td.year);
 				KifuData kd = getKDB(td.fileIndex, td.year);
 				if(kd == null) continue;
 				str += ":" + kd.playerName[SenteGote.Sente.id] + " vs " + kd.playerName[SenteGote.Gote.id];
-				listModel[ListBoxType.Info.id].addElement(str);
+				gd.listModel[ListBoxType.Info.id].addElement(str);
 			}
 		}
-		listBox[ListBoxType.Info.id].setModel(listModel[ListBoxType.Info.id]);
+		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	}
 }

@@ -10,25 +10,19 @@ import javax.swing.JFrame;
 
 import lib.AnalysisData;
 import lib.AnalysisData.Kifu;
-import lib.ButtonData;
-import lib.ButtonData.ButtonType;
-import lib.CanvasBoard;
-import lib.CanvasBoardForEngine;
-import lib.CheckBoxData;
-import lib.CheckBoxData.CheckBoxType;
+import lib.CanvasData;
 import lib.ColorDataBase;
+import lib.ColorDataBase.ButtonType;
 import lib.EditProperty;
-import lib.KomaSound;
-import lib.ListBoxData;
-import lib.ListBoxData.ListBoxType;
-import lib.MenuData;
+import lib.GUIData;
+import lib.GUIData.CheckBoxType;
+import lib.GUIData.ListBoxType;
+import lib.GUIData.TextBoxType;
 import lib.ShogiData;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
 import lib.ShogiEngine;
-import lib.TextBoxData;
-import lib.TextBoxData.TextBoxType;
 
 public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionListener, KeyListener {
 	// -------------------------------------------------------------------------
@@ -37,20 +31,14 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String imgFilePath = "./img/";
 	String imgFilePathKoma = imgFilePath + "koma/";
 	
-	KomaSound ks = new KomaSound();
 	ShogiData sd = new ShogiData();
 	ShogiData sdForKDB = new ShogiData();
 	ShogiEngine se = new ShogiEngine();
-	CanvasBoard cv;
-	CanvasBoardForEngine cve;
+	CanvasData cd;
 	EditProperty ep = new EditProperty();
 	AnalysisData ad;
 	ColorDataBase cldb;
-	ListBoxData lbd;
-	TextBoxData tbd;
-	ButtonData bd;
-	CheckBoxData cbd;
-	MenuData md;
+	GUIData gd;
 	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
@@ -75,7 +63,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		contentPaneSetting();
 		listenerSetting();		
 		System.out.println("Completed.");
-		bd.actionForInitialize();
+		gd.actionForInitialize();
 	}
 	public void initializeAppIcon() {
 		ImageIcon icon = new ImageIcon(imgFilePath + "Shogi Ramen TV.jpg");
@@ -84,54 +72,41 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void initializeGUISetting() {
 		sd.initializeKomaSetting();
 		sdForKDB.initializeKomaSetting();
-		tbd = new TextBoxData(baseXPosForItems, ad, lbd);
-		tbd.initializeTextBoxSetting();
-		cbd = new CheckBoxData(baseXPosForItems, sd, cv, cve);
-		cbd.initializeCheckBox();
-		lbd = new ListBoxData(baseXPosForItems, se.getNumOfMultiPV(), ad, ks);
-		lbd.initializeListBoxSetting();
-		bd = new ButtonData(baseXPosForItems, tbd, lbd, cldb, cbd, cv, cve, sd, ad);
-		bd.initializeButtonSetting();
-		
-		cve = new CanvasBoardForEngine(baseXPosForItems, se, lbd.listModel, lbd.listBox);
-		cv = new CanvasBoard(sd, cbd.checkBox, se, cve);
-		cldb = new ColorDataBase(ep, cv, bd.button);
-		md = new MenuData(this, cldb, se, sd, cv, cve, lbd, cbd, ep, ad);
-		ad = new AnalysisData(this, sd, sdForKDB, se, lbd.listModel, lbd.listBox, tbd.textBox, cv, cve, cbd.checkBox, cbd.comboBox);
-		
-		lbd.update(ad);
-		tbd.update(ad, lbd);
-		bd.update(tbd, lbd, cldb, cbd, cv, cve, sd, ad);
-		cbd.update(cv, cve);
-		md.update(ad);
-		se.update(ad);
-
-		cv.initializeSettings(this.getWidth(), this.getHeight());
-		cve.initializeSetting();
-		ks.initializeSoundSetting();
-		md.initializeMenuBar();
-		cv.initializeNumberRowCol();
+		gd = new GUIData(baseXPosForItems, this, sd, se, ep, cd, ad, cldb);
+		gd.initializeTextBoxSetting();
+		gd.initializeCheckBox();
+		gd.initializeListBoxSetting();
+		gd.initializeButtonSetting();
+		cd = new CanvasData(baseXPosForItems, sd, se, gd);
+		cldb = new ColorDataBase(ep, cd, gd.button);
+		ad = new AnalysisData(this, sd, sdForKDB, se, cd, gd);
+		gd.update(cd, ad, cldb);
+		cd.cv.initializeSettings(this.getWidth(), this.getHeight());
+		cd.cve.initializeSetting();
+		gd.initializeSoundSetting();
+		gd.initializeMenuBar();
+		cd.cv.initializeNumberRowCol();
 		cldb.initializeColorSet();
 	}
 	public void contentPaneSetting() {
 		getContentPane().setLayout(null);
-		for(ButtonType b: ButtonType.values()) getContentPane().add(bd.button[b.id]);
-		for(TextBoxType t: TextBoxType.values()) getContentPane().add(tbd.textBox[t.id]);
-		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(lbd.scrollPane[lb.id]);
-		for(CheckBoxType cb: CheckBoxType.values()) getContentPane().add(cbd.checkBox[cb.id]);
-		getContentPane().add(cbd.radioButtonSente);
-		getContentPane().add(cbd.radioButtonGote);
-		getContentPane().add(cbd.comboBox);
-		getContentPane().add(cve);
-		getContentPane().add(cv);
+		for(ButtonType b: ButtonType.values()) getContentPane().add(gd.button[b.id]);
+		for(TextBoxType t: TextBoxType.values()) getContentPane().add(gd.textBox[t.id]);
+		for(ListBoxType lb: ListBoxType.values()) getContentPane().add(gd.scrollPane[lb.id]);
+		for(CheckBoxType cb: CheckBoxType.values()) getContentPane().add(gd.checkBox[cb.id]);
+		getContentPane().add(gd.radioButtonSente);
+		getContentPane().add(gd.radioButtonGote);
+		getContentPane().add(gd.comboBox);
+		getContentPane().add(cd.cve);
+		getContentPane().add(cd.cv);
 	}
 	public void listenerSetting() {
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addKeyListener(this);
-		cv.addMouseListener(this);
-		cv.addMouseMotionListener(this);
-		cv.addKeyListener(this);
+		cd.cv.addMouseListener(this);
+		cd.cv.addMouseMotionListener(this);
+		cd.cv.addKeyListener(this);
 	}
 	private final int baseXPosForItems = 720;
 	// -------------------------------------------------------------------------
@@ -155,7 +130,6 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		//System.out.println("Key Released");
 		commandKeyOn = false;
 	}
-	
 	// -------------------------------------------------------------------------
 	// ----------------------- << Mouse Action >> -----------------------------
 	// -------------------------------------------------------------------------
@@ -166,30 +140,30 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		//System.out.println("mouse dragged");
 		if(e.getButton() == MouseEvent.BUTTON3) {
 			Point mp = e.getPoint();
-			if(e.getSource() != cv) mp.y -= 50;
-			if(cv.drawListTargetRightClick.size() != 0 ) {
-				cv.drawListTargetRightClick.remove(cv.drawListTargetRightClick.size()-1);
+			if(e.getSource() != cd.cv) mp.y -= 50;
+			if(cd.cv.drawListTargetRightClick.size() != 0 ) {
+				cd.cv.drawListTargetRightClick.remove(cd.cv.drawListTargetRightClick.size()-1);
 			}
-			cv.drawListTargetRightClick.add(mp);
-			cv.repaint();
-			cve.repaint();
+			cd.cv.drawListTargetRightClick.add(mp);
+			cd.cv.repaint();
+			cd.cve.repaint();
 		}
 		
 		if(sd.selectedKoma == null) return;
 		
 		Point mp = e.getPoint();
 		for(ListBoxType lb: ListBoxType.values()) {
-			if(e.getSource() == lbd.listBox[lb.id]) {
-				mp.x += lbd.scrollPane[lb.id].getBounds().x;
-				mp.y += lbd.scrollPane[lb.id].getBounds().y + sd.iconHeight/2 + 20;
+			if(e.getSource() == gd.listBox[lb.id]) {
+				mp.x += gd.scrollPane[lb.id].getBounds().x;
+				mp.y += gd.scrollPane[lb.id].getBounds().y + sd.iconHeight/2 + 20;
 				break;
 			}
 		}
-		if(e.getSource() != cv) mp.y -= 50;
+		if(e.getSource() != cd.cv) mp.y -= 50;
 		sd.selectedKoma.pos.x = mp.x - sd.iconWidth/2;
 		sd.selectedKoma.pos.y = mp.y - sd.iconHeight/2;
-		cv.repaint();
-		cve.repaint();
+		cd.cv.repaint();
+		cd.cve.repaint();
 	}
 	@Override
 	public void mouseClicked(MouseEvent e) {
@@ -205,24 +179,24 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		}
 		if(e.getButton() == MouseEvent.BUTTON1) {
 			//System.out.println("Left Clicked");
-			if(e.getSource() != cv) return;
+			if(e.getSource() != cd.cv) return;
 			Point mp = e.getPoint();
 			if(mp.x < 80 || mp.y < 20 || mp.x > (sd.iconWidth+10)*9+80 || mp.y > (sd.iconHeight+10)*9+20) {
 				return;
 			}
-			Point pShogiXY = cv.convertMousePointToShogiXY(mp);
-			for(Point p: cv.drawListLeftClick) {
-				Point pXY = cv.convertMousePointToShogiXY(p);
+			Point pShogiXY = cd.cv.convertMousePointToShogiXY(mp);
+			for(Point p: cd.cv.drawListLeftClick) {
+				Point pXY = cd.cv.convertMousePointToShogiXY(p);
 				if(pXY.x == pShogiXY.x && pXY.y == pShogiXY.y) {
-					cv.drawListLeftClick.remove(p);
-					cv.repaint();
-					cve.repaint();
+					cd.cv.drawListLeftClick.remove(p);
+					cd.cv.repaint();
+					cd.cve.repaint();
 					return;
 				}
 			}
-			cv.drawListLeftClick.add(mp);
-			cv.repaint();
-			cve.repaint();
+			cd.cv.drawListLeftClick.add(mp);
+			cd.cv.repaint();
+			cd.cve.repaint();
 		}
 	}
 	@Override
@@ -230,11 +204,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		if(e.getButton() == MouseEvent.BUTTON3) { // right click
 			//System.out.println("mouse clicked");
 			Point mp = e.getPoint();
-			if(e.getSource() != cv) mp.y -= 50;
-			cv.drawListBaseRightClick.add(mp);
+			if(e.getSource() != cd.cv) mp.y -= 50;
+			cd.cv.drawListBaseRightClick.add(mp);
 			return;
 		}
-		if(e.getSource() != this && e.getSource() != cv) {
+		if(e.getSource() != this && e.getSource() != cd.cv) {
 			return;
 		}
 		if(sd.selectedKoma == null) {
@@ -252,7 +226,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public Koma searchKoma(MouseEvent e) {
 		Point mp = e.getPoint();
 		Point tp = new Point(mp.x, mp.y);
-		if(e.getSource() != cv) {
+		if(e.getSource() != cd.cv) {
 			tp.y -= 50;
 		}
 		for(Koma k: sd.listKomaOnBoard) {
@@ -276,18 +250,18 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		return null;
 	}
 	public void commonMousePressed(Koma k, Boolean isOnBoard) {
-		if(sd.turnIsSente && k.sente == 1 && !cbd.checkBox[CheckBoxType.Edit.id].isSelected()) {
+		if(sd.turnIsSente && k.sente == 1 && !gd.checkBox[CheckBoxType.Edit.id].isSelected()) {
 			sd.selectedKoma = null;
 			return;
 		}
-		if(!sd.turnIsSente && k.sente == 0 && !cbd.checkBox[CheckBoxType.Edit.id].isSelected()) {
+		if(!sd.turnIsSente && k.sente == 0 && !gd.checkBox[CheckBoxType.Edit.id].isSelected()) {
 			sd.selectedKoma = null;
 			return;
 		}
 		sd.selectedKoma = k;
-		if(isOnBoard) cv.mousePressed = true;
-		cv.repaint();
-		cve.repaint();
+		if(isOnBoard) cd.cv.mousePressed = true;
+		cd.cv.repaint();
+		cd.cve.repaint();
 	}
 	@Override
 	public void mouseReleased(MouseEvent e) {
@@ -297,13 +271,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		//System.out.println("mouse released");
 		if(e.getButton() != MouseEvent.BUTTON3) return;
 		Point mp = e.getPoint();
-		if(e.getSource() != cv) mp.y -= 50;
-		Point p = cv.drawListBaseRightClick.get(cv.drawListBaseRightClick.size()-1);
-		if(p.x == mp.x && p.y == mp.y) cv.drawListBaseRightClick.remove(cv.drawListBaseRightClick.size()-1);
+		if(e.getSource() != cd.cv) mp.y -= 50;
+		Point p = cd.cv.drawListBaseRightClick.get(cd.cv.drawListBaseRightClick.size()-1);
+		if(p.x == mp.x && p.y == mp.y) cd.cv.drawListBaseRightClick.remove(cd.cv.drawListBaseRightClick.size()-1);
 		else {
-			cv.drawListTargetRightClick.add(mp);
-			cv.repaint();
-			cve.repaint();
+			cd.cv.drawListTargetRightClick.add(mp);
+			cd.cv.repaint();
+			cd.cve.repaint();
 		}
 	}
 	public void releaseKoma() {
@@ -319,7 +293,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		int preP = selectedKoma.promoted;
 		
 		int X, Y;
-		if(cbd.checkBox[CheckBoxType.Reverse.id].isSelected()) {
+		if(gd.checkBox[CheckBoxType.Reverse.id].isSelected()) {
 			X = 10 - (9-x);
 			Y = 10 - y;
 		} else {
@@ -327,13 +301,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 			Y = y;
 		}
 		Boolean result = selectedKoma.moveKoma(X, Y, -1);
-		ks.soundKoma();
-		sd.viewKomaOnBoard(cbd.checkBox[CheckBoxType.Reverse.id].isSelected());
-		sd.viewKomaOnHand(cbd.checkBox[CheckBoxType.Reverse.id].isSelected());
+		gd.soundKoma();
+		sd.viewKomaOnBoard(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
+		sd.viewKomaOnHand(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 		
-		cv.mousePressed = false;
-		cv.repaint();
-		cve.repaint();
+		cd.cv.mousePressed = false;
+		cd.cv.repaint();
+		cd.cve.repaint();
 		
 		if(result == false) {
 			sd.selectedKoma = null;
@@ -348,25 +322,25 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		// update kifu lbd.listBox and kifuData
 		if(X != preX || Y != preY) {
 			if(X>0 && X<10 && Y>0 && Y<10) {
-				cv.setLastPoint(X, Y, true);
+				cd.cv.setLastPoint(X, Y, true);
 				ad.updateListBox(type, X, Y, preX, preY, sente, promoted, preP, drop);
 			}
 			Kifu kf = ad.createKifu(selectedKoma, X, Y, promoted, preP, drop);
 			ad.kifuData.add(kf);
-			ad.checkKDB(lbd.listModel[ListBoxType.Kifu.id].size()-1);
-			if(!cbd.checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
+			ad.checkKDB(gd.listModel[ListBoxType.Kifu.id].size()-1);
+			if(!gd.checkBox[CheckBoxType.Edit.id].isSelected()) sd.turnIsSente = !sd.turnIsSente;
 			se.sendCommandToEngine();
 		}
 		
 		// check strategy
-		if(tbd.textBox[TextBoxType.Strategy.id].getText().equals("")) {
-			tbd.textBox[TextBoxType.Strategy.id].setText(ad.checkStrategy(sd));
+		if(gd.textBox[TextBoxType.Strategy.id].getText().equals("")) {
+			gd.textBox[TextBoxType.Strategy.id].setText(ad.checkStrategy(sd));
 		}
-		if(tbd.textBox[TextBoxType.Castle.id].getText().equals("")) {
-			tbd.textBox[TextBoxType.Castle.id].setText(ad.checkCastle(sd, true));
+		if(gd.textBox[TextBoxType.Castle.id].getText().equals("")) {
+			gd.textBox[TextBoxType.Castle.id].setText(ad.checkCastle(sd, true));
 		}
-		if(tbd.textBox[TextBoxType.Castle.id].getText().equals("")) {
-			tbd.textBox[TextBoxType.Castle.id].setText(ad.checkCastle(sd, false));
+		if(gd.textBox[TextBoxType.Castle.id].getText().equals("")) {
+			gd.textBox[TextBoxType.Castle.id].setText(ad.checkCastle(sd, false));
 		}
 		
 		sd.selectedKoma = null;

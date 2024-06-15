@@ -27,7 +27,7 @@ public class ColorDataBase {
 	};
 	public enum ButtonType {
 		Initialize(0), Save(1), Strategy(2), Castle(3), Tesuji(4), Kifu(5);
-		private final int id;
+		public final int id;
 		private ButtonType(final int id) {
 			this.id = id;
 		}
@@ -37,12 +37,12 @@ public class ColorDataBase {
 	ColorSet listColorSet[] = new ColorSet[ColorSetType.values().length];
 	
 	EditProperty ep;
-	CanvasBoard cv;
+	CanvasData cd;
 	JButton button[];
 	
-	public ColorDataBase(EditProperty e, CanvasBoard c, JButton b[]) {
+	public ColorDataBase(EditProperty e, CanvasData c, JButton b[]) {
 		ep = e;
-		cv = c;
+		cd = c;
 		button = b;
 	}
 	public class ColorSet {
@@ -124,10 +124,10 @@ public class ColorDataBase {
 	public void initializeImageSet() {
 		for(ColorSetType cst: ColorSetType.values()) {
 			try {
-				String fileName = cv.imgFilePathBoard + "shogi board" + cst.id + ".png";
+				String fileName = cd.cv.imgFilePathBoard + "shogi board" + cst.id + ".png";
 				BufferedImage img = ImageIO.read(new File(fileName));
 				listColorSet[cst.id].board = img.getScaledInstance((50+10)*9, (63+10)*9, java.awt.Image.SCALE_SMOOTH);
-				fileName = cv.imgFilePathBackground + "background" + cst.id + ".png";
+				fileName = cd.cv.imgFilePathBackground + "background" + cst.id + ".png";
 				img = ImageIO.read(new File(fileName));
 				listColorSet[cst.id].background = img.getScaledInstance(50*25, 63*12, java.awt.Image.SCALE_SMOOTH);
 			} catch(IOException e) {
@@ -149,9 +149,9 @@ public class ColorDataBase {
 			button[bt.id].setBackground(buttonColor);
 			button[bt.id].setBorder(border);
 		}
-		cv.imgBoard = listColorSet[select].board;
-		cv.imgBackground = listColorSet[select].background;
-		cv.clrFont =  listColorSet[select].font;
-		cv.repaint();
+		cd.cv.imgBoard = listColorSet[select].board;
+		cd.cv.imgBackground = listColorSet[select].background;
+		cd.cv.clrFont =  listColorSet[select].font;
+		cd.cv.repaint();
 	}
 }
