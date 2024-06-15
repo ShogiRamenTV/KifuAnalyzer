@@ -24,19 +24,31 @@ import lib.ShogiData.KomaType;
 public class ShogiEngine {
 	public PrintStream out = null;
 	MyThreadReceiver receiver;
-	EditProperty ep = new EditProperty();
 	public static final int numOfMultiPV = 5;
 	public static final int calculatingTimeOfEngine = 2000; // ms
 	public Boolean isEngineOn = false;
-	CanvasData cd;
+	JFrame fr;
+	EditProperty ep;
 	ShogiData sd;
+	CanvasData cd;
 	GUIData gd;
 	AnalysisData ad;
 	
-	public ShogiEngine() {
+	public ShogiEngine(JFrame f, ShogiData s, EditProperty e,
+			GUIData g, CanvasData c, AnalysisData a) {
+		fr = f;
+		ep = e;
+		sd = s;
+		cd = c;
+		gd = g;
+		ad = a;
 	}
-	public Process createEngine(JFrame fr, ShogiData s, 
-			CanvasData c, GUIData g, AnalysisData a) {
+	public void update(GUIData g, CanvasData c, AnalysisData a) {
+		gd = g;
+		cd = c;
+		ad = a;
+	}
+	public Process createEngine() {
 		String enginePath = ep.loadProperty(PropertyType.Engine.name());
 		if(enginePath == null) {
 			ep.setPropertyForEngine(fr);
@@ -53,10 +65,7 @@ public class ShogiEngine {
 			System.out.println("engine is not installed");
 			ep.setPropertyForEngine(fr);
 		}
-		sd = s;
-		cd = c;
-		gd = g;
-		ad = a;
+		
 		return process;
 	}
 	
@@ -323,9 +332,8 @@ public class ShogiEngine {
 			if(ch[4] == '+') cd.promote = 1;
 		}
 	}
-	public void actionForStartEngine(JFrame f, ShogiData s, CanvasData c, 
-			GUIData g, AnalysisData a) {
-		Process process = createEngine(f, s, c, g, a);
+	public void actionForStartEngine() {
+		Process process = createEngine();
         if(process == null) {
         	System.out.println("create engine failed");
         	return;

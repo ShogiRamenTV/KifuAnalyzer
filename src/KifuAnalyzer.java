@@ -33,7 +33,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	
 	ShogiData sd = new ShogiData();
 	ShogiData sdForKDB = new ShogiData();
-	ShogiEngine se = new ShogiEngine();
+	ShogiEngine se;
 	CanvasData cd;
 	EditProperty ep = new EditProperty();
 	AnalysisData ad;
@@ -72,6 +72,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	public void initializeGUISetting() {
 		sd.initializeKomaSetting();
 		sdForKDB.initializeKomaSetting();
+		se = new ShogiEngine(this, sd, ep, gd, cd, ad);
 		gd = new GUIData(baseXPosForItems, this, sd, se, ep, cd, ad, cldb);
 		gd.initializeTextBoxSetting();
 		gd.initializeCheckBox();
@@ -81,6 +82,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cldb = new ColorDataBase(ep, cd, gd.button);
 		ad = new AnalysisData(this, sd, sdForKDB, se, cd, gd);
 		gd.update(cd, ad, cldb);
+		se.update(gd, cd, ad);
 		cd.cv.initializeSettings(this.getWidth(), this.getHeight());
 		cd.cve.initializeSetting();
 		gd.initializeSoundSetting();

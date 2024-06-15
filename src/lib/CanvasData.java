@@ -25,7 +25,9 @@ import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
 import lib.ShogiEngine.PointWithScore;
-
+//-------------------------------------------------------------------------
+// ----------------------- << Canvas, Canvas for Engine >> ----------------
+// ------------------------------------------------------------------------
 public class CanvasData {
 	int baseXPosForItems;
 	ShogiData sd;

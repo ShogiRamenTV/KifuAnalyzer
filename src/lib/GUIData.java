@@ -35,7 +35,9 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import lib.ShogiData.Koma;
-
+// -------------------------------------------------------------------------
+// ---------- << Button, ListBox, TextBox, CheckBox, Menu >> ---------------
+// -------------------------------------------------------------------------
 public class GUIData implements ActionListener, MouseListener, ListSelectionListener, KeyListener{
 	int baseXPosForItems;
 	JFrame fr;
@@ -491,7 +493,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 			cldb.actionForSetColor(fr);
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.StartEngine.id]) {
-			se.actionForStartEngine(fr, sd, cd, this, ad);
+			se.actionForStartEngine();
 		}
 		if(e.getSource() == menuItemEngine[MenuTypeEngine.StopEngine.id]) {
 			se.actionForStopEngine();

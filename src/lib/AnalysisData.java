@@ -33,7 +33,9 @@ import lib.GUIData.TextBoxType;
 import lib.ShogiData.Koma;
 import lib.ShogiData.KomaType;
 import lib.ShogiData.SenteGote;
-
+// -------------------------------------------------------------------------
+// ------------ << Kifu, Strategy, Castle, Player, Tesuji >> ---------------
+// -------------------------------------------------------------------------
 public class AnalysisData {
 	JFrame fr;
 	ShogiData sd;
@@ -151,7 +153,7 @@ public class AnalysisData {
 		gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
 		commonListAction();
 		MyThreadKifuAnalysis thread = new MyThreadKifuAnalysis();
-		se.actionForStartEngine(fr, sd, cd, gd, this);
+		se.actionForStartEngine();
 		if(!se.isEngineOn) {
 			System.out.println("Failed to start shogi engine");
 			return;
@@ -555,6 +557,7 @@ public class AnalysisData {
 			System.out.println("Import (" + fileName + ") error.");
 			return;
 		}
+		initializeShogiBoard();
 		Boolean result = parseShogiWarsKifu(strData);
 		gd.listBox[ListBoxType.Kifu.id].setSelectedIndex(0);
 		gd.listBox[ListBoxType.Kifu.id].ensureIndexIsVisible(0);
