@@ -66,6 +66,14 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		ad = a;
 		cldb = cdb;
 	}
+	public void initialize() {
+		initializeTextBoxSetting();
+		initializeCheckBox();
+		initializeListBoxSetting();
+		initializeButtonSetting();
+		initializeSoundSetting();
+		initializeMenuBar();
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Button >> ------------------------------------
 	// -------------------------------------------------------------------------

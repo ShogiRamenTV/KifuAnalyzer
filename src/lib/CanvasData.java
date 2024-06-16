@@ -30,19 +30,28 @@ import lib.ShogiEngine.PointWithScore;
 // ------------------------------------------------------------------------
 public class CanvasData {
 	int baseXPosForItems;
+	int width;
+	int height;
 	ShogiData sd;
 	ShogiEngine se;
 	GUIData gd;
 	public CanvasBoard cv;
 	public CanvasBoardForEngine cve;
 	
-	public CanvasData(int bPosX, ShogiData s, ShogiEngine sen, GUIData g) {
+	public CanvasData(int bPosX, int w, int h, ShogiData s, ShogiEngine sen, GUIData g) {
 		baseXPosForItems = bPosX;
+		width = w;
+		height = h;
 		sd = s;
 		se = sen;
 		gd = g;
 		cv = new CanvasBoard();
 		cve = new CanvasBoardForEngine();
+	}
+	public void initialize() {
+		cv.initializeSettings(width, height);
+		cve.initializeSetting();
+		cv.initializeNumberRowCol();
 	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Canvas >> ------------------------------------

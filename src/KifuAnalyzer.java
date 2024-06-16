@@ -39,7 +39,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	AnalysisData ad;
 	ColorDataBase cldb;
 	GUIData gd;
-	
+	private final int baseXPosForItems = 720;
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
 	// -------------------------------------------------------------------------
@@ -74,20 +74,13 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		sdForKDB.initializeKomaSetting();
 		se = new ShogiEngine(this, sd, ep, gd, cd, ad);
 		gd = new GUIData(baseXPosForItems, this, sd, se, ep, cd, ad, cldb);
-		gd.initializeTextBoxSetting();
-		gd.initializeCheckBox();
-		gd.initializeListBoxSetting();
-		gd.initializeButtonSetting();
-		cd = new CanvasData(baseXPosForItems, sd, se, gd);
+		cd = new CanvasData(baseXPosForItems, this.getWidth(), this.getHeight(), sd, se, gd);
 		cldb = new ColorDataBase(ep, cd, gd.button);
 		ad = new AnalysisData(this, sd, sdForKDB, se, cd, gd);
-		gd.update(cd, ad, cldb);
-		se.update(gd, cd, ad);
-		cd.cv.initializeSettings(this.getWidth(), this.getHeight());
-		cd.cve.initializeSetting();
-		gd.initializeSoundSetting();
-		gd.initializeMenuBar();
-		cd.cv.initializeNumberRowCol();
+		gd.update(cd, ad, cldb);	// mutual referense
+		se.update(gd, cd, ad);		// mutual referense
+		gd.initialize();
+		cd.initialize();
 		cldb.initializeColorSet();
 	}
 	public void contentPaneSetting() {
@@ -110,9 +103,8 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		cd.cv.addMouseMotionListener(this);
 		cd.cv.addKeyListener(this);
 	}
-	private final int baseXPosForItems = 720;
 	// -------------------------------------------------------------------------
-	// ----------------------- << lbd.listBox Action >> -----------------------------
+	// ----------------------- << Ctrl+v >> ------------------------------------
 	// -------------------------------------------------------------------------
 	Boolean commandKeyOn = false;
 	@Override
