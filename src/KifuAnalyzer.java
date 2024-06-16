@@ -5,7 +5,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
-import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 
 import lib.AnalysisData;
@@ -31,15 +30,17 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	String imgFilePath = "./img/";
 	String imgFilePathKoma = imgFilePath + "koma/";
 	
-	ShogiData sd = new ShogiData();
-	ShogiData sdForKDB = new ShogiData();
+	ShogiData sd;
+	ShogiData sdForKDB;
 	ShogiEngine se;
 	CanvasData cd;
-	EditProperty ep = new EditProperty();
+	EditProperty ep;
 	AnalysisData ad;
 	ColorDataBase cldb;
 	GUIData gd;
 	private final int baseXPosForItems = 720;
+	private final int iconWidth = 50;
+	private final int iconHeight = 63;
 	// -------------------------------------------------------------------------
 	// ----------------------- << Main >> --------------------------------------
 	// -------------------------------------------------------------------------
@@ -56,22 +57,18 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	KifuAnalyzer() {
 		System.out.print("Initializing KifuAnalyzer ... ");
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		sd.initializeIcon();
-		setSize(sd.iconWidth*25, sd.iconHeight*12);
-		initializeAppIcon();
+		setSize(iconWidth*25, iconHeight*12);
+		createInstance();
 		initializeGUISetting();
 		contentPaneSetting();
 		listenerSetting();		
 		System.out.println("Completed.");
 		gd.actionForInitialize();
 	}
-	public void initializeAppIcon() {
-		ImageIcon icon = new ImageIcon(imgFilePath + "Shogi Ramen TV.jpg");
-		setIconImage(icon.getImage());
-	}
-	public void initializeGUISetting() {
-		sd.initializeKomaSetting();
-		sdForKDB.initializeKomaSetting();
+	public void createInstance() {
+		sd = new ShogiData();
+		sdForKDB = new ShogiData();
+		ep = new EditProperty();
 		se = new ShogiEngine(this, sd, ep, gd, cd, ad);
 		gd = new GUIData(baseXPosForItems, this, sd, se, ep, cd, ad, cldb);
 		cd = new CanvasData(baseXPosForItems, this.getWidth(), this.getHeight(), sd, se, gd);
@@ -79,6 +76,11 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 		ad = new AnalysisData(this, sd, sdForKDB, se, cd, gd);
 		gd.update(cd, ad, cldb);	// mutual referense
 		se.update(gd, cd, ad);		// mutual referense
+	}
+	public void initializeGUISetting() {
+		sd.initializeIcon();
+		sd.initializeKomaSetting();
+		sdForKDB.initializeKomaSetting();
 		gd.initialize();
 		cd.initialize();
 		cldb.initializeColorSet();
