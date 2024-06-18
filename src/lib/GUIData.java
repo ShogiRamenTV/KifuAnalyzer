@@ -417,7 +417,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		}
 	};
 	public enum MenuTypeUtility {
-		CaptureBoard(0), KomaInHand(1), ImportKIF(2);
+		CaptureBoard(0), KomaInHand(1), ImportKIF(2), Graph(3);
 		private final int id;
 		private MenuTypeUtility(final int id) {
 			this.id = id;
@@ -476,6 +476,27 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		cd.cv.repaint();
 		cd.cve.repaint();
 	}
+	public void actionForGraph() {
+		JFrame frame = new JFrame();
+		JComboBox<String> cBox = new JComboBox<>();
+		cBox.addItem("strategy");
+		cBox.addItem("castle");
+		cBox.addItem("tesuji");
+		cBox.setBounds(350, 0, 150, 40);
+		frame.setSize(500, 500);
+		cd.cvg.initialize(frame.getWidth(), frame.getHeight(), ad, cBox);
+		cBox.addActionListener (new ActionListener () {
+		    public void actionPerformed(ActionEvent e) {
+		        cd.cvg.repaint();
+		    }
+		});
+		frame.getContentPane().add(cBox);
+		frame.getContentPane().add(cd.cvg);
+		
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+		frame.validate();
+	}
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		// TODO 自動生成されたメソッド・スタブ
@@ -520,6 +541,9 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		}
 		if(e.getSource() == menuItemUtility[MenuTypeUtility.ImportKIF.id]) {
 			ad.importKIF();
+		}
+		if(e.getSource() == menuItemUtility[MenuTypeUtility.Graph.id]) {
+			actionForGraph();
 		}
 	}
 }
