@@ -46,7 +46,7 @@ public class KifuAnalyzer extends JFrame implements MouseListener, MouseMotionLi
 	// -------------------------------------------------------------------------
 	public static void main(String[] args) {
 		KifuAnalyzer ka = new KifuAnalyzer();
-		ka.setTitle("KifuAnalyzer");
+		ka.setTitle("KifuAnalyzer V.2.0");
 		ka.setLocationRelativeTo(null);
 		ka.setVisible(true);
 		ka.validate();
