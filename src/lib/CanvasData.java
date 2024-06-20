@@ -15,13 +15,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.imageio.ImageIO;
-import javax.swing.JComboBox;
 import javax.swing.JLabel;
 
-import lib.AnalysisData.StringCount;
 import lib.GUIData.CheckBoxType;
 import lib.GUIData.ListBoxType;
 import lib.ShogiData.Koma;
@@ -40,7 +37,6 @@ public class CanvasData {
 	GUIData gd;
 	public CanvasBoard cv;
 	public CanvasBoardForEngine cve;
-	public CanvasBoardForGraph cvg;
 	
 	public CanvasData(int bPosX, int w, int h, ShogiData s, ShogiEngine sen, GUIData g) {
 		baseXPosForItems = bPosX;
@@ -51,7 +47,6 @@ public class CanvasData {
 		gd = g;
 		cv = new CanvasBoard();
 		cve = new CanvasBoardForEngine();
-		cvg = new CanvasBoardForGraph();
 	}
 	public void initialize() {
 		cv.initializeSettings(width, height);
@@ -493,67 +488,6 @@ public class CanvasData {
 			for(int index=0; index<se.getNumOfMultiPV(); index++) {
 				//listModel[ListBoxType.Engine.id].set(index, bpd.moveName[index]);
 				gd.listModel[ListBoxType.Engine.id].set(index, bpd.moveName[index]);
-			}
-		}
-	}
-	// -------------------------------------------------------------------------
-	// ----------------------- << Canvas >> ------------------------------------
-	// -------------------------------------------------------------------------
-	public class CanvasBoardForGraph extends Canvas {
-		int xOffSet = 20;
-		int yOffSet = 20;
-		AnalysisData ad;
-		JComboBox<String> comboBox;
-		public CanvasBoardForGraph() {
-		}
-		public void initialize(int w, int h, AnalysisData a, JComboBox<String> c) {
-			setBounds(0, 0, w, h);
-			setBackground(Color.white);
-			ad = a;
-			comboBox = c;
-		}
-		public void paint(Graphics g) {
-			comboBox.setBounds(this.getWidth()-150, 0, 150, 40);
-			drawBaseOfGraph(g);
-			drawData(g);
-		}
-		public void drawBaseOfGraph(Graphics g) {
-			g.setColor(Color.black);
-			g.drawLine(xOffSet, this.getHeight()-yOffSet, this.getWidth()-xOffSet, this.getHeight()-yOffSet);
-			g.drawLine(xOffSet, this.getHeight()-yOffSet, xOffSet, yOffSet);
-		}
-		public void drawData(Graphics g) {
-			int totalDataNum = 0;
-			int maxCnt = 0;
-			List<StringCount> lsStr = null;
-			if(comboBox.getSelectedItem().equals("strategy")) {
-				lsStr = ad.strategyCountData;
-			} else if(comboBox.getSelectedItem().equals("castle")) {
-				lsStr = ad.castleCountData;
-			} else if(comboBox.getSelectedItem().equals("tesuji")) {
-				lsStr = ad.tesujiCountData;
-			}
-			if(lsStr == null) return;
-			for(StringCount sc: lsStr) {
-				totalDataNum++;
-				if(maxCnt < sc.cnt) maxCnt = sc.cnt;
-			}
-			if(totalDataNum == 0) return;
-			int maxHeight = this.getHeight()-2*yOffSet;
-			int maxWidth = this.getWidth()-2*xOffSet;
-			int index = 0;
-			
-			for(StringCount sc: lsStr) {
-				int x = (int)((double)maxWidth * (double)index/(double)totalDataNum);
-				int wX = (int)((double)maxWidth * (double)1/(double)totalDataNum);
-				int y = (int)((double)maxHeight * (double)sc.cnt/(double)maxCnt);
-				index++;
-				Random rand = new Random();
-				g.setColor(new Color(rand.nextInt(255), rand.nextInt(255), rand.nextInt(255)));
-				g.fillRect(x+xOffSet, this.getHeight()-yOffSet-y, wX, y);
-				g.setColor(Color.blue);
-				g.drawRect(x+xOffSet, this.getHeight()-yOffSet-y, wX, y);
-				g.drawString(sc.str, x+xOffSet, this.getHeight()-yOffSet-y);
 			}
 		}
 	}
