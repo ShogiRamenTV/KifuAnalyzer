@@ -837,7 +837,7 @@ public class AnalysisData {
 		StringCount sc = strategyCountData.get(selectedIndex);
 		//System.out.println(sc.str);
 		String strategy = sc.str;
-		gd.textBox[TextBoxType.Castle.id].setText(strategy);
+		gd.textBox[TextBoxType.Strategy.id].setText(strategy);
 		
 		gd.listModel[ListBoxType.Info.id].clear();
 		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
