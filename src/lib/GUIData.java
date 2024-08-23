@@ -327,7 +327,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 	// ----------------------- << CheckBox >> ------------------------------------
 	// -------------------------------------------------------------------------
     public enum CheckBoxType {
-		Edit(0), Reverse(1), Draw(2);
+		Edit(0), Reverse(1), Draw(2), Arrow(3);
 		public final int id;
 		private CheckBoxType(final int id) {
 			this.id = id;
@@ -348,10 +348,12 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		for(CheckBoxType cb: CheckBoxType.values()) {
 			checkBox[cb.id] = new JCheckBox(cb.name());
 		}
+		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+80, 35, 80, 12);
 		checkBox[CheckBoxType.Edit.id].setBounds(baseXPosForItems+140, 35, 60, 12);
 		checkBox[CheckBoxType.Reverse.id].setBounds(baseXPosForItems+190, 35, 80, 12);
-		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListener);
-		checkBox[CheckBoxType.Draw.id].setBounds(baseXPosForItems+80, 35, 80, 12);
+		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListenerForReverse);
+		checkBox[CheckBoxType.Arrow.id].setBounds(baseXPosForItems+190, 50, 80, 12);
+		checkBox[CheckBoxType.Arrow.id].addActionListener(checkActionListenerForArrow);
 		radioButtonSente.setBounds(baseXPosForItems+360, 75, 70, 14);
 		radioButtonGote.setBounds(baseXPosForItems+420, 75, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
@@ -365,7 +367,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		comboBox.setBounds(baseXPosForItems+80, 8, 100, 25);
 	}
 	
-	private ActionListener checkActionListener = new ActionListener() {
+	private ActionListener checkActionListenerForReverse = new ActionListener() {
         @Override
         public void actionPerformed(ActionEvent e) {
         	for(Koma k: sd.k) {
@@ -376,6 +378,12 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
         	cd.cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
         	cd.cv.repaint();
         	cd.cve.repaint();
+        }
+    };
+    private ActionListener checkActionListenerForArrow = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        	cd.cv.repaint();
         }
     };
     // -------------------------------------------------------------------------

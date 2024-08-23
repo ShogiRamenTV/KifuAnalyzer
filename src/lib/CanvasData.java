@@ -109,7 +109,9 @@ public class CanvasData {
 			drawShogiKoma(g);
 			drawNumOfKomaInHand(g);
 			drawLeftClickedPoints(g);
-			drawArrowsForKifuAnalysis(g);
+			if(!gd.checkBox[CheckBoxType.Arrow.id].isSelected()) {
+				drawArrowsForKifuAnalysis(g);
+			}
 			drawArrowsForRightClick(g);
 			drawArrowForEngine(g);
 		}
