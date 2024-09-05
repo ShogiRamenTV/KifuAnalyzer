@@ -464,7 +464,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 			Rectangle bounds = fr.getBounds();
 			Robot robot = new Robot();
 			BufferedImage image = robot.createScreenCapture(bounds);
-			image = image.getSubimage(0, 70, (sd.iconWidth+10)*11+55, (sd.iconHeight+10)*9);
+			image = image.getSubimage(0, 50, (sd.iconWidth+10)*11+55, (sd.iconHeight+10)*9+40);
 			String dirName = imgFilePath;
 			String fileName = "CaptureBoard.jpg";
 			ImageIO.write(image, "jpg", new File(dirName, fileName));
