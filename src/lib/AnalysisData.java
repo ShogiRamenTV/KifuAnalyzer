@@ -348,7 +348,7 @@ public class AnalysisData {
 			while(true) {
 				sdForKDB.resetAllKoma(gd.checkBox[CheckBoxType.Reverse.id].isSelected());
 				String fileName = kifuFilePath + strY + "/" + "kifu" + String.format("%03d", fileIndex) + ".txt";
-				//System.out.println(fileName);
+				// System.out.println(fileName);
 				File file = new File(fileName);
 				KifuData kd = createKifuData();
 				FileReader fr = new FileReader(file);
