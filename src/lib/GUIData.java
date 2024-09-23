@@ -101,6 +101,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 	public void actionForInitialize() {
 		clearTextBox();
 		clearCheckBox();
+		se.actionForStopEngine();
 		cd.cv.reverseNumberRowCol(checkBox[CheckBoxType.Reverse.id].isSelected());
 		sd.resetAllKoma(checkBox[CheckBoxType.Reverse.id].isSelected());	
 		sd.viewKomaOnBoard(checkBox[CheckBoxType.Reverse.id].isSelected());
@@ -327,7 +328,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 	// ----------------------- << CheckBox >> ------------------------------------
 	// -------------------------------------------------------------------------
     public enum CheckBoxType {
-		Edit(0), Reverse(1), Draw(2), Arrow(3);
+		Edit(0), Reverse(1), Draw(2), Arrow(3), Engine(4);
 		public final int id;
 		private CheckBoxType(final int id) {
 			this.id = id;
@@ -354,6 +355,8 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		checkBox[CheckBoxType.Reverse.id].addActionListener(checkActionListenerForReverse);
 		checkBox[CheckBoxType.Arrow.id].setBounds(baseXPosForItems+190, 50, 80, 12);
 		checkBox[CheckBoxType.Arrow.id].addActionListener(checkActionListenerForArrow);
+		checkBox[CheckBoxType.Engine.id].setBounds(baseXPosForItems+80, 50, 80, 12);
+		checkBox[CheckBoxType.Engine.id].addActionListener(checkActionListenerForEngine);
 		radioButtonSente.setBounds(baseXPosForItems+360, 75, 70, 14);
 		radioButtonGote.setBounds(baseXPosForItems+420, 75, 70, 14);
 		ButtonGroup buttonGroup = new ButtonGroup();
@@ -384,6 +387,16 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
         @Override
         public void actionPerformed(ActionEvent e) {
         	cd.cv.repaint();
+        }
+    };
+    private ActionListener checkActionListenerForEngine = new ActionListener() {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+        	if(checkBox[CheckBoxType.Engine.id].isSelected()) {
+        		se.actionForStartEngine();
+        	} else {
+        		se.actionForStopEngine();
+        	}
         }
     };
     // -------------------------------------------------------------------------
