@@ -333,6 +333,7 @@ public class ShogiEngine {
 		}
 	}
 	public void actionForStartEngine() {
+		if(isEngineOn) return;
 		Process process = createEngine();
         if(process == null) {
         	System.out.println("create engine failed");
