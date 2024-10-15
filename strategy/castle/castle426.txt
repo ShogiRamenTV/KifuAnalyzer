@@ -1,4 +1,4 @@
-Hidari Mino
+Tower Mino
 1,0,1,8
 1,0,2,8
 1,0,3,8
