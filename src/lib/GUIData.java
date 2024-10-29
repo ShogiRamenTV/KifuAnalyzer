@@ -364,6 +364,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		buttonGroup.add(radioButtonGote);
 		comboBox = new JComboBox<>();
 		comboBox.addItem("");
+		comboBox.addItem("2024");
 		comboBox.addItem("2023");
 		comboBox.addItem("2022");
 		comboBox.addItem("all");
