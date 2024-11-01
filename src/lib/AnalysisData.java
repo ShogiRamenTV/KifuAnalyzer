@@ -135,7 +135,7 @@ public class AnalysisData {
 				i++;
 			}
 			if(isSame && index < kd.db.size()) {
-				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
+				String str = String.format("%03d:000:%s:", kd.index, kd.year);
 				str += kd.playerName[SenteGote.Sente.id] + "(" + kd.castleName[SenteGote.Sente.id] + ")" + " vs " + kd.playerName[SenteGote.Gote.id] + "(" + kd.castleName[SenteGote.Gote.id] + ")";
 				if(kd.isSenteWin == 1) str+="(Sente Win)";
 				else if(kd.isSenteWin == 0) str+="(Gote Win)";
@@ -856,7 +856,7 @@ public class AnalysisData {
 		gd.listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuData kd: kifuDB) {
 			if(kd.strategyName.equals(strategy)) {
-				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
+				String str = String.format("%03d:000:%s:", kd.index, kd.year);
 				str += kd.playerName[SenteGote.Sente.id] + "(" + kd.castleName[SenteGote.Sente.id] + ")" + " vs " + kd.playerName[SenteGote.Gote.id] + "(" + kd.castleName[SenteGote.Gote.id] + ")";
 				if(kd.isSenteWin == 1) str+="(Sente Win)";
 				else if(kd.isSenteWin == 0) str+="(Gote Win)";
@@ -1055,7 +1055,7 @@ public class AnalysisData {
 		gd.listModel[ListBoxType.Info.id].addElement("-------------");
 		for(KifuData kd: kifuDB) {
 			if(kd.castleName[SenteGote.Sente.id].equals(castleName) || kd.castleName[SenteGote.Gote.id].equals(castleName)) {
-				String str = String.format("kf%03d:000:%s:", kd.index, kd.year);
+				String str = String.format("%03d:000:%s:", kd.index, kd.year);
 				str += kd.playerName[SenteGote.Sente.id] + "(" + kd.castleName[SenteGote.Sente.id] + ")" + " vs " + kd.playerName[SenteGote.Gote.id] + "(" + kd.castleName[SenteGote.Gote.id] + ")";
 				if(kd.isSenteWin == 1) str+="(Sente Win)";
 				else if(kd.isSenteWin == 0) str+="(Gote Win)";
@@ -1581,7 +1581,7 @@ public class AnalysisData {
 		gd.listModel[ListBoxType.Info.id].addElement("-------------");
 		for(TesujiData td: tesujiDataBase) {
 			if(td.name.equals(tesujiName)) {
-				String str = "kf" + String.format("%03d:%03d:%s", td.fileIndex, td.stepIndex, td.year);
+				String str = String.format("%03d:%03d:%s", td.fileIndex, td.stepIndex, td.year);
 				KifuData kd = getKDB(td.fileIndex, td.year);
 				if(kd == null) continue;
 				str += ":" + kd.playerName[SenteGote.Sente.id] + " vs " + kd.playerName[SenteGote.Gote.id];

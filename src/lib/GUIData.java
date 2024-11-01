@@ -215,12 +215,10 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		int index = listBox[ListBoxType.Info.id].getSelectedIndex();
 		if(index < 2) return;
 		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
-		String subStrFile = str.substring(2,5);
-		String subStrStep = str.substring(6,9);
-		String subStrYear = str.substring(10,14);
-		loadFile = subStrFile;
-		loadStep = subStrStep;
-		loadYear = subStrYear;
+		String[] subStr = str.split(":");
+		loadFile = subStr[0];
+		loadStep = subStr[1];
+		loadYear = subStr[2];
 	}
 	@Override
 	public void keyTyped(KeyEvent e) {
