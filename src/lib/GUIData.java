@@ -218,12 +218,9 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		String subStrFile = str.substring(2,5);
 		String subStrStep = str.substring(6,9);
 		String subStrYear = str.substring(10,14);
-		loadFile = "";
-		loadStep = "";
-		loadYear = "";
-		if(subStrFile.matches("[+-]?\\d*(\\.\\d+)?")) loadFile = subStrFile;
-		if(subStrStep.matches("[+-]?\\d*(\\.\\d+)?")) loadStep = subStrStep;
-		if(subStrYear.matches("[+-]?\\d*(\\.\\d+)?")) loadYear = subStrYear;
+		loadFile = subStrFile;
+		loadStep = subStrStep;
+		loadYear = subStrYear;
 	}
 	@Override
 	public void keyTyped(KeyEvent e) {
@@ -363,12 +360,19 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		buttonGroup.add(radioButtonSente);
 		buttonGroup.add(radioButtonGote);
 		comboBox = new JComboBox<>();
-		comboBox.addItem("");
-		comboBox.addItem("2024");
-		comboBox.addItem("2023");
-		comboBox.addItem("2022");
-		comboBox.addItem("all");
+		createCheckBoxList();
 		comboBox.setBounds(baseXPosForItems+80, 8, 100, 25);
+	}
+	public void createCheckBoxList() {
+		File dir = new File("./kifu/");
+		comboBox.addItem("");
+		File[] files = dir.listFiles();
+	    for (int i = 0; i < files.length; i++) {
+	        File file = files[i];
+	        String[] names = file.toString().split("/");
+	        if(file.isDirectory()) comboBox.addItem(names[names.length-1]);
+	    }
+	    comboBox.addItem("all");
 	}
 	
 	private ActionListener checkActionListenerForReverse = new ActionListener() {

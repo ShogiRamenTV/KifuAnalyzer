@@ -337,10 +337,18 @@ public class AnalysisData {
 	public void actionForDB(String comboBoxStr) {
 		kifuDB.clear();
 		String selectedYear = comboBoxStr;
-		if(selectedYear.equals("") || selectedYear.equals("all")) loadKifuDBByYear("");
-		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadKifuDBByYear("2022");
-		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadKifuDBByYear("2023");
-		if(selectedYear.equals("2024") || selectedYear.equals("all")) loadKifuDBByYear("2024");
+		if(selectedYear.equals("all")) actionForDBAll();
+		else loadKifuDBByYear(comboBoxStr);
+	}
+	public void actionForDBAll() {
+		loadKifuDBByYear("");
+		File dir = new File("./kifu/");
+		File[] files = dir.listFiles();
+	    for (int i = 0; i < files.length; i++) {
+	        File file = files[i];
+	        String[] names = file.toString().split("/");
+	        if(file.isDirectory()) loadKifuDBByYear(names[names.length-1]);
+	    }
 	}
 	public void loadKifuDBByYear(String strY) {
 		try {
@@ -1472,10 +1480,18 @@ public class AnalysisData {
 	public void loadTesujiData() {
 		tesujiDataBase.clear();
 		String selectedYear = (String)gd.comboBox.getSelectedItem();
-		if(selectedYear.equals("") || selectedYear.equals("all")) loadTesujiDataByYear("");
-		if(selectedYear.equals("2022") || selectedYear.equals("all")) loadTesujiDataByYear("2022");
-		if(selectedYear.equals("2023") || selectedYear.equals("all")) loadTesujiDataByYear("2023");
-		if(selectedYear.equals("2024") || selectedYear.equals("all")) loadTesujiDataByYear("2024");
+		if(selectedYear.equals("all")) loadTesujiDataAll();
+		else loadTesujiDataByYear(selectedYear);
+	}
+	public void loadTesujiDataAll() {
+		loadTesujiDataByYear("");
+		File dir = new File("./kifu/");
+		File[] files = dir.listFiles();
+	    for (int i = 0; i < files.length; i++) {
+	        File file = files[i];
+	        String[] names = file.toString().split("/");
+	        if(file.isDirectory()) loadTesujiDataByYear(names[names.length-1]);
+	    }
 	}
 	public void loadTesujiDataByYear(String strY) {
 		System.out.print("Loading Tesuji Data(" + strY + ") ... ");
