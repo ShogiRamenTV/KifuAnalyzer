@@ -214,7 +214,9 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 	public void getLoadNumberOnListBox2() {
 		int index = listBox[ListBoxType.Info.id].getSelectedIndex();
 		if(index < 2) return;
-		String str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
+		String str = listModel[ListBoxType.Info.id].getElementAt(0);
+		if(!str.contains("Kifu")) return;
+		str = listModel[ListBoxType.Info.id].getElementAt(listBox[ListBoxType.Info.id].getSelectedIndex());
 		String[] subStr = str.split(":");
 		loadFile = subStr[0];
 		loadStep = subStr[1];
