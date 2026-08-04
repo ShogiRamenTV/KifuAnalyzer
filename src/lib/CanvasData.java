@@ -124,6 +124,10 @@ public class CanvasData {
 				for(int y=0; y<9; y++) {
 					g.drawRect(x*(sd.iconWidth+10)+80, y*(sd.iconHeight+10)+20, sd.iconWidth+10, sd.iconHeight+10);
 				}
+			g.fillOval(3*(sd.iconWidth+10)+76, 3*(sd.iconHeight+10)+16, 8, 8);
+			g.fillOval(3*(sd.iconWidth+10)+76, 6*(sd.iconHeight+10)+16, 8, 8);
+			g.fillOval(6*(sd.iconWidth+10)+76, 3*(sd.iconHeight+10)+16, 8, 8);
+			g.fillOval(6*(sd.iconWidth+10)+76, 6*(sd.iconHeight+10)+16, 8, 8);
 		}
 		public void drawShogiBoardBackground(Graphics g) {
 			if(imgBoard != null) g.drawImage(imgBoard, 80, 20, this);
