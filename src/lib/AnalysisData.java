@@ -532,7 +532,33 @@ public class AnalysisData {
 		}
 		gd.listBox[ListBoxType.Info.id].setModel(gd.listModel[ListBoxType.Info.id]);
 	}
-	
+	// -------------------------------------------------------------------------
+	// ----------------------- << Output Data Interface >> ----------------------
+	// -------------------------------------------------------------------------
+	public void outputData() {
+		System.out.print("Output Data ... ");
+		String fileName = "Data.csv";
+		
+		try {
+			File file = new File(fileName);
+			FileWriter fw = new FileWriter(file);
+			
+			fw.write("Index, Year, Sente, Gote, Strategy, Result" + "\n");
+			
+			int index = 1;
+			for(KifuData kd: kifuDB) {
+				String str =  index + "," + kd.year + "," + kd.playerName[SenteGote.Sente.id] + "," + kd.playerName[SenteGote.Gote.id] + 
+						"," + kd.strategyName + "," + kd.isSenteWin + "\n";
+				fw.write(str);
+				index++;
+			}
+			fw.close();
+			
+			JOptionPane.showMessageDialog(null, fileName + " is saved.");
+		} catch(IOException er) {
+			System.out.println(er);
+		}
+	}
 	// -------------------------------------------------------------------------
 	// ----------------------- << Shogi Wars Interface >> ----------------------
 	// -------------------------------------------------------------------------

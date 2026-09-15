@@ -442,7 +442,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		}
 	};
 	public enum MenuTypeUtility {
-		CaptureBoard(0), KomaInHand(1), ImportKIF(2);
+		CaptureBoard(0), KomaInHand(1), ImportKIF(2), OutputData(3);
 		private final int id;
 		private MenuTypeUtility(final int id) {
 			this.id = id;
@@ -454,7 +454,7 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 	JMenu menuUtility = new JMenu("Utility");
 	JMenuItem menuItemSetting[] = new JMenuItem[MenuTypeSetting.values().length];
 	JMenuItem menuItemEngine[] = new JMenuItem[MenuTypeEngine.values().length];
-	JMenuItem menuItemUtility[] = new JMenuItem[MenuTypeEngine.values().length];
+	JMenuItem menuItemUtility[] = new JMenuItem[MenuTypeUtility.values().length];
 	public void initializeMenuBar() {
 		for(MenuTypeSetting mt: MenuTypeSetting.values()) {
 			menuItemSetting[mt.id] = new JMenuItem(mt.name());
@@ -545,6 +545,9 @@ public class GUIData implements ActionListener, MouseListener, ListSelectionList
 		}
 		if(e.getSource() == menuItemUtility[MenuTypeUtility.ImportKIF.id]) {
 			ad.importKIF();
+		}
+		if(e.getSource() == menuItemUtility[MenuTypeUtility.OutputData.id]) {
+			ad.outputData();
 		}
 	}
 }
