@@ -1,5 +1,5 @@
 Akihito Hirose
-Kazuki KImura
+Kazuki Kimura
 1,2,6,0,0,0
 27,8,4,0,0,0
 1,2,5,0,0,0
