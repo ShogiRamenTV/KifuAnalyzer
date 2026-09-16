@@ -88,10 +88,12 @@ public class AnalysisData {
 		public String year;
 		public int index;
 		public int isSenteWin;
+		public int isSenteFuribisha;
 		
 		public KifuData() {
 			strategyName = "";
 			for(SenteGote sg: SenteGote.values()) castleName[sg.id] = "";
+			isSenteFuribisha = -1;
 		}
 	}
 
@@ -386,6 +388,7 @@ public class AnalysisData {
 						sdForKDB.k[kf.k.index].moveKoma(kf.x, kf.y, kf.p);
 						if(kd.strategyName.equals("")) {
 							kd.strategyName = checkStrategy(sdForKDB);
+							if(!kd.strategyName.equals("")) checkIsFuribishaSente(kd, sdForKDB);
 						}
 						if(kd.castleName[SenteGote.Sente.id].equals("")) {
 							kd.castleName[SenteGote.Sente.id] = checkCastle(sdForKDB, true);
@@ -543,12 +546,12 @@ public class AnalysisData {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 			
-			fw.write("Index, Year, Sente, Gote, Strategy, Result" + "\n");
+			fw.write("Index, Year, Sente, Gote, Strategy, Sente Furibisha, Result" + "\n");
 			
 			int index = 1;
 			for(KifuData kd: kifuDB) {
 				String str =  index + "," + kd.year + "," + kd.playerName[SenteGote.Sente.id] + "," + kd.playerName[SenteGote.Gote.id] + 
-						"," + kd.strategyName + "," + kd.isSenteWin + "\n";
+						"," + kd.strategyName + "," + kd.isSenteFuribisha + "," + kd.isSenteWin + "\n";
 				fw.write(str);
 				index++;
 			}
@@ -803,6 +806,56 @@ public class AnalysisData {
 		}
 		
 		return "";
+	}
+	public void checkIsFuribishaSente(KifuData kd, ShogiData sdForKDB) {
+		if(kd.strategyName.equals("Sankenbisha")) {
+			for(int k=0; k<40 ;k++) {
+				if(sdForKDB.k[k].type == KomaType.Rook) {
+					if(sdForKDB.k[k].px == 7 && sdForKDB.k[k].py == 8) {
+						kd.isSenteFuribisha = 1;
+					}
+					if(sdForKDB.k[k].px == 3 && sdForKDB.k[k].py == 2) {
+						kd.isSenteFuribisha = 0;
+					}
+				}
+			}
+		}
+		if(kd.strategyName.equals("Shikenbisha")) {
+			for(int k=0; k<40 ;k++) {
+				if(sdForKDB.k[k].type == KomaType.Rook) {
+					if(sdForKDB.k[k].px == 6 && sdForKDB.k[k].py == 8) {
+						kd.isSenteFuribisha = 1;
+					}
+					if(sdForKDB.k[k].px == 4 && sdForKDB.k[k].py == 2) {
+						kd.isSenteFuribisha = 0;
+					}
+				}
+			}
+		}
+		if(kd.strategyName.equals("Nakabisha")) {
+			for(int k=0; k<40 ;k++) {
+				if(sdForKDB.k[k].type == KomaType.Rook) {
+					if(sdForKDB.k[k].px == 5 && sdForKDB.k[k].py == 8) {
+						kd.isSenteFuribisha = 1;
+					}
+					if(sdForKDB.k[k].px == 5 && sdForKDB.k[k].py == 2) {
+						kd.isSenteFuribisha = 0;
+					}
+				}
+			}
+		}
+		if(kd.strategyName.equals("Mukaibisha")) {
+			for(int k=0; k<40 ;k++) {
+				if(sdForKDB.k[k].type == KomaType.Rook) {
+					if(sdForKDB.k[k].px == 8 && sdForKDB.k[k].py == 8) {
+						kd.isSenteFuribisha = 1;
+					}
+					if(sdForKDB.k[k].px == 2 && sdForKDB.k[k].py == 2) {
+						kd.isSenteFuribisha = 0;
+					}
+				}
+			}
+		}
 	}
 	public void countStrategy() {
 		gd.listModel[ListBoxType.Strategy.id].clear();
