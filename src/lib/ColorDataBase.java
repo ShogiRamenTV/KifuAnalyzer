@@ -19,7 +19,7 @@ import lib.EditProperty.PropertyType;
 // -------------------------------------------------------------------------
 public class ColorDataBase {
 	public enum ColorSetType {
-		Default(0), Sakura(1), GreenTea(2), BlueSky(3), Evening(4), Universe(5), Ocean(6);
+		Default(0), Sakura(1), GreenTea(2), BlueSky(3), Evening(4), Universe(5), Ocean(6), RedLeaf(7);
 		private final int id;		
 		private ColorSetType(final int id) {
 			this.id = id;
@@ -123,6 +123,12 @@ public class ColorDataBase {
 				new Color(171, 190, 229), 
 				new Color(117, 134, 201),
 				new Color(255, 255, 255)	
+				);
+		listColorSet[ColorSetType.RedLeaf.id] = new ColorSet(
+				new Color(230, 205, 227), 
+				new Color(229, 171, 190), 
+				new Color(201, 117, 134),
+				new Color(255, 255, 255)
 				);
 		initializeImageSet();
 		setColor();
