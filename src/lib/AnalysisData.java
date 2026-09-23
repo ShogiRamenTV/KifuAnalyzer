@@ -546,12 +546,13 @@ public class AnalysisData {
 			File file = new File(fileName);
 			FileWriter fw = new FileWriter(file);
 			
-			fw.write("Index, Year, Sente, Gote, Strategy, Sente Furibisha, Result" + "\n");
+			fw.write("Index, Year, Sente, Gote, Strategy, Sente Castle, Gote Castle, Sente Furibisha, Result" + "\n");
 			
 			int index = 1;
 			for(KifuData kd: kifuDB) {
 				String str =  index + "," + kd.year + "," + kd.playerName[SenteGote.Sente.id] + "," + kd.playerName[SenteGote.Gote.id] + 
-						"," + kd.strategyName + "," + kd.isSenteFuribisha + "," + kd.isSenteWin + "\n";
+						"," + kd.strategyName + "," + kd.castleName[SenteGote.Sente.id] + "," + kd.castleName[SenteGote.Gote.id] +
+						"," + kd.isSenteFuribisha + "," + kd.isSenteWin + "\n";
 				fw.write(str);
 				index++;
 			}
